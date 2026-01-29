@@ -1,0 +1,398 @@
+<Application xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="AvalonHttp.App"
+             xmlns:local="using:AvalonHttp"
+             RequestedThemeVariant="Dark">
+
+    <Application.DataTemplates>
+        <local:ViewLocator />
+    </Application.DataTemplates>
+
+    <Application.Resources>
+        <!-- Colors -->
+        <SolidColorBrush x:Key="BgDark">#0D0D0D</SolidColorBrush>
+        <SolidColorBrush x:Key="BgSidebarBrush">#1E1E1E</SolidColorBrush>
+        <SolidColorBrush x:Key="BgMain">#121212</SolidColorBrush>
+        <SolidColorBrush x:Key="BgElevated">#1A1A1A</SolidColorBrush>
+        <SolidColorBrush x:Key="BorderColor">#2A2A2A</SolidColorBrush>
+        <SolidColorBrush x:Key="BorderBright">#333333</SolidColorBrush>
+        <SolidColorBrush x:Key="TextPrimary">#FFFFFF</SolidColorBrush>
+        <SolidColorBrush x:Key="TextSecondary">#A0A0A0</SolidColorBrush>
+        <SolidColorBrush x:Key="TextMuted">#6A6A6A</SolidColorBrush>
+        <SolidColorBrush x:Key="AccentBrush">#3B82F6</SolidColorBrush>
+        <SolidColorBrush x:Key="AccentPurple">#3B82F6</SolidColorBrush>
+        <SolidColorBrush x:Key="AccentTeal">#14B8A6</SolidColorBrush>
+        <SolidColorBrush x:Key="Success">#10B981</SolidColorBrush>
+        <SolidColorBrush x:Key="Error">#EF4444</SolidColorBrush>
+        <SolidColorBrush x:Key="Warning">#F59E0B</SolidColorBrush>
+        <SolidColorBrush x:Key="GlassBg">#0DFFFFFF</SolidColorBrush>
+        <SolidColorBrush x:Key="GlassBorder">#1AFFFFFF</SolidColorBrush>
+    </Application.Resources>
+
+    <Application.Styles>
+        <FluentTheme />
+        
+        <!-- Button -->
+        <Style Selector="Button">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="{StaticResource TextPrimary}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource BorderColor}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Padding" Value="12,8"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+
+        <Style Selector="Button:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="{StaticResource GlassBg}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource BorderBright}"/>
+        </Style>
+
+        <Style Selector="Button:pressed /template/ ContentPresenter">
+            <Setter Property="Background" Value="{StaticResource BorderColor}"/>
+        </Style>
+
+        <Style Selector="Button:disabled /template/ ContentPresenter">
+            <Setter Property="Opacity" Value="0.4"/>
+        </Style>
+
+        <!-- TextBox -->
+        <Style Selector="TextBox">
+            <Setter Property="Background" Value="{StaticResource BgElevated}"/>
+            <Setter Property="Foreground" Value="{StaticResource TextPrimary}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource BorderColor}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Padding" Value="12,10"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="CaretBrush" Value="{StaticResource AccentBrush}"/>
+            <Setter Property="SelectionBrush" Value="{StaticResource AccentBrush}"/>
+        </Style>
+
+        <Style Selector="TextBox:focus /template/ Border#PART_BorderElement">
+            <Setter Property="Background" Value="{StaticResource BgElevated}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+        </Style>
+
+        <Style Selector="TextBox:pointerover /template/ Border#PART_BorderElement">
+            <Setter Property="BorderBrush" Value="{StaticResource BorderBright}"/>
+        </Style>
+
+        <Style Selector="TextBox:disabled /template/ Border#PART_BorderElement">
+            <Setter Property="Opacity" Value="0.4"/>
+        </Style>
+
+        <!-- ComboBox -->
+        <Style Selector="ComboBox">
+            <Setter Property="Background" Value="{StaticResource BgElevated}"/>
+            <Setter Property="Foreground" Value="{StaticResource TextPrimary}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource BorderColor}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Padding" Value="12,10"/>
+            <Setter Property="FontSize" Value="13"/>
+        </Style>
+
+        <Style Selector="ComboBox:focus /template/ Border#Background">
+            <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}"/>
+        </Style>
+
+        <Style Selector="ComboBox:pointerover /template/ Border#Background">
+            <Setter Property="BorderBrush" Value="{StaticResource BorderBright}"/>
+        </Style>
+
+        <Style Selector="ComboBox /template/ PathIcon#DropDownGlyph">
+            <Setter Property="Foreground" Value="{StaticResource TextSecondary}"/>
+        </Style>
+
+        <!-- ComboBoxItem -->
+        <Style Selector="ComboBoxItem">
+            <Setter Property="Background" Value="{StaticResource BgElevated}"/>
+            <Setter Property="Foreground" Value="{StaticResource TextPrimary}"/>
+            <Setter Property="Padding" Value="12,8"/>
+        </Style>
+
+        <Style Selector="ComboBoxItem:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="{StaticResource GlassBg}"/>
+        </Style>
+
+        <Style Selector="ComboBoxItem:selected /template/ ContentPresenter">
+            <Setter Property="Background" Value="{StaticResource AccentBrush}"/>
+        </Style>
+
+        <!-- CheckBox -->
+        <Style Selector="CheckBox">
+            <Setter Property="MinWidth" Value="0"/>
+            <Setter Property="Foreground" Value="{StaticResource TextPrimary}"/>
+        </Style>
+
+        <Style Selector="CheckBox /template/ Border#NormalRectangle">
+            <Setter Property="Background" Value="{StaticResource BgElevated}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource BorderColor}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="4"/>
+            <Setter Property="Width" Value="16"/>
+            <Setter Property="Height" Value="16"/>
+        </Style>
+
+        <Style Selector="CheckBox:checked /template/ Border#NormalRectangle">
+            <Setter Property="Background" Value="{StaticResource AccentBrush}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}"/>
+        </Style>
+
+        <Style Selector="CheckBox:pointerover /template/ Border#NormalRectangle">
+            <Setter Property="BorderBrush" Value="{StaticResource BorderBright}"/>
+        </Style>
+
+        <!-- ScrollBar -->
+        <Style Selector="ScrollBar">
+            <Setter Property="Background" Value="Transparent"/>
+        </Style>
+
+        <Style Selector="ScrollBar:vertical">
+            <Setter Property="Width" Value="8"/>
+        </Style>
+
+        <Style Selector="ScrollBar:horizontal">
+            <Setter Property="Height" Value="8"/>
+        </Style>
+
+        <Style Selector="ScrollBar /template/ Border#PART_Background">
+            <Setter Property="Background" Value="Transparent"/>
+        </Style>
+
+        <Style Selector="ScrollBar /template/ Thumb">
+            <Setter Property="Background" Value="{StaticResource BorderBright}"/>
+            <Setter Property="CornerRadius" Value="4"/>
+        </Style>
+
+        <Style Selector="ScrollBar /template/ Thumb:pointerover">
+            <Setter Property="Background" Value="#404040"/>
+        </Style>
+
+        <!-- ScrollViewer -->
+        <Style Selector="ScrollViewer">
+            <Setter Property="Background" Value="Transparent"/>
+        </Style>
+
+        <Style Selector="Button.NavIcon">
+            <Setter Property="Width" Value="40"/>
+            <Setter Property="Height" Value="40"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="CornerRadius" Value="8"/>
+        </Style>
+
+        <Style Selector="Button.NavIcon:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="{StaticResource GlassBg}"/>
+        </Style>
+
+        <Style Selector="Button.NavIcon.Active /template/ ContentPresenter">
+            <Setter Property="Background" Value="{StaticResource AccentBrush}"/>
+        </Style>
+
+        <Style Selector="TextBox.SearchBox">
+            <Setter Property="Background" Value="{StaticResource BgElevated}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource BorderColor}"/>
+        </Style>
+
+        <Style Selector="Border.TreeItem">
+            <Setter Property="Padding" Value="10,8"/>
+            <Setter Property="Margin" Value="0,1"/>
+            <Setter Property="CornerRadius" Value="6"/>
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+
+        <Style Selector="Border.TreeItem:pointerover">
+            <Setter Property="Background" Value="{StaticResource GlassBg}"/>
+        </Style>
+
+        <Style Selector="Border.TreeItem.Active">
+            <Setter Property="Background" Value="{StaticResource GlassBg}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource GlassBorder}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+        </Style>
+
+        <Style Selector="Border.TreeItem TextBlock">
+            <Setter Property="Foreground" Value="{StaticResource TextSecondary}"/>
+            <Setter Property="FontSize" Value="13"/>
+        </Style>
+
+        <Style Selector="Border.TreeItem.Active TextBlock">
+            <Setter Property="Foreground" Value="{StaticResource TextPrimary}"/>
+        </Style>
+
+        <Style Selector="Border.MethodBadge">
+            <Setter Property="Padding" Value="6,2"/>
+            <Setter Property="CornerRadius" Value="4"/>
+            <Setter Property="MinWidth" Value="50"/>
+        </Style>
+
+        <Style Selector="Border.MethodBadge TextBlock">
+            <Setter Property="FontSize" Value="9"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="HorizontalAlignment" Value="Center"/>
+            <Setter Property="LetterSpacing" Value="0.5"/>
+        </Style>
+
+        <Style Selector="Border.MethodGet">
+            <Setter Property="Background" Value="#1A10B981"/>
+        </Style>
+
+        <Style Selector="Border.MethodGet TextBlock">
+            <Setter Property="Foreground" Value="{StaticResource Success}"/>
+        </Style>
+
+        <Style Selector="Border.MethodPost">
+            <Setter Property="Background" Value="#1A3B82F6"/>
+        </Style>
+
+        <Style Selector="Border.MethodPost TextBlock">
+            <Setter Property="Foreground" Value="{StaticResource AccentBrush}"/>
+        </Style>
+
+        <Style Selector="Border.MethodPut">
+            <Setter Property="Background" Value="#1AF59E0B"/>
+        </Style>
+
+        <Style Selector="Border.MethodPut TextBlock">
+            <Setter Property="Foreground" Value="{StaticResource Warning}"/>
+        </Style>
+
+        <Style Selector="Border.MethodDelete">
+            <Setter Property="Background" Value="#1AEF4444"/>
+        </Style>
+
+        <Style Selector="Border.MethodDelete TextBlock">
+            <Setter Property="Foreground" Value="{StaticResource Error}"/>
+        </Style>
+
+        <Style Selector="Border.Badge">
+            <Setter Property="Background" Value="{StaticResource GlassBg}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource GlassBorder}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="4"/>
+            <Setter Property="Padding" Value="6,2"/>
+        </Style>
+
+        <Style Selector="Border.Badge TextBlock">
+            <Setter Property="Foreground" Value="{StaticResource TextSecondary}"/>
+            <Setter Property="FontSize" Value="10"/>
+            <Setter Property="FontWeight" Value="Medium"/>
+        </Style>
+
+        <Style Selector="ComboBox.MethodDropdown">
+            <Setter Property="Background" Value="{StaticResource AccentBrush}"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+        </Style>
+
+        <Style Selector="TextBox.UrlInput">
+            <Setter Property="Background" Value="{StaticResource BgMain}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource BorderBright}"/>
+            <Setter Property="FontFamily" Value="Cascadia Code, Consolas, monospace"/>
+        </Style>
+
+        <Style Selector="Button.SendButton">
+            <Setter Property="Background" Value="{StaticResource AccentBrush}"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Padding" Value="24,12"/>
+        </Style>
+
+        <Style Selector="Button.SendButton:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="#4A90F7"/>
+        </Style>
+
+        <Style Selector="Border.Tab">
+            <Setter Property="Padding" Value="20,14"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="BorderThickness" Value="0,0,0,2"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+        </Style>
+
+        <Style Selector="Border.Tab TextBlock">
+            <Setter Property="Foreground" Value="{StaticResource TextSecondary}"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="FontWeight" Value="Medium"/>
+        </Style>
+
+        <Style Selector="Border.Tab:pointerover">
+            <Setter Property="Background" Value="{StaticResource GlassBg}"/>
+        </Style>
+
+        <Style Selector="Border.Tab.Active">
+            <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}"/>
+        </Style>
+
+        <Style Selector="Border.Tab.Active TextBlock">
+            <Setter Property="Foreground" Value="{StaticResource AccentBrush}"/>
+        </Style>
+
+        <Style Selector="TextBlock.SectionTitle">
+            <Setter Property="Foreground" Value="{StaticResource TextSecondary}"/>
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="LetterSpacing" Value="0.5"/>
+        </Style>
+
+        <Style Selector="TextBox.KvInput">
+            <Setter Property="FontFamily" Value="Cascadia Code, Consolas, monospace"/>
+            <Setter Property="Padding" Value="12,8"/>
+        </Style>
+
+        <Style Selector="Button.IconButton">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Width" Value="32"/>
+            <Setter Property="Height" Value="32"/>
+        </Style>
+
+        <Style Selector="Button.AddRowButton">
+            <Setter Property="Background" Value="{StaticResource BgElevated}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource BorderBright}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Foreground" Value="{StaticResource TextSecondary}"/>
+            <Setter Property="HorizontalAlignment" Value="Stretch"/>
+        </Style>
+
+        <Style Selector="Button.AddRowButton:pointerover /template/ ContentPresenter">
+            <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}"/>
+            <Setter Property="Background" Value="{StaticResource GlassBg}"/>
+        </Style>
+
+        <Style Selector="Border.StatusBadge">
+            <Setter Property="Padding" Value="8,4"/>
+            <Setter Property="CornerRadius" Value="6"/>
+        </Style>
+
+        <Style Selector="Border.StatusSuccess">
+            <Setter Property="Background" Value="#1A10B981"/>
+            <Setter Property="BorderBrush" Value="#3310B981"/>
+            <Setter Property="BorderThickness" Value="1"/>
+        </Style>
+
+        <Style Selector="Button.ActionButton">
+            <Setter Property="Background" Value="{StaticResource BgMain}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource BorderBright}"/>
+            <Setter Property="Foreground" Value="{StaticResource TextSecondary}"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Padding" Value="14,8"/>
+        </Style>
+
+        <Style Selector="Button.ActionButton:pointerover /template/ ContentPresenter">
+            <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}"/>
+            <Setter Property="Background" Value="{StaticResource GlassBg}"/>
+        </Style>
+
+        <Style Selector="Button.ActionButton.Active /template/ ContentPresenter">
+            <Setter Property="Background" Value="{StaticResource AccentBrush}"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+        </Style>
+    </Application.Styles>
+</Application>

@@ -1,0 +1,333 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:AvalonHttp.ViewModels"
+        xmlns:models="using:AvalonHttp.Models"
+        xmlns:lucide="clr-namespace:LucideAvalonia;assembly=LucideAvalonia"
+        x:Class="AvalonHttp.Views.MainWindow"
+        x:DataType="vm:MainWindowViewModel"
+        Title="HTTP Client Pro"
+        Width="1400" Height="900"
+        MinWidth="1200" MinHeight="700"
+        Background="{DynamicResource BgDark}"
+        TransparencyLevelHint="AcrylicBlur"
+        ExtendClientAreaToDecorationsHint="True"
+        ExtendClientAreaChromeHints="PreferSystemChrome"
+        WindowStartupLocation="CenterScreen">
+
+    <Panel>
+        <!-- Custom Title Bar -->
+        <Border Height="40" 
+                VerticalAlignment="Top" 
+                Background="{DynamicResource BgElevated}"
+                BorderBrush="{DynamicResource BorderColor}"
+                BorderThickness="0,0,0,1"
+                IsHitTestVisible="False">
+            <Grid ColumnDefinitions="*, Auto" IsHitTestVisible="False">
+                <StackPanel Grid.Column="0" 
+                            Orientation="Horizontal" 
+                            Spacing="12" 
+                            Margin="16,0"
+                            VerticalAlignment="Center">
+                    <lucide:Lucide Icon="Zap" StrokeBrush="{DynamicResource AccentBrush}" Width="16" Height="16"/>
+                    <TextBlock Text="HTTP Client Pro" 
+                               Foreground="{DynamicResource TextPrimary}"
+                               FontWeight="SemiBold"
+                               FontSize="13"
+                               VerticalAlignment="Center"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- Main Content with top margin for title bar -->
+        <Grid Margin="0,40,0,0" ColumnDefinitions="60, 280, *">
+            
+            <!-- LEFT SIDEBAR - SLIM NAVIGATION -->
+            <Border Grid.Column="0" Background="{DynamicResource BgSidebarBrush}" 
+                    BorderBrush="{DynamicResource BorderColor}" BorderThickness="0,0,1,0">
+                <DockPanel>
+                    <StackPanel DockPanel.Dock="Top" Spacing="12" Margin="10,20">
+                        <Button Classes="NavIcon Active">
+                            <lucide:Lucide Icon="FolderOpen" StrokeBrush="White" Width="20" Height="20"/>
+                        </Button>
+                        <Button Classes="NavIcon">
+                            <lucide:Lucide Icon="Search" StrokeBrush="White" Width="20" Height="20"/>
+                        </Button>
+                        <Button Classes="NavIcon">
+                            <lucide:Lucide Icon="Zap" StrokeBrush="White" Width="20" Height="20"/>
+                        </Button>
+                        <Border Height="1" Background="{DynamicResource BorderColor}" Margin="5,8"/>
+                        <Button Classes="NavIcon">
+                            <lucide:Lucide Icon="ChartBar" StrokeBrush="White" Width="20" Height="20"/>
+                        </Button>
+                        <Button Classes="NavIcon">
+                            <lucide:Lucide Icon="Wrench" StrokeBrush="White" Width="20" Height="20"/>
+                        </Button>
+                    </StackPanel>
+                    
+                    <Button Classes="NavIcon" DockPanel.Dock="Bottom" Margin="10,0,10,20">
+                        <lucide:Lucide Icon="Settings" StrokeBrush="White" Width="20" Height="20"/>
+                    </Button>
+                </DockPanel>
+            </Border>
+
+            <!-- COLLECTIONS PANEL -->
+            <Border Grid.Column="1" Background="{DynamicResource BgSidebarBrush}" 
+                    BorderBrush="{DynamicResource BorderColor}" BorderThickness="0,0,1,0">
+                <DockPanel>
+                    <StackPanel DockPanel.Dock="Top" Margin="20,20,20,16" Spacing="12">
+                        <TextBlock Text="COLLECTIONS" 
+                                   Foreground="{DynamicResource TextSecondary}" 
+                                   FontSize="11" 
+                                   FontWeight="SemiBold"
+                                   LetterSpacing="1"/>
+                        <TextBox Watermark="Search collections..." Classes="SearchBox"/>
+                    </StackPanel>
+                    
+                    <ScrollViewer>
+                        <StackPanel Margin="12" Spacing="2">
+                            <!-- My Workspace Folder -->
+                            <Border Classes="TreeItem Folder">
+                                <StackPanel Orientation="Horizontal" Spacing="10">
+                                    <lucide:Lucide Icon="Folder" StrokeBrush="#A0A0A0" Width="16" Height="16"/>
+                                    <TextBlock Text="My Workspace"/>
+                                </StackPanel>
+                            </Border>
+                            
+                            <!-- API Testing Folder -->
+                            <Border Classes="TreeItem Folder" Margin="12,0,0,0">
+                                <Grid ColumnDefinitions="*, Auto">
+                                    <StackPanel Orientation="Horizontal" Spacing="10">
+                                        <lucide:Lucide Icon="Folder" StrokeBrush="#F59E0B" Width="16" Height="16"/>
+                                        <TextBlock Text="API Testing"/>
+                                    </StackPanel>
+                                    <Border Classes="Badge" Grid.Column="1">
+                                        <TextBlock Text="8"/>
+                                    </Border>
+                                </Grid>
+                            </Border>
+                            
+                            <!-- Get Users Request -->
+                            <Border Classes="TreeItem Request Active" Margin="36,0,0,0">
+                                <StackPanel Orientation="Horizontal" Spacing="10">
+                                    <Border Classes="MethodBadge MethodGet">
+                                        <TextBlock Text="GET"/>
+                                    </Border>
+                                    <TextBlock Text="Get Users"/>
+                                </StackPanel>
+                            </Border>
+                            
+                            <!-- Create User Request -->
+                            <Border Classes="TreeItem Request" Margin="36,0,0,0">
+                                <StackPanel Orientation="Horizontal" Spacing="10">
+                                    <Border Classes="MethodBadge MethodPost">
+                                        <TextBlock Text="POST"/>
+                                    </Border>
+                                    <TextBlock Text="Create User"/>
+                                </StackPanel>
+                            </Border>
+                            
+                            <!-- Update User Request -->
+                            <Border Classes="TreeItem Request" Margin="36,0,0,0">
+                                <StackPanel Orientation="Horizontal" Spacing="10">
+                                    <Border Classes="MethodBadge MethodPut">
+                                        <TextBlock Text="PUT"/>
+                                    </Border>
+                                    <TextBlock Text="Update User"/>
+                                </StackPanel>
+                            </Border>
+                            
+                            <!-- Delete User Request -->
+                            <Border Classes="TreeItem Request" Margin="36,0,0,0">
+                                <StackPanel Orientation="Horizontal" Spacing="10">
+                                    <Border Classes="MethodBadge MethodDelete">
+                                        <TextBlock Text="DELETE"/>
+                                    </Border>
+                                    <TextBlock Text="Delete User"/>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </ScrollViewer>
+                </DockPanel>
+            </Border>
+
+            <!-- MAIN CONTENT AREA -->
+            <Grid Grid.Column="2">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/> <!-- Request Bar -->
+                    <RowDefinition Height="Auto"/> <!-- Tabs -->
+                    <RowDefinition Height="*"/>    <!-- Content Split -->
+                </Grid.RowDefinitions>
+                
+                <!-- REQUEST BAR -->
+                <Border Grid.Row="0" Background="{DynamicResource BgElevated}" 
+                        BorderBrush="{DynamicResource BorderColor}" 
+                        BorderThickness="0,0,0,1" Padding="20,16">
+                    <StackPanel Spacing="12">
+                        <!-- Request Name -->
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <lucide:Lucide Icon="File" StrokeBrush="{DynamicResource TextSecondary}" Width="14" Height="14"/>
+                            <TextBox Text="Get Users" 
+                                     BorderThickness="0" 
+                                     Background="Transparent"
+                                     Foreground="{DynamicResource TextPrimary}"
+                                     FontWeight="Medium"
+                                     FontSize="13"
+                                     MinWidth="200"/>
+                        </StackPanel>
+                        
+                        <!-- URL Input Row -->
+                        <Grid ColumnDefinitions="Auto, *, Auto" ColumnSpacing="12">
+                            <ComboBox Grid.Column="0" 
+                                      SelectedIndex="0"
+                                      Classes="MethodDropdown"
+                                      MinWidth="90">
+                                <ComboBoxItem Content="GET"/>
+                                <ComboBoxItem Content="POST"/>
+                                <ComboBoxItem Content="PUT"/>
+                                <ComboBoxItem Content="DELETE"/>
+                                <ComboBoxItem Content="PATCH"/>
+                            </ComboBox>
+                            
+                            <TextBox Grid.Column="1" 
+                                     Text="https://jsonplaceholder.typicode.com/users"
+                                     Watermark="Enter request URL..."
+                                     Classes="UrlInput"/>
+                            
+                            <Button Grid.Column="2" 
+                                    Classes="SendButton"
+                                    Command="{Binding SendRequestCommand}">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <lucide:Lucide Icon="Send" StrokeBrush="White" Width="16" Height="16"/>
+                                    <TextBlock Text="Send"/>
+                                </StackPanel>
+                            </Button>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+                
+                <!-- TABS -->
+                <Border Grid.Row="1" Background="{DynamicResource BgElevated}" 
+                        BorderBrush="{DynamicResource BorderColor}" 
+                        BorderThickness="0,0,0,1">
+                    <StackPanel Orientation="Horizontal" Margin="20,0" Spacing="4">
+                        <Border Classes="Tab">
+                            <TextBlock Text="Params"/>
+                        </Border>
+                        <Border Classes="Tab">
+                            <TextBlock Text="Auth"/>
+                        </Border>
+                        <Border Classes="Tab Active">
+                            <TextBlock Text="Headers"/>
+                        </Border>
+                        <Border Classes="Tab">
+                            <TextBlock Text="Body"/>
+                        </Border>
+                    </StackPanel>
+                </Border>
+                
+                <!-- CONTENT SPLIT -->
+                <Grid Grid.Row="2" ColumnDefinitions="*, 1, *">
+                    <!-- REQUEST PANEL -->
+                    <ScrollViewer Grid.Column="0">
+                        <StackPanel Margin="20" Spacing="20">
+                            <TextBlock Text="REQUEST HEADERS" Classes="SectionTitle"/>
+                            
+                            <!-- KV Table Row -->
+                            <Grid ColumnDefinitions="40, *, *, 40" ColumnSpacing="12">
+                                <CheckBox Grid.Column="0" IsChecked="True"/>
+                                <TextBox Grid.Column="1" Text="Content-Type" Classes="KvInput"/>
+                                <TextBox Grid.Column="2" Text="application/json" Classes="KvInput"/>
+                                <Button Grid.Column="3" Classes="IconButton">
+                                    <lucide:Lucide Icon="Trash2" StrokeBrush="{DynamicResource TextMuted}" Width="16" Height="16"/>
+                                </Button>
+                            </Grid>
+                            
+                            <Button Classes="AddRowButton">
+                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                    <lucide:Lucide Icon="Plus" StrokeBrush="{DynamicResource TextSecondary}" Width="14" Height="14"/>
+                                    <TextBlock Text="Add Header"/>
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
+                    </ScrollViewer>
+                    
+                    <!-- SPLITTER -->
+                    <GridSplitter Grid.Column="1" Background="{DynamicResource BorderColor}"/>
+                    
+                    <!-- RESPONSE PANEL -->
+                    <Grid Grid.Column="2">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/> <!-- Status Bar -->
+                            <RowDefinition Height="Auto"/> <!-- Response Tabs -->
+                            <RowDefinition Height="*"/>    <!-- Response Content -->
+                        </Grid.RowDefinitions>
+                        
+                        <!-- RESPONSE STATUS BAR -->
+                        <Border Grid.Row="0" Background="{DynamicResource BgElevated}" 
+                                BorderBrush="{DynamicResource BorderColor}" 
+                                BorderThickness="0,0,0,1" Padding="16,12">
+                            <Grid ColumnDefinitions="Auto, Auto, Auto, *" ColumnSpacing="16">
+                                <!-- Status Badge -->
+                                <Border Grid.Column="0" Classes="StatusBadge StatusSuccess">
+                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                        <lucide:Lucide Icon="CheckCheck" StrokeBrush="{DynamicResource Success}" Width="14" Height="14"/>
+                                        <TextBlock Text="200 OK" Foreground="{DynamicResource Success}"/>
+                                    </StackPanel>
+                                </Border>
+                                
+                                <!-- Time -->
+                                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6">
+                                    <lucide:Lucide Icon="Clock" StrokeBrush="{DynamicResource AccentTeal}" Width="14" Height="14"/>
+                                    <TextBlock Text="247 ms" Foreground="{DynamicResource TextSecondary}" FontSize="12"/>
+                                </StackPanel>
+                                
+                                <!-- Size -->
+                                <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="6">
+                                    <lucide:Lucide Icon="Package" StrokeBrush="{DynamicResource AccentTeal}" Width="14" Height="14"/>
+                                    <TextBlock Text="5.2 KB" Foreground="{DynamicResource TextSecondary}" FontSize="12"/>
+                                </StackPanel>
+                                
+                                <!-- Actions -->
+                                <StackPanel Grid.Column="3" Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right">
+                                    <Button Classes="ActionButton Active" Content="Pretty"/>
+                                    <Button Classes="ActionButton" Content="Raw"/>
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+                        
+                        <!-- RESPONSE TABS -->
+                        <Border Grid.Row="1" Background="{DynamicResource BgElevated}" 
+                                BorderBrush="{DynamicResource BorderColor}" 
+                                BorderThickness="0,0,0,1">
+                            <StackPanel Orientation="Horizontal" Margin="20,0" Spacing="4">
+                                <Border Classes="Tab Active">
+                                    <TextBlock Text="Body"/>
+                                </Border>
+                                <Border Classes="Tab">
+                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                        <TextBlock Text="Headers"/>
+                                        <Border Classes="Badge">
+                                            <TextBlock Text="12"/>
+                                        </Border>
+                                    </StackPanel>
+                                </Border>
+                            </StackPanel>
+                        </Border>
+                        
+                        <!-- RESPONSE CONTENT -->
+                        <TextBox Grid.Row="2" 
+                                 Text="{Binding ResponseContent}"
+                                 IsReadOnly="True"
+                                 AcceptsReturn="True"
+                                 TextWrapping="Wrap"
+                                 Background="{DynamicResource BgDark}"
+                                 BorderThickness="0"
+                                 FontFamily="Cascadia Code, Consolas, monospace"
+                                 FontSize="13"
+                                 Padding="20"/>
+                    </Grid>
+                </Grid>
+            </Grid>
+        </Grid>
+    </Panel>
+</Window>
