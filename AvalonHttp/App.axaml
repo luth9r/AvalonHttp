@@ -2,6 +2,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              x:Class="AvalonHttp.App"
              xmlns:local="using:AvalonHttp"
+             xmlns:lucide="clr-namespace:LucideAvalonia;assembly=LucideAvalonia"
              RequestedThemeVariant="Dark">
 
     <Application.DataTemplates>
@@ -31,6 +32,11 @@
 
     <Application.Styles>
         <FluentTheme />
+        
+        <!-- TextBlock -->
+        <Style Selector="TextBlock">
+            <Setter Property="VerticalAlignment" Value="Center"></Setter>
+        </Style>
         
         <!-- Button -->
         <Style Selector="Button">
@@ -68,6 +74,7 @@
             <Setter Property="FontSize" Value="13"/>
             <Setter Property="CaretBrush" Value="{StaticResource AccentBrush}"/>
             <Setter Property="SelectionBrush" Value="{StaticResource AccentBrush}"/>
+            <Setter Property="VerticalAlignment" Value="Center"></Setter>
         </Style>
 
         <Style Selector="TextBox:focus /template/ Border#PART_BorderElement">
@@ -77,11 +84,39 @@
         </Style>
 
         <Style Selector="TextBox:pointerover /template/ Border#PART_BorderElement">
-            <Setter Property="BorderBrush" Value="{StaticResource BorderBright}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}"/>
         </Style>
 
         <Style Selector="TextBox:disabled /template/ Border#PART_BorderElement">
             <Setter Property="Opacity" Value="0.4"/>
+        </Style>
+        
+        <Style Selector="TextBox.ResponseBox">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="FontFamily" Value="Cascadia Code, Consolas, monospace"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Padding" Value="20"/>
+            <Setter Property="Foreground" Value="{StaticResource TextPrimary}"/>
+            <Setter Property="IsReadOnly" Value="True"/>
+            <Setter Property="Cursor" Value="Arrow"/>
+        </Style>
+        
+        <Style Selector="TextBox.ResponseBox:focus /template/ Border#PART_BorderElement">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+        </Style>
+        
+        <Style Selector="TextBox.ResponseBox:pointerover /template/ Border#PART_BorderElement">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+        </Style>
+        
+        <Style Selector="TextBox.ResponseBox">
+            <Setter Property="SelectionBrush" Value="#33FFFFFF"/>
+            <Setter Property="SelectionForegroundBrush" Value="{StaticResource TextPrimary}"/>
         </Style>
 
         <!-- ComboBox -->
@@ -225,14 +260,16 @@
         </Style>
 
         <Style Selector="Border.MethodBadge">
-            <Setter Property="Padding" Value="6,2"/>
             <Setter Property="CornerRadius" Value="4"/>
             <Setter Property="MinWidth" Value="50"/>
+            <Setter Property="MinHeight" Value="16"></Setter>
+            <Setter Property="VerticalAlignment" Value="Center"></Setter>
         </Style>
 
         <Style Selector="Border.MethodBadge TextBlock">
             <Setter Property="FontSize" Value="9"/>
             <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="VerticalAlignment" Value="Center"></Setter>
             <Setter Property="HorizontalAlignment" Value="Center"/>
             <Setter Property="LetterSpacing" Value="0.5"/>
         </Style>
@@ -394,5 +431,44 @@
             <Setter Property="Foreground" Value="White"/>
             <Setter Property="BorderBrush" Value="Transparent"/>
         </Style>
+        
+        <Style Selector="Button.ActionButton.Active /template/ ContentPresenter">
+            <Setter Property="Background" Value="{StaticResource AccentBrush}"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+        </Style>
+        
+        <!-- Response Copy Button -->
+        <Style Selector="Button.ResponseCopyBtn">
+            <Setter Property="Width" Value="36"/>
+            <Setter Property="Height" Value="36"/>
+            <Setter Property="Background" Value="{StaticResource BgElevated}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource BorderColor}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="6"/>
+            <Setter Property="Padding" Value="8"/>
+        </Style>
+
+        <!-- Icon -->
+        <Style Selector="Button.ResponseCopyBtn > lucide|Lucide">
+            <Setter Property="StrokeBrush" Value="{StaticResource TextSecondary}"/>
+            <Setter Property="Transitions">
+                <Transitions>
+                    <BrushTransition Property="StrokeBrush" Duration="0:0:0.2"/>
+                </Transitions>
+            </Setter>
+        </Style>
+
+        <!-- Icon - hover -->
+        <Style Selector="Button.ResponseCopyBtn:pointerover > lucide|Lucide">
+            <Setter Property="StrokeBrush" Value="{StaticResource AccentBrush}"/>
+        </Style>
+
+        <!-- Background - hover -->
+        <Style Selector="Button.ResponseCopyBtn:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="{StaticResource GlassBg}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}"/>
+        </Style>
     </Application.Styles>
+    
 </Application>

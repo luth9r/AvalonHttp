@@ -1,3 +1,4 @@
+using System;
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Data.Core;
@@ -6,6 +7,7 @@ using System.Linq;
 using Avalonia.Markup.Xaml;
 using AvalonHttp.ViewModels;
 using AvalonHttp.Views;
+using Avalonia.Controls;
 
 namespace AvalonHttp;
 
@@ -27,9 +29,25 @@ public partial class App : Application
             {
                 DataContext = new MainWindowViewModel(),
             };
+            
+            desktop.ShutdownMode = ShutdownMode.OnMainWindowClose;
+            
+            desktop.Exit += OnApplicationExit;
         }
 
         base.OnFrameworkInitializationCompleted();
+    }
+    
+    private void OnApplicationExit(object? sender, ControlledApplicationLifetimeExitEventArgs e)
+    {
+        if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+        {
+            // Dispose MainWindow DataContext
+            if (desktop.MainWindow?.DataContext is IDisposable disposable)
+            {
+                disposable.Dispose();
+            }
+        }
     }
 
     private void DisableAvaloniaDataAnnotationValidation()

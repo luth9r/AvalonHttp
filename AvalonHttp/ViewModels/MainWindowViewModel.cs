@@ -1,125 +1,100 @@
 ﻿using System;
 using System.Collections.ObjectModel;
-using System.Linq;
 using System.Net.Http;
-using System.Text.Json;
-using System.Threading.Tasks;
 using AvalonHttp.Models;
+using AvalonHttp.Services;
+using Avalonia;
+using Avalonia.Controls.ApplicationLifetimes;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using System.Threading.Tasks;
+using AvalonHttp.Services.Interfaces;
 
 namespace AvalonHttp.ViewModels;
 
-public partial class MainWindowViewModel : ViewModelBase
+public partial class MainWindowViewModel : ViewModelBase, IDisposable
 {
     [ObservableProperty]
-    private ObservableCollection<ApiCollection> _collections = new();
+    private ObservableCollection<ApiCollection> _collections;
 
     [ObservableProperty]
-    private ApiRequest? _selectedRequest;
+    private bool _isSidebarVisible = true;
 
     [ObservableProperty]
-    private string _requestBody = "";
+    private double _sidebarWidth = 280;
 
-    [ObservableProperty]
-    private string _responseContent = "No response yet";
+    public RequestViewModel RequestViewModel { get; }
 
-    [ObservableProperty]
-    private string _statusCode = "Ready";
-
-    [ObservableProperty]
-    private string _responseTime = "Time: --";
-
-    [ObservableProperty]
-    private string _responseHeaders = "";
-
-    [ObservableProperty]
-    private string _selectedMethodString = "GET";
-
-    public ObservableCollection<string> HttpMethods { get; } = new() 
-        { "GET", "POST", "PUT", "DELETE", "PATCH" };
+    public ObservableCollection<string> HttpMethods { get; } = new ObservableCollection<string>()
+    {
+        "GET",
+        "POST",
+        "PUT",
+        "DELETE",
+        "PATCH",
+        "HEAD",
+        "OPTIONS",
+    };
 
     public MainWindowViewModel()
     {
-        LoadSampleData();
+        // Initialize services
+        var httpService = new HttpService();
+        var urlParserService = new UrlParserService();
+
+        // Initialize ViewModels
+        var headersViewModel = new HeadersViewModel();
+        var queryParamsViewModel = new QueryParamsViewModel(urlParserService);
+        RequestViewModel = new RequestViewModel(httpService, headersViewModel, queryParamsViewModel);
+        
+        InitializeCollections();
     }
 
-    private void LoadSampleData()
+    private void InitializeCollections()
     {
-        var collection = new ApiCollection { Name = "JSONPlaceholder API" };
-        collection.Requests.Add(new ApiRequest 
-        { 
-            Name = "Get Posts", 
-            Url = "https://jsonplaceholder.typicode.com/posts", 
-            Method = Models.HttpMethod.GET 
-        });
-        collection.Requests.Add(new ApiRequest 
-        { 
-            Name = "Get Post #1", 
-            Url = "https://jsonplaceholder.typicode.com/posts/1", 
-            Method = Models.HttpMethod.GET 
-        });
-        
-        Collections.Add(collection);
-        SelectedRequest = Collections[0].Requests[0];
+        Collections = new ObservableCollection<ApiCollection>
+        {
+            new ApiCollection
+            {
+                Name = "API Testing",
+                Requests = new ObservableCollection<ApiRequest>
+                {
+                    new() { Name = "Get Users", Method = HttpMethod.Get, Url = "https://jsonplaceholder.typicode.com/users" },
+                    new() { Name = "Create User", Method = HttpMethod.Post, Url = "https://jsonplaceholder.typicode.com/users" }
+                }
+            }
+        };
     }
 
     [RelayCommand]
-    private async Task SendRequest()
+    private void ToggleSidebar()
     {
-        if (SelectedRequest == null) return;
-        
-        using var client = new HttpClient();
-        client.DefaultRequestHeaders.Add("User-Agent", "AvalonHttp/1.0");
-        
-        try 
+        IsSidebarVisible = !IsSidebarVisible;
+        SidebarWidth = IsSidebarVisible ? 280 : 0;
+    }
+
+    [RelayCommand]
+    private async Task CopyResponse()
+    {
+        if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
-            StatusCode = "Sending...";
-            ResponseContent = "Loading...";
-            
-            var startTime = DateTime.Now;
-            
-            HttpResponseMessage response = SelectedRequest.Method switch
+            var mainWindow = desktop.MainWindow;
+            if (mainWindow?.Clipboard != null)
             {
-                Models.HttpMethod.GET => await client.GetAsync(SelectedRequest.Url),
-                Models.HttpMethod.POST => await client.PostAsync(SelectedRequest.Url, 
-                    new StringContent(RequestBody, System.Text.Encoding.UTF8, "application/json")),
-                Models.HttpMethod.PUT => await client.PutAsync(SelectedRequest.Url, 
-                    new StringContent(RequestBody, System.Text.Encoding.UTF8, "application/json")),
-                Models.HttpMethod.DELETE => await client.DeleteAsync(SelectedRequest.Url),
-                _ => await client.GetAsync(SelectedRequest.Url)
-            };
-            
-            var elapsedTime = (DateTime.Now - startTime).TotalMilliseconds;
-            
-            var content = await response.Content.ReadAsStringAsync();
-            
-            // Форматуємо JSON
-            try
-            {
-                var jsonDoc = JsonDocument.Parse(content);
-                ResponseContent = JsonSerializer.Serialize(jsonDoc, new JsonSerializerOptions 
-                { 
-                    WriteIndented = true 
-                });
+                await mainWindow.Clipboard.SetTextAsync(RequestViewModel.ResponseContent);
             }
-            catch 
-            {
-                ResponseContent = content;
-            }
-            
-            StatusCode = $"{(int)response.StatusCode} {response.ReasonPhrase}";
-            ResponseTime = $"Time: {elapsedTime:F0}ms";
-            
-            var headers = string.Join("\n", 
-                response.Headers.Select(h => $"{h.Key}: {string.Join(", ", h.Value)}"));
-            ResponseHeaders = headers;
-        } 
-        catch (Exception ex) 
-        {
-            ResponseContent = $"Error: {ex.Message}\n\n{ex.StackTrace}";
-            StatusCode = "Error";
-            ResponseTime = "Time: --";
         }
+    }
+
+    public void Dispose()
+    {
+        if (RequestViewModel is IDisposable disposableRequest)
+        {
+            disposableRequest.Dispose();
+        }
+        
+        Collections.Clear();
+        
+        GC.SuppressFinalize(this);
     }
 }
