@@ -2,6 +2,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:AvalonHttp.ViewModels"
         xmlns:lucide="clr-namespace:LucideAvalonia;assembly=LucideAvalonia"
+        xmlns:controls="clr-namespace:AvalonHttp.Controls"
         x:Class="AvalonHttp.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
         Title="AvalonHttp"
@@ -92,13 +93,13 @@
                                    FontSize="11"
                                    FontWeight="SemiBold"
                                    LetterSpacing="1" />
-                        <TextBox Watermark="Search collections..." Classes="SearchBox" />
+                        <TextBox Watermark="Search collections..."/>
                     </StackPanel>
 
                     <ScrollViewer>
                         <StackPanel Margin="12" Spacing="2">
                             <!-- My Workspace Folder -->
-                            <Border Classes="TreeItem Folder">
+                            <Border Classes="TreeItem">
                                 <StackPanel Orientation="Horizontal" Spacing="10">
                                     <lucide:Lucide Icon="Folder" StrokeBrush="#A0A0A0" Width="16" Height="16" />
                                     <TextBlock Text="My Workspace" />
@@ -106,7 +107,7 @@
                             </Border>
 
                             <!-- API Testing Folder -->
-                            <Border Classes="TreeItem Folder" Margin="12,0,0,0">
+                            <Border Classes="TreeItem" Margin="12,0,0,0">
                                 <Grid ColumnDefinitions="*, Auto">
                                     <StackPanel Orientation="Horizontal" Spacing="10">
                                         <lucide:Lucide Icon="Folder" StrokeBrush="#F59E0B" Width="16" Height="16" />
@@ -119,7 +120,7 @@
                             </Border>
 
                             <!-- Requests -->
-                            <Border Classes="TreeItem Request Active" Margin="36,0,0,0">
+                            <Border Classes="TreeItem Active" Margin="36,0,0,0">
                                 <StackPanel Orientation="Horizontal" Spacing="10">
                                     <Border Classes="MethodBadge MethodGet">
                                         <TextBlock Text="GET" />
@@ -128,7 +129,7 @@
                                 </StackPanel>
                             </Border>
 
-                            <Border Classes="TreeItem Request" Margin="36,0,0,0">
+                            <Border Classes="TreeItem" Margin="36,0,0,0">
                                 <StackPanel Orientation="Horizontal" Spacing="10">
                                     <Border Classes="MethodBadge MethodPost">
                                         <TextBlock Text="POST" />
@@ -137,7 +138,7 @@
                                 </StackPanel>
                             </Border>
 
-                            <Border Classes="TreeItem Request" Margin="36,0,0,0">
+                            <Border Classes="TreeItem" Margin="36,0,0,0">
                                 <StackPanel Orientation="Horizontal" Spacing="10">
                                     <Border Classes="MethodBadge MethodPut">
                                         <TextBlock Text="PUT" />
@@ -146,7 +147,7 @@
                                 </StackPanel>
                             </Border>
 
-                            <Border Classes="TreeItem Request" Margin="36,0,0,0">
+                            <Border Classes="TreeItem" Margin="36,0,0,0">
                                 <StackPanel Orientation="Horizontal" Spacing="10">
                                     <Border Classes="MethodBadge MethodDelete">
                                         <TextBlock Text="DELETE" />
@@ -430,31 +431,32 @@
 
                         <!-- RESPONSE CONTENT -->
                         <Border Grid.Row="2" Background="{DynamicResource BgMain}" Padding="20">
-                            <Border Background="{DynamicResource BgDark}"
+                            <Border Background="Transparent"
                                     BorderBrush="{DynamicResource BorderColor}"
                                     BorderThickness="1"
-                                    CornerRadius="8">
+                                    CornerRadius="8"
+                                    ClipToBounds="True">
                                 <Grid>
                                     <Button Classes="ResponseCopyBtn"
                                             Command="{Binding CopyResponseCommand}"
                                             HorizontalAlignment="Right"
                                             VerticalAlignment="Top"
-                                            Margin="12"
+                                            Margin="10, 12, 20, 10"
                                             ZIndex="100"
                                             ToolTip.Tip="Copy to clipboard">
                                         <lucide:Lucide Icon="Copy" Width="16" Height="16" />
                                     </Button>
 
-                                    <ScrollViewer>
-                                        <TextBox Classes="ResponseBox"
-                                                 Text="{Binding RequestViewModel.ResponseContent}"
-                                                 AcceptsReturn="True"
-                                                 TextWrapping="Wrap"
-                                                 Margin="0" />
-                                    </ScrollViewer>
+                                    <controls:JsonEditor 
+                                        Text="{Binding RequestViewModel.ResponseContent, Mode=OneWay}"
+                                        MinWidth="100"
+                                        MinHeight="100"
+                                        HorizontalAlignment="Stretch"
+                                        VerticalAlignment="Stretch" />
                                 </Grid>
                             </Border>
                         </Border>
+
                     </Grid>
                 </Grid>
             </Grid>
