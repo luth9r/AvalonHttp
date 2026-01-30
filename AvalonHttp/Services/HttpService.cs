@@ -22,10 +22,21 @@ public class HttpService : IHttpService
     {
         using var request = new HttpRequestMessage(GetHttpMethod(method), url);
 
+        bool hasUserAgent = false;
+        
         // Add headers
         foreach (var header in headers)
         {
+            if (header.Key.Equals("User-Agent", StringComparison.OrdinalIgnoreCase))
+            {
+                hasUserAgent = true;
+            }
             request.Headers.TryAddWithoutValidation(header.Key, header.Value);
+        }
+        
+        if (!hasUserAgent)
+        {
+            request.Headers.TryAddWithoutValidation("User-Agent", "AvalonHttp/1.0");
         }
 
         // Add body if exists

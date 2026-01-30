@@ -93,7 +93,7 @@
                                    FontSize="11"
                                    FontWeight="SemiBold"
                                    LetterSpacing="1" />
-                        <TextBox Watermark="Search collections..."/>
+                        <TextBox Watermark="Search collections..." />
                     </StackPanel>
 
                     <ScrollViewer>
@@ -216,22 +216,34 @@
                         BorderThickness="0,0,0,1">
                     <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
                         <StackPanel Orientation="Horizontal" Margin="20,0" Spacing="4">
-                            <Border Classes="Tab">
+                            <Border Classes="Tab"
+                                    Classes.Active="{Binding SelectedRequestTab, Converter={x:Static ObjectConverters.Equal}, ConverterParameter=Params}"
+                                    PointerPressed="SelectRequestTab" Tag="Params">
                                 <TextBlock Text="Params" />
                             </Border>
-                            <Border Classes="Tab">
+                            <Border Classes="Tab"
+                                    Classes.Active="{Binding SelectedRequestTab, Converter={x:Static ObjectConverters.Equal}, ConverterParameter=Auth}"
+                                    PointerPressed="SelectRequestTab" Tag="Auth">
                                 <TextBlock Text="Auth" />
                             </Border>
-                            <Border Classes="Tab Active">
+                            <Border Classes="Tab"
+                                    Classes.Active="{Binding SelectedRequestTab, Converter={x:Static ObjectConverters.Equal}, ConverterParameter=Headers}"
+                                    PointerPressed="SelectRequestTab" Tag="Headers">
                                 <TextBlock Text="Headers" />
                             </Border>
-                            <Border Classes="Tab">
+                            <Border Classes="Tab"
+                                    Classes.Active="{Binding SelectedRequestTab, Converter={x:Static ObjectConverters.Equal}, ConverterParameter=Body}"
+                                    PointerPressed="SelectRequestTab" Tag="Body">
                                 <TextBlock Text="Body" />
                             </Border>
-                            <Border Classes="Tab">
+                            <Border Classes="Tab"
+                                    Classes.Active="{Binding SelectedRequestTab, Converter={x:Static ObjectConverters.Equal}, ConverterParameter=PreRequest}"
+                                    PointerPressed="SelectRequestTab" Tag="PreRequest">
                                 <TextBlock Text="Pre-request" />
                             </Border>
-                            <Border Classes="Tab">
+                            <Border Classes="Tab"
+                                    Classes.Active="{Binding SelectedRequestTab, Converter={x:Static ObjectConverters.Equal}, ConverterParameter=Tests}"
+                                    PointerPressed="SelectRequestTab" Tag="Tests">
                                 <TextBlock Text="Tests" />
                             </Border>
                         </StackPanel>
@@ -247,86 +259,139 @@
                     </Grid.ColumnDefinitions>
 
                     <!-- LEFT: REQUEST PANEL -->
+                    <!-- LEFT: REQUEST PANEL -->
                     <ScrollViewer Grid.Column="0" Background="{DynamicResource BgMain}">
                         <StackPanel Margin="20" Spacing="24">
-                            <TextBlock Text="REQUEST HEADERS" Classes="SectionTitle" />
 
-                            <!-- Headers Table -->
-                            <ItemsControl ItemsSource="{Binding RequestViewModel.HeadersViewModel.Headers}">
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate>
-                                        <Grid ColumnSpacing="12" Margin="0,6">
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="40" />
-                                                <ColumnDefinition Width="*" MinWidth="80" />
-                                                <ColumnDefinition Width="*" MinWidth="80" />
-                                                <ColumnDefinition Width="40" />
-                                            </Grid.ColumnDefinitions>
+                            <!-- PARAMS TAB CONTENT -->
+                            <StackPanel
+                                IsVisible="{Binding SelectedRequestTab, Converter={x:Static ObjectConverters.Equal}, ConverterParameter=Params}">
+                                <TextBlock Text="QUERY PARAMETERS" Classes="SectionTitle" />
 
-                                            <CheckBox Grid.Column="0" IsChecked="{Binding IsEnabled}" />
-                                            <TextBox Grid.Column="1" Text="{Binding Key}" Classes="KvInput"
-                                                     Watermark="Header name" />
-                                            <TextBox Grid.Column="2" Text="{Binding Value}" Classes="KvInput"
-                                                     Watermark="Value" />
-                                            <Button Grid.Column="3" Classes="IconButton"
-                                                    Command="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).RequestViewModel.HeadersViewModel.RemoveHeaderCommand}"
-                                                    CommandParameter="{Binding}">
-                                                <lucide:Lucide Icon="Trash2" StrokeBrush="{DynamicResource TextMuted}"
-                                                               Width="16" Height="16" />
-                                            </Button>
-                                        </Grid>
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                            </ItemsControl>
+                                <ItemsControl ItemsSource="{Binding RequestViewModel.QueryParamsViewModel.Parameters}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Grid ColumnSpacing="12" Margin="0,6">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="40" />
+                                                    <ColumnDefinition Width="*" MinWidth="60" />
+                                                    <ColumnDefinition Width="*" MinWidth="60" />
+                                                    <ColumnDefinition Width="40" />
+                                                </Grid.ColumnDefinitions>
 
-                            <Button Classes="AddRowButton" 
-                                    Command="{Binding RequestViewModel.HeadersViewModel.AddHeaderCommand}">
-                                <StackPanel Orientation="Horizontal" Spacing="6">
-                                    <lucide:Lucide Icon="Plus" StrokeBrush="{DynamicResource TextSecondary}" Width="14"
-                                                   Height="14" />
-                                    <TextBlock Text="Add Header" />
-                                </StackPanel>
-                            </Button>
+                                                <CheckBox Grid.Column="0" IsChecked="{Binding IsEnabled}" />
+                                                <TextBox Grid.Column="1" Text="{Binding Key}" Classes="KvInput"
+                                                         Watermark="Param name" />
+                                                <TextBox Grid.Column="2" Text="{Binding Value}" Classes="KvInput"
+                                                         Watermark="Value" />
+                                                <Button Grid.Column="3" Classes="IconButton"
+                                                        Command="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).RequestViewModel.QueryParamsViewModel.RemoveParameterCommand}"
+                                                        CommandParameter="{Binding}">
+                                                    <lucide:Lucide Icon="Trash2"
+                                                                   StrokeBrush="{DynamicResource TextMuted}"
+                                                                   Width="16" Height="16" />
+                                                </Button>
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
 
-                            <!-- Query Parameters Section -->
-                            <TextBlock Text="QUERY PARAMETERS" Classes="SectionTitle" Margin="0,16,0,0" />
+                                <Button Classes="AddRowButton"
+                                        Margin="0,12,0,0"
+                                        Command="{Binding RequestViewModel.QueryParamsViewModel.AddParameterCommand}">
+                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                        <lucide:Lucide Icon="Plus" StrokeBrush="{DynamicResource TextSecondary}"
+                                                       Width="14" Height="14" />
+                                        <TextBlock Text="Add Parameter" VerticalAlignment="Center" />
+                                    </StackPanel>
+                                </Button>
+                            </StackPanel>
 
-                            <!-- Query Parameters -->
-                            <ItemsControl ItemsSource="{Binding RequestViewModel.QueryParamsViewModel.Parameters}">
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate>
-                                        <Grid ColumnSpacing="12" Margin="0,6">
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="40" />
-                                                <ColumnDefinition Width="*" MinWidth="60" />
-                                                <ColumnDefinition Width="*" MinWidth="60" />
-                                                <ColumnDefinition Width="40" />
-                                            </Grid.ColumnDefinitions>
+                            <!-- AUTH TAB CONTENT -->
+                            <StackPanel
+                                IsVisible="{Binding SelectedRequestTab, Converter={x:Static ObjectConverters.Equal}, ConverterParameter=Auth}">
+                                <TextBlock Text="AUTHORIZATION" Classes="SectionTitle" />
+                                <TextBlock Text="Authentication features coming soon..."
+                                           Foreground="{DynamicResource TextMuted}"
+                                           FontSize="13"
+                                           Margin="0,12,0,0" />
+                            </StackPanel>
 
-                                            <CheckBox Grid.Column="0" IsChecked="{Binding IsEnabled}" />
-                                            <TextBox Grid.Column="1" Text="{Binding Key}" Classes="KvInput"
-                                                     Watermark="Param name" />
-                                            <TextBox Grid.Column="2" Text="{Binding Value}" Classes="KvInput"
-                                                     Watermark="Value" />
-                                            <Button Grid.Column="3" Classes="IconButton"
-                                                    Command="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).RequestViewModel.QueryParamsViewModel.RemoveParameterCommand}"
-                                                    CommandParameter="{Binding}">
-                                                <lucide:Lucide Icon="Trash2" StrokeBrush="{DynamicResource TextMuted}"
-                                                               Width="16" Height="16" />
-                                            </Button>
-                                        </Grid>
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                            </ItemsControl>
+                            <!-- HEADERS TAB CONTENT -->
+                            <StackPanel
+                                IsVisible="{Binding SelectedRequestTab, Converter={x:Static ObjectConverters.Equal}, ConverterParameter=Headers}">
+                                <TextBlock Text="REQUEST HEADERS" Classes="SectionTitle" />
 
-                            <Button Classes="AddRowButton" 
-                                    Command="{Binding RequestViewModel.QueryParamsViewModel.AddParameterCommand}">
-                                <StackPanel Orientation="Horizontal" Spacing="6">
-                                    <lucide:Lucide Icon="Plus" StrokeBrush="{DynamicResource TextSecondary}" Width="14"
-                                                   Height="14" />
-                                    <TextBlock Text="Add Parameter" />
-                                </StackPanel>
-                            </Button>
+                                <ItemsControl ItemsSource="{Binding RequestViewModel.HeadersViewModel.Headers}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Grid ColumnSpacing="12" Margin="0,6">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="40" />
+                                                    <ColumnDefinition Width="*" MinWidth="80" />
+                                                    <ColumnDefinition Width="*" MinWidth="80" />
+                                                    <ColumnDefinition Width="40" />
+                                                </Grid.ColumnDefinitions>
+
+                                                <CheckBox Grid.Column="0" IsChecked="{Binding IsEnabled}" />
+                                                <TextBox Grid.Column="1" Text="{Binding Key}" Classes="KvInput"
+                                                         Watermark="Header name" />
+                                                <TextBox Grid.Column="2" Text="{Binding Value}" Classes="KvInput"
+                                                         Watermark="Value" />
+                                                <Button Grid.Column="3" Classes="IconButton"
+                                                        Command="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).RequestViewModel.HeadersViewModel.RemoveHeaderCommand}"
+                                                        CommandParameter="{Binding}">
+                                                    <lucide:Lucide Icon="Trash2"
+                                                                   StrokeBrush="{DynamicResource TextMuted}"
+                                                                   Width="16" Height="16" />
+                                                </Button>
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+
+                                <Button Classes="AddRowButton"
+                                        Margin="0,12,0,0"
+                                        Command="{Binding RequestViewModel.HeadersViewModel.AddHeaderCommand}">
+                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                        <lucide:Lucide Icon="Plus" StrokeBrush="{DynamicResource TextSecondary}"
+                                                       Width="14" Height="14" />
+                                        <TextBlock Text="Add Header" />
+                                    </StackPanel>
+                                </Button>
+                            </StackPanel>
+
+                            <!-- BODY TAB CONTENT -->
+                            <StackPanel
+                                IsVisible="{Binding SelectedRequestTab, Converter={x:Static ObjectConverters.Equal}, ConverterParameter=Body}">
+                                <TextBlock Text="REQUEST BODY" Classes="SectionTitle" />
+
+                                <controls:JsonBodyEditor 
+                                    Text="{Binding RequestViewModel.RequestBody}"
+                                    MinHeight="300"
+                                    Margin="0,12,0,0" />
+                            </StackPanel>
+
+                            <!-- PRE-REQUEST TAB CONTENT -->
+                            <StackPanel
+                                IsVisible="{Binding SelectedRequestTab, Converter={x:Static ObjectConverters.Equal}, ConverterParameter=PreRequest}">
+                                <TextBlock Text="PRE-REQUEST SCRIPT" Classes="SectionTitle" />
+                                <TextBlock Text="Pre-request script features coming soon..."
+                                           Foreground="{DynamicResource TextMuted}"
+                                           FontSize="13"
+                                           Margin="0,12,0,0" />
+                            </StackPanel>
+
+                            <!-- TESTS TAB CONTENT -->
+                            <StackPanel
+                                IsVisible="{Binding SelectedRequestTab, Converter={x:Static ObjectConverters.Equal}, ConverterParameter=Tests}">
+                                <TextBlock Text="TESTS" Classes="SectionTitle" />
+                                <TextBlock Text="Test script features coming soon..."
+                                           Foreground="{DynamicResource TextMuted}"
+                                           FontSize="13"
+                                           Margin="0,12,0,0" />
+                            </StackPanel>
+
                         </StackPanel>
                     </ScrollViewer>
 
@@ -385,8 +450,22 @@
                                 </StackPanel>
 
                                 <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="6">
-                                    <Button Classes="ActionButton Active" Content="Pretty" MinWidth="0" Padding="12,8" />
-                                    <Button Classes="ActionButton" Content="Raw" MinWidth="0" Padding="12,8" />
+                                    <!-- Pretty Button -->
+                                    <Button Command="{Binding RequestViewModel.SetPrettyFormatCommand}"
+                                            Classes="ActionButton"
+                                            Classes.Active="{Binding RequestViewModel.IsPrettyActive}"
+                                            Content="Pretty"
+                                            MinWidth="0"
+                                            Padding="12,8" />
+
+                                    <!-- Raw Button -->
+                                    <Button Command="{Binding RequestViewModel.SetRawFormatCommand}"
+                                            Classes="ActionButton"
+                                            Classes.Active="{Binding RequestViewModel.IsRawActive}"
+                                            Content="Raw"
+                                            MinWidth="0"
+                                            Padding="12,8" />
+
                                     <Button Classes="ActionButton" ToolTip.Tip="Preview" MinWidth="0" Padding="8">
                                         <lucide:Lucide Icon="Eye" StrokeBrush="{DynamicResource TextSecondary}"
                                                        Width="14" Height="14" />
@@ -405,7 +484,7 @@
                                 BorderThickness="0,0,0,1">
                             <StackPanel Orientation="Horizontal" Margin="20,0" Spacing="4">
                                 <Border Classes="Tab Active">
-                                    <TextBlock Text="Body"  />
+                                    <TextBlock Text="Body" />
                                 </Border>
                                 <Border Classes="Tab">
                                     <StackPanel Orientation="Horizontal" Spacing="6">
@@ -440,14 +519,14 @@
                                     <Button Classes="ResponseCopyBtn"
                                             Command="{Binding CopyResponseCommand}"
                                             HorizontalAlignment="Right"
-                                            VerticalAlignment="Top"
-                                            Margin="10, 12, 20, 10"
+                                            VerticalAlignment="Bottom"
+                                            Margin="10, 12, 20, 20"
                                             ZIndex="100"
                                             ToolTip.Tip="Copy to clipboard">
                                         <lucide:Lucide Icon="Copy" Width="16" Height="16" />
                                     </Button>
 
-                                    <controls:JsonEditor 
+                                    <controls:JsonEditor
                                         Text="{Binding RequestViewModel.ResponseContent, Mode=OneWay}"
                                         MinWidth="100"
                                         MinHeight="100"
@@ -456,7 +535,6 @@
                                 </Grid>
                             </Border>
                         </Border>
-
                     </Grid>
                 </Grid>
             </Grid>

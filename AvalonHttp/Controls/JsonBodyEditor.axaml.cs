@@ -1,28 +1,26 @@
 ﻿using System;
-using System.Linq;
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Input;
 using Avalonia.Markup.Xaml;
 using Avalonia.Media;
 using AvaloniaEdit;
 using AvaloniaEdit.Document;
 using AvaloniaEdit.Editing;
+using AvaloniaEdit.Indentation;
+using AvaloniaEdit.Indentation.CSharp;
 using AvaloniaEdit.TextMate;
 using TextMateSharp.Grammars;
 
 namespace AvalonHttp.Controls;
 
-public partial class JsonEditor : UserControl
+public partial class JsonBodyEditor : UserControl
 {
     public static readonly StyledProperty<string> TextProperty =
-        AvaloniaProperty.Register<JsonEditor, string>(
+        AvaloniaProperty.Register<JsonBodyEditor, string>(
             nameof(Text), 
             string.Empty,
             defaultBindingMode: Avalonia.Data.BindingMode.TwoWay);
-    
-    public static readonly StyledProperty<bool> HasContentProperty =
-        AvaloniaProperty.Register<JsonEditor, bool>(
-            nameof(HasContent));
     
     public string Text
     {
@@ -30,17 +28,11 @@ public partial class JsonEditor : UserControl
         set => SetValue(TextProperty, value);
     }
     
-    public bool HasContent
-    {
-        get => GetValue(HasContentProperty);
-        private set => SetValue(HasContentProperty, value);
-    }
-    
     private TextEditor? _editor;
     private TextMate.Installation? _textMateInstallation;
     private bool _isUpdating;
 
-    public JsonEditor()
+    public JsonBodyEditor()
     {
         InitializeComponent();
     }
@@ -63,15 +55,21 @@ public partial class JsonEditor : UserControl
                 ShowSpaces = false,
                 ShowTabs = false,
                 ShowEndOfLine = false,
-                HighlightCurrentLine = false,
                 IndentationSize = 2,
                 ConvertTabsToSpaces = true,
                 EnableHyperlinks = false,
                 EnableEmailHyperlinks = false,
-                AllowScrollBelowDocument = false
+                AllowScrollBelowDocument = false,
+                EnableRectangularSelection = true,
+                EnableTextDragDrop = true
             };
             
+            _editor.TextArea.IndentationStrategy = new CSharpIndentationStrategy();
+            
             SetupTextMate();
+
+            _editor.TextArea.TextEntering += OnTextEntering;
+            _editor.TextArea.TextEntered += OnTextEntered;
             
             _editor.TextChanged += (_, _) =>
             {
@@ -87,6 +85,88 @@ public partial class JsonEditor : UserControl
         }
     }
     
+    private void OnTextEntering(object? sender, TextInputEventArgs e)
+    {
+        if (_editor == null || e.Text == null || e.Text.Length == 0) return;
+
+        char nextChar = GetNextChar();
+        
+        // If next character is closing bracket and we are typing the same bracket
+        if (e.Text[0] == nextChar && (nextChar == ')' || nextChar == ']' || nextChar == '}' || nextChar == '"'))
+        {
+            e.Handled = true;
+            
+            int newOffset = _editor.TextArea.Caret.Offset + 1;
+            if (newOffset <= _editor.Document.TextLength)
+            {
+                _editor.TextArea.Caret.Offset = newOffset;
+            }
+        }
+    }
+
+    private void OnTextEntered(object? sender, TextInputEventArgs e)
+    {
+        if (_editor == null || e.Text == null || e.Text.Length == 0) return;
+
+        var caret = _editor.TextArea.Caret;
+        var document = _editor.Document;
+        
+        char typedChar = e.Text[0];
+        
+        // Automatically close brackets and quotes
+        if (typedChar != '\n' && typedChar != '\r')
+        {
+            string? closingChar = typedChar switch
+            {
+                '{' => "}",
+                '[' => "]",
+                '(' => ")",
+                '"' => "\"",
+                _ => null
+            };
+
+            if (closingChar != null)
+            {
+                int offset = caret.Offset;
+                
+                // Do not close quotes if next character is not space/newline
+                if (typedChar == '"')
+                {
+                    char nextChar = GetNextChar();
+                    if (nextChar != ' ' && nextChar != '\0' && nextChar != '\n' && nextChar != '\r')
+                    {
+                        return;
+                    }
+                }
+                
+                if (offset <= document.TextLength)
+                {
+                    document.Insert(offset, closingChar);
+                    if (offset <= document.TextLength)
+                    {
+                        caret.Offset = offset;
+                    }
+                }
+            }
+        }
+    }
+
+    /// <summary>
+    /// Retrieves the next character at the current caret position within the editor's document.
+    /// </summary>
+    /// <returns>The character at the current caret position, or '\0' if no character is available or the editor is uninitialized.</returns>
+    private char GetNextChar()
+    {
+        if (_editor == null) return '\0';
+        
+        int offset = _editor.TextArea.Caret.Offset;
+        if (offset < _editor.Document.TextLength)
+        {
+            return _editor.Document.GetCharAt(offset);
+        }
+        return '\0';
+    }
+    
     private void OnEditorLoaded(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
         if (_editor?.TextArea == null) return;
@@ -97,10 +177,10 @@ public partial class JsonEditor : UserControl
             {
                 lineNumbers.SetValue(TextBlock.FontFamilyProperty, _editor.FontFamily);
                 lineNumbers.SetValue(TextBlock.FontSizeProperty, _editor.FontSize);
-                lineNumbers.Margin = new Thickness(0, 1, 8, 0); 
+                lineNumbers.Margin = new Thickness(0, 1, 8, 0);
             }
         }
-        
+
         _editor.TextArea.TextView.Redraw();
     }
     
@@ -131,8 +211,6 @@ public partial class JsonEditor : UserControl
         {
             var newText = change.GetNewValue<string>() ?? string.Empty;
             
-            HasContent = !string.IsNullOrWhiteSpace(newText);
-            
             _isUpdating = true;
             
             try
@@ -145,7 +223,7 @@ public partial class JsonEditor : UserControl
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"JsonEditor update error: {ex.Message}");
+                Console.WriteLine($"JsonBodyEditor update error: {ex.Message}");
             }
             finally
             {

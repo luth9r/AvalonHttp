@@ -1,6 +1,8 @@
 using System;
 using AvalonHttp.Controls;
+using AvalonHttp.ViewModels;
 using Avalonia.Controls;
+using Avalonia.Input;
 using Avalonia.Interactivity;
 
 namespace AvalonHttp.Views;
@@ -10,12 +12,13 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
-        
-        var assembly = typeof(JsonEditor).Assembly;
-        string[] resources = assembly.GetManifestResourceNames();
-        foreach (var res in resources)
+    }
+    
+    private void SelectRequestTab(object? sender, PointerPressedEventArgs e)
+    {
+        if (sender is Border border && border.Tag is string tabName && DataContext is MainWindowViewModel vm)
         {
-            System.Diagnostics.Debug.WriteLine($"Found resource: {res}");
+            vm.SelectRequestTabCommand.Execute(tabName);
         }
     }
     
