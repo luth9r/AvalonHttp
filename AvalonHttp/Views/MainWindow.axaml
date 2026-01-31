@@ -221,6 +221,7 @@
                                     PointerPressed="SelectRequestTab" Tag="Params">
                                 <TextBlock Text="Params" />
                             </Border>
+
                             <Border Classes="Tab"
                                     Classes.Active="{Binding SelectedRequestTab, Converter={x:Static ObjectConverters.Equal}, ConverterParameter=Auth}"
                                     PointerPressed="SelectRequestTab" Tag="Auth">
@@ -310,11 +311,107 @@
                             <!-- AUTH TAB CONTENT -->
                             <StackPanel
                                 IsVisible="{Binding SelectedRequestTab, Converter={x:Static ObjectConverters.Equal}, ConverterParameter=Auth}">
-                                <TextBlock Text="AUTHORIZATION" Classes="SectionTitle" />
-                                <TextBlock Text="Authentication features coming soon..."
-                                           Foreground="{DynamicResource TextMuted}"
-                                           FontSize="13"
-                                           Margin="0,12,0,0" />
+                                <TextBlock Text="AUTHORIZATION" Classes="SectionTitle" Margin="0,0,0,12" />
+
+                                <!-- Auth Type Selector -->
+                                <TextBlock Text="Auth Type"
+                                           Foreground="{DynamicResource TextSecondary}"
+                                           FontSize="12"
+                                           Margin="0,0,0,6" />
+                                <ComboBox SelectedItem="{Binding RequestViewModel.AuthViewModel.SelectedAuthType}"
+                                          ItemsSource="{Binding RequestViewModel.AuthViewModel.AuthTypes}"
+                                          MinWidth="200"
+                                          Margin="0,0,0,20" />
+
+                                <!-- BASIC AUTH -->
+                                <StackPanel
+                                    IsVisible="{Binding RequestViewModel.AuthViewModel.SelectedAuthType, Converter={x:Static ObjectConverters.Equal}, ConverterParameter='Basic Auth'}"
+                                    Spacing="12">
+                                    <TextBlock Text="Username"
+                                               Foreground="{DynamicResource TextSecondary}"
+                                               FontSize="12" />
+                                    <TextBox Text="{Binding RequestViewModel.AuthViewModel.BasicUsername}"
+                                             Watermark="Enter username"
+                                             Classes="KvInput" />
+
+                                    <TextBlock Text="Password"
+                                               Foreground="{DynamicResource TextSecondary}"
+                                               FontSize="12" />
+                                    <TextBox Text="{Binding RequestViewModel.AuthViewModel.BasicPassword}"
+                                             Watermark="Enter password"
+                                             PasswordChar="●"
+                                             Classes="KvInput" />
+                                </StackPanel>
+
+                                <!-- BEARER TOKEN -->
+                                <StackPanel
+                                    IsVisible="{Binding RequestViewModel.AuthViewModel.SelectedAuthType, Converter={x:Static ObjectConverters.Equal}, ConverterParameter='Bearer Token'}"
+                                    Spacing="12">
+                                    <TextBlock Text="Token"
+                                               Foreground="{DynamicResource TextSecondary}"
+                                               FontSize="12" />
+                                    <TextBox Text="{Binding RequestViewModel.AuthViewModel.BearerToken}"
+                                             Watermark="Enter bearer token"
+                                             Classes="KvInput"
+                                             MinHeight="80"
+                                             AcceptsReturn="True"
+                                             TextWrapping="Wrap" />
+                                </StackPanel>
+
+                                <!-- API KEY -->
+                                <StackPanel
+                                    IsVisible="{Binding RequestViewModel.AuthViewModel.SelectedAuthType, Converter={x:Static ObjectConverters.Equal}, ConverterParameter='API Key'}"
+                                    Spacing="12">
+                                    <TextBlock Text="Key Name"
+                                               Foreground="{DynamicResource TextSecondary}"
+                                               FontSize="12" />
+                                    <TextBox Text="{Binding RequestViewModel.AuthViewModel.ApiKeyName}"
+                                             Watermark="e.g. X-API-Key"
+                                             Classes="KvInput" />
+
+                                    <TextBlock Text="Key Value"
+                                               Foreground="{DynamicResource TextSecondary}"
+                                               FontSize="12" />
+                                    <TextBox Text="{Binding RequestViewModel.AuthViewModel.ApiKeyValue}"
+                                             Watermark="Enter API key"
+                                             Classes="KvInput" />
+
+                                    <TextBlock Text="Add To"
+                                               Foreground="{DynamicResource TextSecondary}"
+                                               FontSize="12" />
+                                    <ComboBox SelectedItem="{Binding RequestViewModel.AuthViewModel.ApiKeyLocation}"
+                                              ItemsSource="{Binding RequestViewModel.AuthViewModel.ApiKeyLocations}"
+                                              MinWidth="200" />
+                                </StackPanel>
+
+                                <!-- NONE MESSAGE -->
+                                <StackPanel
+                                    IsVisible="{Binding RequestViewModel.AuthViewModel.SelectedAuthType, Converter={x:Static ObjectConverters.Equal}, ConverterParameter=None}"
+                                    Spacing="8">
+                                    <Border Background="{DynamicResource BgElevated}"
+                                            BorderBrush="{DynamicResource BorderColor}"
+                                            BorderThickness="1"
+                                            CornerRadius="6"
+                                            Padding="16">
+                                        <StackPanel Spacing="8">
+                                            <lucide:Lucide Icon="ShieldOff"
+                                                           StrokeBrush="{DynamicResource TextMuted}"
+                                                           Width="32"
+                                                           Height="32"
+                                                           HorizontalAlignment="Center" />
+                                            <TextBlock Text="No authentication"
+                                                       Foreground="{DynamicResource TextPrimary}"
+                                                       FontSize="14"
+                                                       FontWeight="Medium"
+                                                       HorizontalAlignment="Center" />
+                                            <TextBlock Text="This request will be sent without authentication"
+                                                       Foreground="{DynamicResource TextMuted}"
+                                                       FontSize="12"
+                                                       TextWrapping="Wrap"
+                                                       HorizontalAlignment="Center" />
+                                        </StackPanel>
+                                    </Border>
+                                </StackPanel>
                             </StackPanel>
 
                             <!-- HEADERS TAB CONTENT -->

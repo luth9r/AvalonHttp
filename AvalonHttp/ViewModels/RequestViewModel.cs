@@ -78,17 +78,18 @@ public partial class RequestViewModel : ViewModelBase, IDisposable
 
     public HeadersViewModel HeadersViewModel { get; }
     public QueryParamsViewModel QueryParamsViewModel { get; }
-    
-    
+    public AuthViewModel AuthViewModel { get; }
 
     public RequestViewModel(
         IHttpService httpService,
         HeadersViewModel headersViewModel,
-        QueryParamsViewModel queryParamsViewModel)
+        QueryParamsViewModel queryParamsViewModel,
+        AuthViewModel authViewModel)
     {
         _httpService = httpService;
         HeadersViewModel = headersViewModel;
         QueryParamsViewModel = queryParamsViewModel;
+        AuthViewModel = authViewModel;
 
         // Subscribe to URL changes from query params
         QueryParamsViewModel.UrlChanged += OnQueryParamsUrlChanged;
@@ -129,6 +130,28 @@ public partial class RequestViewModel : ViewModelBase, IDisposable
             var startTime = DateTime.Now;
 
             var headers = HeadersViewModel.GetEnabledHeaders();
+            var authHeaders = AuthViewModel.GetAuthHeaders();
+        
+            foreach (var authHeader in authHeaders)
+            {
+                headers[authHeader.Key] = authHeader.Value;
+            }
+            
+            var authQueryParams = AuthViewModel.GetAuthQueryParams();
+            if (authQueryParams.Count > 0)
+            {
+                var uriBuilder = new UriBuilder(RequestUrl);
+                var query = System.Web.HttpUtility.ParseQueryString(uriBuilder.Query);
+            
+                foreach (var param in authQueryParams)
+                {
+                    query[param.Key] = param.Value;
+                }
+            
+                uriBuilder.Query = query.ToString();
+                RequestUrl = uriBuilder.ToString();
+            }
+            
             var response = await _httpService.SendRequestAsync(
                 RequestUrl,
                 SelectedMethod,

@@ -54,7 +54,8 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
         // Initialize ViewModels
         var headersViewModel = new HeadersViewModel();
         var queryParamsViewModel = new QueryParamsViewModel(urlParserService);
-        RequestViewModel = new RequestViewModel(httpService, headersViewModel, queryParamsViewModel);
+        var authViewModel = new AuthViewModel();
+        RequestViewModel = new RequestViewModel(httpService, headersViewModel, queryParamsViewModel, authViewModel);
         
         InitializeCollections();
     }
