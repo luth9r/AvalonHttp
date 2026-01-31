@@ -345,27 +345,8 @@
             <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}"/>
             <Setter Property="Background" Value="{StaticResource GlassBg}"/>
         </Style>
-
-        <Style Selector="Button.ActionButton">
-            <Setter Property="Background" Value="{StaticResource BgMain}"/>
-            <Setter Property="BorderBrush" Value="{StaticResource BorderBright}"/>
-            <Setter Property="Foreground" Value="{StaticResource TextSecondary}"/>
-            <Setter Property="FontSize" Value="12"/>
-            <Setter Property="Padding" Value="14,8"/>
-        </Style>
-
-        <Style Selector="Button.ActionButton:pointerover /template/ ContentPresenter">
-            <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}"/>
-            <Setter Property="Background" Value="{StaticResource GlassBg}"/>
-        </Style>
-
-        <Style Selector="Button.ActionButton.Active /template/ ContentPresenter">
-            <Setter Property="Background" Value="{StaticResource AccentBrush}"/>
-            <Setter Property="Foreground" Value="White"/>
-            <Setter Property="BorderBrush" Value="Transparent"/>
-        </Style>
         
-        <Style Selector="Button.ResponseCopyBtn">
+        <Style Selector="Button.ActionButton">
             <Setter Property="Width" Value="36"/>
             <Setter Property="Height" Value="36"/>
             <Setter Property="Background" Value="{StaticResource BgElevated}"/>
@@ -373,9 +354,10 @@
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="CornerRadius" Value="6"/>
             <Setter Property="Padding" Value="8"/>
+            <Setter Property="MinWidth" Value="0"/>
         </Style>
 
-        <Style Selector="Button.ResponseCopyBtn > lucide|Lucide">
+        <Style Selector="Button.ActionButton > lucide|Lucide">
             <Setter Property="StrokeBrush" Value="{StaticResource TextSecondary}"/>
             <Setter Property="Transitions">
                 <Transitions>
@@ -384,11 +366,11 @@
             </Setter>
         </Style>
 
-        <Style Selector="Button.ResponseCopyBtn:pointerover > lucide|Lucide">
+        <Style Selector="Button.ActionButton:pointerover > lucide|Lucide">
             <Setter Property="StrokeBrush" Value="{StaticResource AccentBrush}"/>
         </Style>
 
-        <Style Selector="Button.ResponseCopyBtn:pointerover /template/ ContentPresenter">
+        <Style Selector="Button.ActionButton:pointerover /template/ ContentPresenter">
             <Setter Property="Background" Value="{StaticResource GlassBg}"/>
             <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}"/>
         </Style>

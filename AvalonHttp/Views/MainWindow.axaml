@@ -253,18 +253,7 @@
                                     PointerPressed="SelectRequestTab" Tag="Body">
                                 <TextBlock Text="Body" />
                             </Border>
-
-                            <Border Classes="Tab"
-                                    Classes.Active="{Binding SelectedRequestTab, Converter={x:Static ObjectConverters.Equal}, ConverterParameter=PreRequest}"
-                                    PointerPressed="SelectRequestTab" Tag="PreRequest">
-                                <TextBlock Text="Pre-request" />
-                            </Border>
-
-                            <Border Classes="Tab"
-                                    Classes.Active="{Binding SelectedRequestTab, Converter={x:Static ObjectConverters.Equal}, ConverterParameter=Tests}"
-                                    PointerPressed="SelectRequestTab" Tag="Tests">
-                                <TextBlock Text="Tests" />
-                            </Border>
+                            
                         </StackPanel>
                     </ScrollViewer>
                 </Border>
@@ -276,8 +265,7 @@
                         <ColumnDefinition Width="Auto" />
                         <ColumnDefinition Width="*" MinWidth="350" />
                     </Grid.ColumnDefinitions>
-
-                    <!-- LEFT: REQUEST PANEL -->
+                    
                     <!-- LEFT: REQUEST PANEL -->
                     <ScrollViewer Grid.Column="0" Background="{DynamicResource BgMain}">
                         <StackPanel Margin="20" Spacing="24">
