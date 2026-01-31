@@ -4,6 +4,7 @@
              xmlns:local="using:AvalonHttp"
              xmlns:lucide="clr-namespace:LucideAvalonia;assembly=LucideAvalonia"
              xmlns:converters="clr-namespace:AvalonHttp.Converters"
+             xmlns:behaviors="clr-namespace:AvalonHttp.Behaviors"
              RequestedThemeVariant="Dark">
 
     <Application.DataTemplates>
@@ -30,6 +31,9 @@
         <SolidColorBrush x:Key="GlassBorder">#1AFFFFFF</SolidColorBrush>
         
         <converters:PercentToPixelConverter x:Key="PercentToPixelConverter"/>
+        <converters:BoolToAngleConverter x:Key="BoolToAngleConverter" />
+        <converters:MethodToBrushConverter x:Key="MethodToBrushConverter"/>
+        
     </Application.Resources>
 
     <Application.Styles>
@@ -55,6 +59,17 @@
             <Setter Property="Padding" Value="12,8"/>
             <Setter Property="FontSize" Value="13"/>
             <Setter Property="Cursor" Value="Hand"/>
+            
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+        </Style>
+
+        <Style Selector="Button.IconButton">
+            <Setter Property="Background" Value="Transparent"/> <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Width" Value="32"/>
+            <Setter Property="Height" Value="32"/>
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
         </Style>
 
         <Style Selector="Button:pointerover /template/ ContentPresenter">
@@ -244,38 +259,6 @@
             <Setter Property="VerticalAlignment" Value="Center"/>
             <Setter Property="HorizontalAlignment" Value="Center"/>
             <Setter Property="LetterSpacing" Value="0.5"/>
-        </Style>
-
-        <Style Selector="Border.MethodGet">
-            <Setter Property="Background" Value="#1A10B981"/>
-        </Style>
-
-        <Style Selector="Border.MethodGet TextBlock">
-            <Setter Property="Foreground" Value="{StaticResource Success}"/>
-        </Style>
-
-        <Style Selector="Border.MethodPost">
-            <Setter Property="Background" Value="#1A3B82F6"/>
-        </Style>
-
-        <Style Selector="Border.MethodPost TextBlock">
-            <Setter Property="Foreground" Value="{StaticResource AccentBrush}"/>
-        </Style>
-
-        <Style Selector="Border.MethodPut">
-            <Setter Property="Background" Value="#1AF59E0B"/>
-        </Style>
-
-        <Style Selector="Border.MethodPut TextBlock">
-            <Setter Property="Foreground" Value="{StaticResource Warning}"/>
-        </Style>
-
-        <Style Selector="Border.MethodDelete">
-            <Setter Property="Background" Value="#1AEF4444"/>
-        </Style>
-
-        <Style Selector="Border.MethodDelete TextBlock">
-            <Setter Property="Foreground" Value="{StaticResource Error}"/>
         </Style>
 
         <!-- Badge -->
