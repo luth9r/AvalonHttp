@@ -22,7 +22,7 @@
                                      HorizontalScrollBarVisibility="Auto"
                                      VerticalAlignment="Stretch"
                                      HorizontalAlignment="Stretch"
-                                     Padding="12"
+                                     Padding="12,24,12,12"
                                      BorderThickness="0"
                                      IsVisible="{Binding #Root.HasContent}" />
 

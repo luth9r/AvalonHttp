@@ -68,7 +68,7 @@ public partial class JsonEditor : UserControl
                 ConvertTabsToSpaces = true,
                 EnableHyperlinks = false,
                 EnableEmailHyperlinks = false,
-                AllowScrollBelowDocument = false
+                AllowScrollBelowDocument = false,
             };
             
             SetupTextMate();
