@@ -3,6 +3,7 @@
         xmlns:vm="using:AvalonHttp.ViewModels"
         xmlns:lucide="clr-namespace:LucideAvalonia;assembly=LucideAvalonia"
         xmlns:controls="clr-namespace:AvalonHttp.Controls"
+        xmlns:behaviors="clr-namespace:AvalonHttp.Behaviors"
         x:Class="AvalonHttp.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
         Title="AvalonHttp"
@@ -16,7 +17,40 @@
         WindowStartupLocation="CenterScreen"
         CanResize="True">
 
+        <behaviors:ClearFocusOnClickBehavior />
+
+        <KeyBinding Gesture="Ctrl+S" Command="{Binding RequestViewModel.SaveCurrentRequestCommand}" />
+
     <Panel>
+        <Grid IsVisible="{Binding IsDialogOpen}" ZIndex="1000">
+            <Border Background="Black" Opacity="0.5">
+                    <EventTriggerBehavior EventName="PointerPressed">
+                    </EventTriggerBehavior>
+            </Border>
+            <Border Width="400" MinHeight="150"
+                    BorderBrush="{DynamicResource BorderColor}"
+                    CornerRadius="8"
+                    VerticalAlignment="Center"
+                    Padding="24">
+                    <StackPanel Orientation="Horizontal" Spacing="12">
+                        <TextBlock Text="{Binding DialogTitle}"
+                                   FontWeight="SemiBold"
+                    </StackPanel>
+                    <TextBlock Text="{Binding DialogMessage}"
+                               TextWrapping="Wrap"
+
+                        <Button Content="Cancel"
+                                Background="Transparent"
+                                BorderThickness="1"
+                                Padding="16,8"
+
+                                Command="{Binding ExecuteConfirmCommand}"
+                                Foreground="White"
+                                Padding="16,8"
+                                Cursor="Hand" />
+                </StackPanel>
+        </Grid>
+
         <!-- Custom Title Bar -->
         <Border Height="40"
                 VerticalAlignment="Top"

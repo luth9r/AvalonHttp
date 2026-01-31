@@ -12,6 +12,7 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
+        Focusable = true;
     }
     
     private void SelectRequestTab(object? sender, PointerPressedEventArgs e)
@@ -32,11 +33,14 @@ public partial class MainWindow : Window
     
     protected override void OnClosing(WindowClosingEventArgs e)
     {
-        if (DataContext is IDisposable disposable)
+        if (DataContext is MainWindowViewModel vm)
         {
-            disposable.Dispose();
+            if (vm.RequestViewModel.IsDirty)
+            {
+                e.Cancel = true;
+                vm.AttemptExitCommand.Execute(null);
+            }
         }
-        
         base.OnClosing(e);
     }
 }
