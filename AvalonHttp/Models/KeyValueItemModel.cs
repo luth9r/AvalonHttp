@@ -2,14 +2,14 @@
 
 namespace AvalonHttp.Models;
 
-public partial class HeaderItem : ObservableObject
+public partial class KeyValueItemModel : ObservableObject
 {
-    [ObservableProperty]
-    private bool _isEnabled;
-
     [ObservableProperty]
     private string _key = "";
 
     [ObservableProperty]
     private string _value = "";
+
+    [ObservableProperty]
+    private bool _isEnabled = true;
 }

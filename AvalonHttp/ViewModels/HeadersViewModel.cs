@@ -10,25 +10,26 @@ namespace AvalonHttp.ViewModels;
 public partial class HeadersViewModel : ViewModelBase
 {
     [ObservableProperty]
-    private ObservableCollection<HeaderItem> _headers;
+    private ObservableCollection<KeyValueItemModel> _headers = new();
+    
+    public int EnabledHeadersCount => 
+        Headers.Count(h => h.IsEnabled && !string.IsNullOrWhiteSpace(h.Key));
 
     public HeadersViewModel()
     {
-        _headers = new ObservableCollection<HeaderItem>
-        {
-            new() { IsEnabled = true, Key = "Content-Type", Value = "application/json" },
-            new() { IsEnabled = false, Key = "Authorization", Value = "Bearer token..." }
-        };
+        Headers.CollectionChanged += (s, e) => OnPropertyChanged(nameof(EnabledHeadersCount));
     }
 
     [RelayCommand]
     private void AddHeader()
     {
-        Headers.Add(new HeaderItem { IsEnabled = true, Key = "", Value = "" });
+        var header = new KeyValueItemModel { IsEnabled = true };
+        header.PropertyChanged += (s, e) => OnPropertyChanged(nameof(EnabledHeadersCount));
+        Headers.Add(header);
     }
 
     [RelayCommand]
-    private void RemoveHeader(HeaderItem header)
+    private void RemoveHeader(KeyValueItemModel header)
     {
         Headers.Remove(header);
     }
@@ -37,6 +38,6 @@ public partial class HeadersViewModel : ViewModelBase
     {
         return Headers
             .Where(h => h.IsEnabled && !string.IsNullOrWhiteSpace(h.Key))
-            .ToDictionary(h => h.Key, h => h.Value ?? string.Empty);
+            .ToDictionary(h => h.Key, h => h.Value ?? "");
     }
 }

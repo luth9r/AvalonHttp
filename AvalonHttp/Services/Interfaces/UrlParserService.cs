@@ -7,16 +7,16 @@ namespace AvalonHttp.Services.Interfaces;
 
 public class UrlParserService : IUrlParserService
 {
-    public (string baseUrl, List<QueryParameter> parameters) ParseUrl(string url)
+    public (string baseUrl, List<KeyValueItemModel> parameters) ParseUrl(string url)
     {
         if (string.IsNullOrWhiteSpace(url))
         {
-            return (string.Empty, new List<QueryParameter>());
+            return (string.Empty, new List<KeyValueItemModel>());
         }
 
         var parts = url.Split('?', 2);
         var baseUrl = parts[0];
-        var parameters = new List<QueryParameter>();
+        var parameters = new List<KeyValueItemModel>();
 
         if (parts.Length == 2)
         {
@@ -29,7 +29,7 @@ public class UrlParserService : IUrlParserService
                 var key = Uri.UnescapeDataString(keyValue[0]);
                 var value = keyValue.Length > 1 ? Uri.UnescapeDataString(keyValue[1]) : "";
 
-                parameters.Add(new QueryParameter
+                parameters.Add(new KeyValueItemModel
                 {
                     IsEnabled = true,
                     Key = key,
@@ -41,7 +41,7 @@ public class UrlParserService : IUrlParserService
         return (baseUrl, parameters);
     }
 
-    public string BuildUrl(string baseUrl, IEnumerable<QueryParameter> parameters)
+    public string BuildUrl(string baseUrl, IEnumerable<KeyValueItemModel> parameters)
     {
         var enabledParams = parameters
             .Where(p => p.IsEnabled && !string.IsNullOrWhiteSpace(p.Key))

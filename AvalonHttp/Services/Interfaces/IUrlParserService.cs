@@ -5,7 +5,7 @@ namespace AvalonHttp.Services.Interfaces;
 
 public interface IUrlParserService
 {
-    (string baseUrl, List<QueryParameter> parameters) ParseUrl(string url);
+    (string baseUrl, List<KeyValueItemModel> parameters) ParseUrl(string url);
     
-    string BuildUrl(string baseUrl, IEnumerable<QueryParameter> parameters);
+    string BuildUrl(string baseUrl, IEnumerable<KeyValueItemModel> parameters);
 }

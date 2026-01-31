@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
+using System.Linq;
 using AvalonHttp.Models;
-using AvalonHttp.Services;
 using AvalonHttp.Services.Interfaces;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -15,14 +15,17 @@ public partial class QueryParamsViewModel : ViewModelBase, IDisposable
     private bool _isUpdating = false;
 
     [ObservableProperty]
-    private ObservableCollection<QueryParameter> _parameters;
+    private ObservableCollection<KeyValueItemModel> _parameters;
+
+    public int EnabledParametersCount => 
+        Parameters.Count(p => p.IsEnabled && !string.IsNullOrWhiteSpace(p.Key));
 
     public event EventHandler<string>? UrlChanged;
 
     public QueryParamsViewModel(IUrlParserService urlParserService)
     {
         _urlParserService = urlParserService;
-        _parameters = new ObservableCollection<QueryParameter>();
+        _parameters = new ObservableCollection<KeyValueItemModel>();
         _parameters.CollectionChanged += OnParametersChanged;
     }
 
@@ -46,6 +49,7 @@ public partial class QueryParamsViewModel : ViewModelBase, IDisposable
         finally
         {
             _isUpdating = false;
+            OnPropertyChanged(nameof(EnabledParametersCount));
         }
     }
 
@@ -57,13 +61,13 @@ public partial class QueryParamsViewModel : ViewModelBase, IDisposable
     [RelayCommand]
     private void AddParameter()
     {
-        var newParam = new QueryParameter { IsEnabled = true, Key = "", Value = "" };
+        var newParam = new KeyValueItemModel { IsEnabled = true, Key = "", Value = "" };
         newParam.PropertyChanged += OnParameterPropertyChanged;
         Parameters.Add(newParam);
     }
 
     [RelayCommand]
-    private void RemoveParameter(QueryParameter param)
+    private void RemoveParameter(KeyValueItemModel param)
     {
         param.PropertyChanged -= OnParameterPropertyChanged;
         Parameters.Remove(param);
@@ -75,7 +79,7 @@ public partial class QueryParamsViewModel : ViewModelBase, IDisposable
 
         if (e.NewItems != null)
         {
-            foreach (QueryParameter param in e.NewItems)
+            foreach (KeyValueItemModel param in e.NewItems)
             {
                 param.PropertyChanged += OnParameterPropertyChanged;
             }
@@ -83,21 +87,23 @@ public partial class QueryParamsViewModel : ViewModelBase, IDisposable
 
         if (e.OldItems != null)
         {
-            foreach (QueryParameter param in e.OldItems)
+            foreach (KeyValueItemModel param in e.OldItems)
             {
                 param.PropertyChanged -= OnParameterPropertyChanged;
             }
         }
 
+        OnPropertyChanged(nameof(EnabledParametersCount));
         NotifyUrlChanged();
     }
 
     private void OnParameterPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
     {
-        if (e.PropertyName == nameof(QueryParameter.Key) ||
-            e.PropertyName == nameof(QueryParameter.Value) ||
-            e.PropertyName == nameof(QueryParameter.IsEnabled))
+        if (e.PropertyName == nameof(KeyValueItemModel.Key) ||
+            e.PropertyName == nameof(KeyValueItemModel.Value) ||
+            e.PropertyName == nameof(KeyValueItemModel.IsEnabled))
         {
+            OnPropertyChanged(nameof(EnabledParametersCount));
             NotifyUrlChanged();
         }
     }
