@@ -105,6 +105,10 @@
                                     <TextBlock Text="My Workspace" />
                                 </StackPanel>
                             </Border>
+                        <ItemsControl ItemsSource="{Binding CollectionsViewModel.Collections}">
+                                <DataTemplate>
+                                        <!-- Collection Header -->
+                                            <Interaction.Behaviors>
 
                             <!-- API Testing Folder -->
                             <Border Classes="TreeItem" Margin="12,0,0,0">
@@ -128,6 +132,10 @@
                                     <TextBlock Text="Get Users" />
                                 </StackPanel>
                             </Border>
+                                                    <Border Classes="TreeItem"
+                                                            Margin="0,2">
+                                                            <behaviors:DragDropBehavior />
+                                                        </Interaction.Behaviors>
 
                             <Border Classes="TreeItem" Margin="36,0,0,0">
                                 <StackPanel Orientation="Horizontal" Spacing="10">
