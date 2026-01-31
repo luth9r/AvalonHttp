@@ -39,10 +39,19 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
     [ObservableProperty]
     private string _selectedRequestTab = "Params";
     
+    [ObservableProperty]
+    private string _selectedResponseTab = "Body";
+    
     [RelayCommand]
     private void SelectRequestTab(string tabName)
     {
         SelectedRequestTab = tabName;
+    }
+    
+    [RelayCommand]
+    private void SelectResponseTab(string tabName)
+    {
+        SelectedResponseTab = tabName;
     }
 
     public MainWindowViewModel()

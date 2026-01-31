@@ -22,6 +22,14 @@ public partial class MainWindow : Window
         }
     }
     
+    private void SelectResponseTab(object? sender, PointerPressedEventArgs e)
+    {
+        if (sender is Border border && border.Tag is string tabName && DataContext is MainWindowViewModel vm)
+        {
+            vm.SelectResponseTabCommand.Execute(tabName);
+        }
+    }
+    
     protected override void OnClosing(WindowClosingEventArgs e)
     {
         if (DataContext is IDisposable disposable)

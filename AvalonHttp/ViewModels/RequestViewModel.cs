@@ -49,33 +49,11 @@ public partial class RequestViewModel : ViewModelBase, IDisposable
     private IBrush _statusBrush = new SolidColorBrush(Color.Parse("#6B7280"));
     
     [ObservableProperty]
-    private bool _isPrettyActive  = true;
+    private ObservableCollection<ResponseHeaderModel> _responseHeaders = new();
 
     [ObservableProperty]
-    private bool _isRawActive = false;
-
-    [RelayCommand]
-    private void SetPrettyFormat()
-    {
-        Debug.WriteLine("SetPrettyFormat called");
-        IsPrettyFormat = true;
-        IsPrettyActive = true;
-        IsRawActive = false;
-        ApplyFormat();
-        Debug.WriteLine($"After SetPrettyFormat - ResponseContent length: {ResponseContent?.Length}");
-    }
-
-    [RelayCommand]
-    private void SetRawFormat()
-    {
-        Debug.WriteLine("SetRawFormat called");
-        IsPrettyFormat = false;
-        IsPrettyActive = false;
-        IsRawActive = true;
-        ApplyFormat();
-        Debug.WriteLine($"After SetRawFormat - ResponseContent length: {ResponseContent?.Length}");
-    }
-
+    private ObservableCollection<ResponseHeaderModel> _responseCookies = new();
+    
     [ObservableProperty]
     private ObservableCollection<TimelineStageModel> _timelineStages = new();
     
@@ -87,6 +65,9 @@ public partial class RequestViewModel : ViewModelBase, IDisposable
     
     public bool IsPrettyActive => IsPrettyFormat;
     public bool IsRawActive => !IsPrettyFormat;
+    
+    [ObservableProperty]
+    private bool _hasResponseData;
     
     public HeadersViewModel HeadersViewModel { get; }
     public QueryParamsViewModel QueryParamsViewModel { get; }
@@ -103,22 +84,56 @@ public partial class RequestViewModel : ViewModelBase, IDisposable
         QueryParamsViewModel = queryParamsViewModel;
         AuthViewModel = authViewModel;
 
-        // Subscribe to URL changes from query params
         QueryParamsViewModel.UrlChanged += OnQueryParamsUrlChanged;
-        
-        // Load initial params from URL
         QueryParamsViewModel.LoadFromUrl(RequestUrl);
-    }
 
+        ResponseHeaders.CollectionChanged += (s, e) => OnPropertyChanged(nameof(ResponseHeadersCount));
+        ResponseCookies.CollectionChanged += (s, e) => OnPropertyChanged(nameof(ResponseCookiesCount));
+    }
+    
     partial void OnRequestUrlChanged(string value)
     {
         QueryParamsViewModel.LoadFromUrl(value);
+        ClearResponseData();
+    }
+    
+    partial void OnSelectedMethodChanged(string value)
+    {
+        ClearResponseData();
+    }
+    
+    partial void OnRequestBodyChanged(string value)
+    {
+        ClearResponseData();
+    }
+    
+    partial void OnIsPrettyFormatChanged(bool value)
+    {
+        OnPropertyChanged(nameof(IsPrettyActive));
+        OnPropertyChanged(nameof(IsRawActive));
     }
 
     private void OnQueryParamsUrlChanged(object? sender, string e)
     {
         var baseUrl = RequestUrl.Split('?')[0];
         RequestUrl = QueryParamsViewModel.BuildUrl(baseUrl);
+    }
+    
+    private void ClearResponseData()
+    {
+        if (!HasResponseData) return;
+        
+        HasResponseData = false;
+        ResponseContent = "";
+        RawResponseContent = "";
+        ResponseHeaders.Clear();
+        ResponseCookies.Clear();
+        TimelineStages.Clear();
+        TotalRequestTime = 0;
+        StatusCode = "Ready";
+        ResponseTime = "--";
+        ResponseSize = "--";
+        StatusBrush = new SolidColorBrush(Color.Parse("#6B7280"));
     }
 
     [RelayCommand]
@@ -134,7 +149,8 @@ public partial class RequestViewModel : ViewModelBase, IDisposable
         try
         {
             IsLoading = true;
-            StatusCode = "Sending...";
+            HasResponseData = false;
+            
             ResponseContent = "";
             RawResponseContent = "";
             ResponseHeaders.Clear();
@@ -198,13 +214,50 @@ public partial class RequestViewModel : ViewModelBase, IDisposable
             ResponseSize = FormatBytes(contentLength);
             RawResponseContent = content;
             
+            foreach (var header in response.Headers)
+            {
+                ResponseHeaders.Add(new ResponseHeaderModel
+                {
+                    Name = header.Key,
+                    Value = string.Join(", ", header.Value)
+                });
+            }
+
+            foreach (var header in response.Content.Headers)
+            {
+                ResponseHeaders.Add(new ResponseHeaderModel
+                {
+                    Name = header.Key,
+                    Value = string.Join(", ", header.Value)
+                });
+            }
+            
+            if (response.Headers.TryGetValues("Set-Cookie", out var cookies))
+            {
+                foreach (var cookie in cookies)
+                {
+                    var parts = cookie.Split(';')[0].Split('=');
+                    if (parts.Length >= 2)
+                    {
+                        ResponseCookies.Add(new ResponseHeaderModel
+                        {
+                            Name = parts[0].Trim(),
+                            Value = parts[1].Trim()
+                        });
+                    }
+                }
+            }
+            
             ApplyFormat();
+            HasResponseData = true;
         }
         catch (Exception ex)
         {
             StatusCode = "Error";
-            ResponseContent = $"Error: {ex.Message}";
+            RawResponseContent = $"Error: {ex.Message}";
+            ResponseContent = RawResponseContent;
             StatusBrush = new SolidColorBrush(Color.Parse("#EF4444"));
+            HasResponseData = false;
         }
         finally
         {
@@ -212,14 +265,25 @@ public partial class RequestViewModel : ViewModelBase, IDisposable
         }
     }
     
+    [RelayCommand]
+    private void SetPrettyFormat()
+    {
+        IsPrettyFormat = true;
+        ApplyFormat();
+    }
+
+    [RelayCommand]
+    private void SetRawFormat()
+    {
+        IsPrettyFormat = false;
+        ApplyFormat();
+    }
+    
     private void ApplyFormat()
     {
-        Debug.WriteLine($"ApplyFormat - IsPrettyFormat: {IsPrettyFormat}, RawContent length: {RawResponseContent?.Length}");
-        
         if (string.IsNullOrWhiteSpace(RawResponseContent))
         {
             ResponseContent = string.Empty;
-            Debug.WriteLine("ApplyFormat - RawResponseContent is empty");
             return;
         }
 
@@ -227,44 +291,20 @@ public partial class RequestViewModel : ViewModelBase, IDisposable
         {
             if (IsPrettyFormat)
             {
-                Debug.WriteLine("ApplyFormat - Formatting as Pretty");
                 var jsonDoc = JsonDocument.Parse(RawResponseContent);
-                var formatted = JsonSerializer.Serialize(jsonDoc, new JsonSerializerOptions
+                ResponseContent = JsonSerializer.Serialize(jsonDoc, new JsonSerializerOptions
                 {
                     WriteIndented = true
                 });
-                ResponseContent = formatted;
-                Debug.WriteLine($"ApplyFormat - Pretty formatted, length: {formatted.Length}");
             }
             else
             {
-                Debug.WriteLine("ApplyFormat - Using Raw format");
                 ResponseContent = RawResponseContent;
-                Debug.WriteLine($"ApplyFormat - Raw set, length: {RawResponseContent.Length}");
             }
-        }
-        catch (Exception ex)
-        {
-            Debug.WriteLine($"ApplyFormat - Exception: {ex.Message}");
-            ResponseContent = RawResponseContent;
-        }
-    }
-
-    private string FormatJson(string json)
-    {
-        if (string.IsNullOrWhiteSpace(json)) return "";
-
-        try
-        {
-            var parsedJson = JsonDocument.Parse(json);
-            return JsonSerializer.Serialize(parsedJson, new JsonSerializerOptions
-            {
-                WriteIndented = true
-            });
         }
         catch
         {
-            return json;
+            ResponseContent = RawResponseContent;
         }
     }
 
