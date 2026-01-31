@@ -17,38 +17,69 @@
         WindowStartupLocation="CenterScreen"
         CanResize="True">
 
+    <Interaction.Behaviors>
         <behaviors:ClearFocusOnClickBehavior />
+    </Interaction.Behaviors>
 
+    <Window.KeyBindings>
         <KeyBinding Gesture="Ctrl+S" Command="{Binding RequestViewModel.SaveCurrentRequestCommand}" />
+    </Window.KeyBindings>
 
     <Panel>
         <Grid IsVisible="{Binding IsDialogOpen}" ZIndex="1000">
+
             <Border Background="Black" Opacity="0.5">
+                <Interaction.Behaviors>
                     <EventTriggerBehavior EventName="PointerPressed">
+                        <InvokeCommandAction Command="{Binding CancelConfirmCommand}" />
                     </EventTriggerBehavior>
+                </Interaction.Behaviors>
             </Border>
+
             <Border Width="400" MinHeight="150"
+                    Background="{DynamicResource BgElevated}"
                     BorderBrush="{DynamicResource BorderColor}"
+                    BorderThickness="1"
                     CornerRadius="8"
+                    BoxShadow="0 4 20 0 #40000000"
                     VerticalAlignment="Center"
+                    HorizontalAlignment="Center"
                     Padding="24">
+                <StackPanel Spacing="16">
                     <StackPanel Orientation="Horizontal" Spacing="12">
+                        <lucide:Lucide Icon="OctagonAlert" StrokeBrush="#EF4444" Width="24" Height="24" />
                         <TextBlock Text="{Binding DialogTitle}"
+                                   FontSize="18"
                                    FontWeight="SemiBold"
+                                   VerticalAlignment="Center" />
                     </StackPanel>
+
                     <TextBlock Text="{Binding DialogMessage}"
+                               Foreground="{DynamicResource TextSecondary}"
                                TextWrapping="Wrap"
+                               LineHeight="20" />
 
+                    <StackPanel Orientation="Horizontal" Spacing="12" HorizontalAlignment="Right" Margin="0,8,0,0">
                         <Button Content="Cancel"
+                                Command="{Binding CancelConfirmCommand}"
                                 Background="Transparent"
+                                BorderBrush="{DynamicResource BorderColor}"
                                 BorderThickness="1"
-                                Padding="16,8"
-
-                                Command="{Binding ExecuteConfirmCommand}"
-                                Foreground="White"
+                                CornerRadius="6"
                                 Padding="16,8"
                                 Cursor="Hand" />
+
+                        <Button Content="{Binding ConfirmButtonText}"
+                                Command="{Binding ExecuteConfirmCommand}"
+                                Background="#EF4444"
+                                Foreground="White"
+                                CornerRadius="6"
+                                Padding="16,8"
+                                FontWeight="Medium"
+                                Cursor="Hand" />
+                    </StackPanel>
                 </StackPanel>
+            </Border>
         </Grid>
 
         <!-- Custom Title Bar -->
