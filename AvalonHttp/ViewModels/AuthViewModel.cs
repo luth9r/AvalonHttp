@@ -81,9 +81,6 @@ public partial class AuthViewModel : ViewModelBase
         return headers;
     }
     
-    /// <summary>
-    /// Получает параметры запроса для API Key если location = Query Parameter
-    /// </summary>
     public Dictionary<string, string> GetAuthQueryParams()
     {
         var queryParams = new Dictionary<string, string>();

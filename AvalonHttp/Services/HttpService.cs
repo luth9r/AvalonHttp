@@ -65,7 +65,6 @@ public class HttpService : IHttpService, IDisposable
 
     public void Dispose()
     {
-        // Ничего не нужно
     }
 }
 
@@ -129,8 +128,7 @@ public class MetricsHandler : DelegatingHandler
         }
 
         var networkStream = new NetworkStream(socket, ownsSocket: true);
-
-        // 3. SSL Handshake (если HTTPS)
+        
         if (context.InitialRequestMessage.RequestUri?.Scheme == "https")
         {
             var sslStart = sw.Elapsed.TotalMilliseconds;
