@@ -1,9 +1,9 @@
 ﻿using System;
-using System.Diagnostics;
+using System.Collections.ObjectModel;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
-using AvalonHttp.Services;
+using AvalonHttp.Models;
 using AvalonHttp.Services.Interfaces;
 using Avalonia.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -76,6 +76,18 @@ public partial class RequestViewModel : ViewModelBase, IDisposable
         Debug.WriteLine($"After SetRawFormat - ResponseContent length: {ResponseContent?.Length}");
     }
 
+    [ObservableProperty]
+    private ObservableCollection<TimelineStageModel> _timelineStages = new();
+    
+    public int ResponseHeadersCount => ResponseHeaders.Count;
+    public int ResponseCookiesCount => ResponseCookies.Count;
+    
+    [ObservableProperty]
+    private double _totalRequestTime;
+    
+    public bool IsPrettyActive => IsPrettyFormat;
+    public bool IsRawActive => !IsPrettyFormat;
+    
     public HeadersViewModel HeadersViewModel { get; }
     public QueryParamsViewModel QueryParamsViewModel { get; }
     public AuthViewModel AuthViewModel { get; }
@@ -125,6 +137,12 @@ public partial class RequestViewModel : ViewModelBase, IDisposable
             StatusCode = "Sending...";
             ResponseContent = "";
             RawResponseContent = "";
+            ResponseHeaders.Clear();
+            ResponseCookies.Clear();
+            TimelineStages.Clear();
+            TotalRequestTime = 0;
+            
+            StatusCode = "Sending...";
             StatusBrush = new SolidColorBrush(Color.Parse("#F59E0B"));
 
             var startTime = DateTime.Now;
@@ -162,6 +180,8 @@ public partial class RequestViewModel : ViewModelBase, IDisposable
             var duration = (endTime - startTime).TotalMilliseconds;
 
             ResponseTime = $"{duration:F0} ms";
+            
+            BuildTimeline(duration);
 
             var statusCode = (int)response.StatusCode;
             StatusCode = $"{statusCode} {response.StatusCode}";
@@ -261,6 +281,55 @@ public partial class RequestViewModel : ViewModelBase, IDisposable
         }
 
         return $"{len:0.##} {sizes[order]}";
+    }
+    
+    private void BuildTimeline(double totalTime)
+    {
+        TimelineStages.Clear();
+        TotalRequestTime = totalTime;
+
+        var metrics = _httpService.LastRequestMetrics;
+
+        var stages = new[]
+        {
+            new TimelineStageModel 
+            { 
+                Name = "DNS Lookup", 
+                Duration = metrics.DnsLookup, 
+                Color = "#10B981" 
+            },
+            new TimelineStageModel 
+            { 
+                Name = "TCP Handshake", 
+                Duration = metrics.TcpHandshake, 
+                Color = "#3B82F6" 
+            },
+            new TimelineStageModel 
+            { 
+                Name = "SSL Handshake", 
+                Duration = metrics.SslHandshake, 
+                Color = "#F59E0B" 
+            },
+            new TimelineStageModel 
+            { 
+                Name = "Waiting (TTFB)", 
+                Duration = metrics.TimeToFirstByte, 
+                Color = "#EF4444" 
+            },
+            new TimelineStageModel 
+            { 
+                Name = "Content Download", 
+                Duration = metrics.ContentDownload, 
+                Color = "#06B6D4" 
+            }
+        };
+
+        foreach (var stage in stages)
+        {
+            stage.DurationText = stage.Duration > 0 ? $"{stage.Duration:F2} ms" : "0 ms";
+            stage.WidthPercent = totalTime > 0 ? (stage.Duration / totalTime) * 100 : 0;
+            TimelineStages.Add(stage);
+        }
     }
 
     public void Dispose()

@@ -631,6 +631,192 @@
                                         VerticalAlignment="Stretch" />
                                 </Grid>
                             </Border>
+
+                                <!-- TIMELINE TAB -->
+                                <Border Background="{DynamicResource BgElevated}"
+                                        BorderBrush="{DynamicResource BorderColor}"
+                                        BorderThickness="1"
+                                        CornerRadius="8"
+                                        IsVisible="{Binding SelectedResponseTab, Converter={x:Static ObjectConverters.Equal}, ConverterParameter=Timeline}">
+                                    <Grid>
+                                        <!-- Timeline Data -->
+                                        <ScrollViewer IsVisible="{Binding RequestViewModel.HasResponseData}">
+                                            <StackPanel Margin="24" Spacing="24">
+
+                                                <!-- Header -->
+                                                <Grid ColumnDefinitions="*,Auto">
+                                                    <StackPanel Grid.Column="0">
+                                                        <TextBlock Text="Timeline"
+                                                                   Foreground="{DynamicResource TextPrimary}"
+                                                                   FontSize="16"
+                                                                   FontWeight="SemiBold" />
+                                                        <TextBlock Margin="0,4,0,0">
+                                                            <Run Text="Total: "
+                                                                 Foreground="{DynamicResource TextSecondary}"
+                                                                 FontSize="12" />
+                                                            <Run Text="{Binding RequestViewModel.ResponseTime}"
+                                                                 Foreground="{DynamicResource AccentTeal}"
+                                                                 FontWeight="SemiBold"
+                                                                 FontSize="12" />
+                                                        </TextBlock>
+                                                    </StackPanel>
+                                                </Grid>
+
+                                                <!-- Waterfall Chart -->
+                                                <Border Background="{DynamicResource BgMain}"
+                                                        BorderBrush="{DynamicResource BorderColor}"
+                                                        BorderThickness="1"
+                                                        CornerRadius="8"
+                                                        Padding="20">
+                                                    <ItemsControl
+                                                        ItemsSource="{Binding RequestViewModel.TimelineStages}">
+                                                        <ItemsControl.ItemTemplate>
+                                                            <DataTemplate>
+                                                                <Grid Margin="0,8">
+                                                                    <Grid.ColumnDefinitions>
+                                                                        <ColumnDefinition Width="140" />
+                                                                        <ColumnDefinition Width="*" />
+                                                                        <ColumnDefinition Width="80" />
+                                                                    </Grid.ColumnDefinitions>
+
+                                                                    <!-- Stage Name with Color Dot -->
+                                                                    <StackPanel Grid.Column="0"
+                                                                            Orientation="Horizontal"
+                                                                            Spacing="8"
+                                                                            VerticalAlignment="Center">
+                                                                        <Border Width="10"
+                                                                                Height="10"
+                                                                                Background="{Binding Color}"
+                                                                                CornerRadius="5" />
+                                                                        <TextBlock Text="{Binding Name}"
+                                                                                Foreground="{DynamicResource TextSecondary}"
+                                                                                FontSize="12"
+                                                                                VerticalAlignment="Center" />
+                                                                    </StackPanel>
+
+                                                                    <!-- Progress Bar Container -->
+                                                                    <Border Grid.Column="1"
+                                                                            Height="24"
+                                                                            Background="{DynamicResource BgDark}"
+                                                                            CornerRadius="4"
+                                                                            Margin="8,0"
+                                                                            VerticalAlignment="Center">
+                                                                        <Grid>
+                                                                            <!-- The Bar -->
+                                                                            <Border HorizontalAlignment="Left"
+                                                                                    Background="{Binding Color}"
+                                                                                    CornerRadius="4"
+                                                                                    Height="24">
+                                                                                <Border.Width>
+                                                                                    <MultiBinding
+                                                                                        Converter="{StaticResource PercentToPixelConverter}">
+                                                                                        <Binding Path="WidthPercent" />
+                                                                                        <Binding
+                                                                                            RelativeSource="{RelativeSource AncestorType=Border}"
+                                                                                            Path="Bounds.Width" />
+                                                                                    </MultiBinding>
+                                                                                </Border.Width>
+                                                                            </Border>
+                                                                        </Grid>
+                                                                    </Border>
+
+                                                                    <!-- Duration -->
+                                                                    <TextBlock Grid.Column="2"
+                                                                               Text="{Binding DurationText}"
+                                                                               Foreground="{DynamicResource TextPrimary}"
+                                                                               FontWeight="Medium"
+                                                                               FontSize="12"
+                                                                               VerticalAlignment="Center"
+                                                                               TextAlignment="Right" />
+                                                                </Grid>
+                                                            </DataTemplate>
+                                                        </ItemsControl.ItemTemplate>
+                                                    </ItemsControl>
+                                                </Border>
+
+                                                <!-- Summary Stats -->
+                                                <Border Background="{DynamicResource BgMain}"
+                                                        BorderBrush="{DynamicResource BorderColor}"
+                                                        BorderThickness="1"
+                                                        CornerRadius="8"
+                                                        Padding="16">
+                                                    <Grid ColumnDefinitions="*,*,*" ColumnSpacing="16">
+                                                        <!-- DNS -->
+                                                        <StackPanel Grid.Column="0" Spacing="4">
+                                                            <TextBlock Text="DNS Lookup"
+                                                                       Foreground="{DynamicResource TextMuted}"
+                                                                       FontSize="11" />
+                                                            <TextBlock Foreground="{DynamicResource TextPrimary}"
+                                                                       FontSize="13"
+                                                                       FontWeight="Medium">
+                                                                <Run
+                                                                    Text="{Binding RequestViewModel.TimelineStages[0].DurationText}" />
+                                                            </TextBlock>
+                                                        </StackPanel>
+
+                                                        <!-- Connection -->
+                                                        <StackPanel Grid.Column="1" Spacing="4">
+                                                            <TextBlock Text="Connection"
+                                                                       Foreground="{DynamicResource TextMuted}"
+                                                                       FontSize="11" />
+                                                            <TextBlock Foreground="{DynamicResource TextPrimary}"
+                                                                       FontSize="13"
+                                                                       FontWeight="Medium">
+                                                                <Run
+                                                                    Text="{Binding RequestViewModel.TimelineStages[1].DurationText}" />
+                                                            </TextBlock>
+                                                        </StackPanel>
+
+                                                        <!-- TTFB -->
+                                                        <StackPanel Grid.Column="2" Spacing="4">
+                                                            <TextBlock Text="Time to First Byte"
+                                                                       Foreground="{DynamicResource TextMuted}"
+                                                                       FontSize="11" />
+                                                            <TextBlock Foreground="{DynamicResource TextPrimary}"
+                                                                       FontSize="13"
+                                                                       FontWeight="Medium">
+                                                                <Run
+                                                                    Text="{Binding RequestViewModel.TimelineStages[3].DurationText}" />
+                                                            </TextBlock>
+                                                        </StackPanel>
+                                                    </Grid>
+                                                </Border>
+
+                                            </StackPanel>
+                                        </ScrollViewer>
+
+                                        <!-- Empty State -->
+                                        <StackPanel Margin="20"
+                                                    VerticalAlignment="Center"
+                                                    HorizontalAlignment="Center"
+                                                    Spacing="12"
+                                                    IsVisible="{Binding !RequestViewModel.HasResponseData}">
+                                            <Border Width="64"
+                                                    Height="64"
+                                                    Background="{DynamicResource BgMain}"
+                                                    CornerRadius="32"
+                                                    HorizontalAlignment="Center">
+                                                <lucide:Lucide Icon="Clock"
+                                                               StrokeBrush="{DynamicResource TextMuted}"
+                                                               Width="32"
+                                                               Height="32"
+                                                               HorizontalAlignment="Center"
+                                                               VerticalAlignment="Center" />
+                                            </Border>
+                                            <TextBlock Text="No Timeline Data"
+                                                       Foreground="{DynamicResource TextPrimary}"
+                                                       FontSize="16"
+                                                       FontWeight="SemiBold"
+                                                       HorizontalAlignment="Center" />
+                                            <TextBlock Text="Send a request to see timing breakdown"
+                                                       Foreground="{DynamicResource TextMuted}"
+                                                       FontSize="13"
+                                                       HorizontalAlignment="Center" />
+                                        </StackPanel>
+                                    </Grid>
+                                </Border>
+
+                            </Grid>
                         </Border>
                     </Grid>
                 </Grid>

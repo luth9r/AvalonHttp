@@ -3,6 +3,7 @@
              x:Class="AvalonHttp.App"
              xmlns:local="using:AvalonHttp"
              xmlns:lucide="clr-namespace:LucideAvalonia;assembly=LucideAvalonia"
+             xmlns:converters="clr-namespace:AvalonHttp.Converters"
              RequestedThemeVariant="Dark">
 
     <Application.DataTemplates>
@@ -27,6 +28,8 @@
         <SolidColorBrush x:Key="Warning">#F59E0B</SolidColorBrush>
         <SolidColorBrush x:Key="GlassBg">#0DFFFFFF</SolidColorBrush>
         <SolidColorBrush x:Key="GlassBorder">#1AFFFFFF</SolidColorBrush>
+        
+        <converters:PercentToPixelConverter x:Key="PercentToPixelConverter"/>
     </Application.Resources>
 
     <Application.Styles>
