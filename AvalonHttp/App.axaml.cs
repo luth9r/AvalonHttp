@@ -4,15 +4,21 @@ using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Data.Core;
 using Avalonia.Data.Core.Plugins;
 using System.Linq;
+using AvalonHttp.Services;
+using AvalonHttp.Services.Interfaces;
 using Avalonia.Markup.Xaml;
 using AvalonHttp.ViewModels;
+using AvalonHttp.ViewModels.CollectionAggregate;
 using AvalonHttp.Views;
 using Avalonia.Controls;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace AvalonHttp;
 
 public partial class App : Application
 {
+    public IServiceProvider? Services { get; private set; }
+    
     public override void Initialize()
     {
         AvaloniaXamlLoader.Load(this);
@@ -20,14 +26,22 @@ public partial class App : Application
 
     public override void OnFrameworkInitializationCompleted()
     {
+        var collection = new ServiceCollection();
+        
+        ConfigureServices(collection);
+        
+        Services = collection.BuildServiceProvider();
+        
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
             // Avoid duplicate validations from both Avalonia and the CommunityToolkit. 
             // More info: https://docs.avaloniaui.net/docs/guides/development-guides/data-validation#manage-validationplugins
             DisableAvaloniaDataAnnotationValidation();
+            var mainViewModel = Services.GetRequiredService<MainWindowViewModel>();
+
             desktop.MainWindow = new MainWindow
             {
-                DataContext = new MainWindowViewModel(),
+                DataContext = mainViewModel,
             };
             
             desktop.ShutdownMode = ShutdownMode.OnMainWindowClose;
@@ -36,6 +50,18 @@ public partial class App : Application
         }
 
         base.OnFrameworkInitializationCompleted();
+    }
+    
+    private void ConfigureServices(IServiceCollection services)
+    {
+        services.AddSingleton<IFileNameSanitizer, FileNameSanitizer>();
+        services.AddSingleton<ICollectionRepository, FileCollectionRepository>();
+        
+        services.AddSingleton<SessionService>();
+        
+        services.AddTransient<CollectionsViewModel>();
+        
+        services.AddTransient<MainWindowViewModel>();
     }
     
     private void OnApplicationExit(object? sender, ControlledApplicationLifetimeExitEventArgs e)

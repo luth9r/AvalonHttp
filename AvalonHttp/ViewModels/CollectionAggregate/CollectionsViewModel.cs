@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using AvalonHttp.Messages;
 using AvalonHttp.Models.CollectionAggregate;
 using AvalonHttp.Services;
+using AvalonHttp.Services.Interfaces;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
@@ -14,7 +15,7 @@ namespace AvalonHttp.ViewModels.CollectionAggregate;
 
 public partial class CollectionsViewModel : ViewModelBase
 {
-    private readonly CollectionService _collectionService;
+    private readonly ICollectionRepository _collectionService;
     private readonly SessionService _sessionService;
 
     [ObservableProperty]
@@ -31,7 +32,7 @@ public partial class CollectionsViewModel : ViewModelBase
 
     public event EventHandler<ApiRequest>? RequestSelected;
 
-    public CollectionsViewModel(CollectionService collectionService, SessionService sessionService)
+    public CollectionsViewModel(ICollectionRepository collectionService, SessionService sessionService)
     {
         _collectionService = collectionService;
         _sessionService = sessionService;

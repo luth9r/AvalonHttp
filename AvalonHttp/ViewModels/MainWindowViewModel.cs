@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 using AvalonHttp.Messages;
 using AvalonHttp.Models.CollectionAggregate;
 using AvalonHttp.Services.Interfaces;
+using AvalonHttp.ViewModels.CollectionAggregate;
 using CommunityToolkit.Mvvm.Messaging;
 using ApiRequest = AvalonHttp.Models.CollectionAggregate.ApiRequest;
 
@@ -74,8 +75,10 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
         SelectedResponseTab = tabName;
     }
 
-    public MainWindowViewModel()
+    public MainWindowViewModel(CollectionsViewModel collectionsViewModel)
     {
+        CollectionsViewModel = collectionsViewModel;
+        
         // Initialize services
         var httpService = new HttpService();
         var urlParserService = new UrlParserService();
@@ -84,11 +87,7 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
         var headersViewModel = new HeadersViewModel();
         var queryParamsViewModel = new QueryParamsViewModel(urlParserService);
         var authViewModel = new AuthViewModel();
-        var collectionService = new CollectionService();
         var sessionService = new SessionService();
-        
-        CollectionsViewModel = new CollectionAggregate.CollectionsViewModel(collectionService, sessionService);
-        
 
         CollectionsViewModel.RequestSelected += OnRequestSelected;
         RequestViewModel = new RequestViewModel(httpService, headersViewModel, queryParamsViewModel, authViewModel);
