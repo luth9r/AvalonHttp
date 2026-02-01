@@ -21,6 +21,11 @@ public partial class ApiRequest : ObservableObject
     [NotifyPropertyChangedFor(nameof(MethodString))]
     private HttpMethod _method = HttpMethod.Get;
     
+    [ObservableProperty]
+    private ObservableCollection<KeyValueItemModel> _cookies = new();
+
+    [ObservableProperty]
+    private AuthData _authData = new();
     public string MethodString
     {
         get => Method.Method;

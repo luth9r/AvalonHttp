@@ -331,7 +331,7 @@
                                                                     <KeyBinding Gesture="Escape"
                                                                             Command="{Binding CancelRenameCommand}" />
                                                                 </TextBox.KeyBindings>
-                                                                
+
                                                                 <Interaction.Behaviors>
                                                                     <EventTriggerBehavior EventName="LostFocus">
                                                                         <InvokeCommandAction
@@ -534,6 +534,19 @@
                                     Classes.Active="{Binding SelectedRequestTab, Converter={x:Static ObjectConverters.Equal}, ConverterParameter=Body}"
                                     PointerPressed="SelectRequestTab" Tag="Body">
                                 <TextBlock Text="Body" />
+                            </Border>
+
+                            <Border Classes="Tab"
+                                    Classes.Active="{Binding SelectedRequestTab, Converter={x:Static ObjectConverters.Equal}, ConverterParameter=Cookies}"
+                                    PointerPressed="SelectRequestTab" Tag="Cookies">
+                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                    <TextBlock Text="Cookies" />
+                                    <Border Classes="Badge"
+                                            IsVisible="{Binding RequestViewModel.CookiesViewModel.EnabledCookiesCount, Converter={x:Static ObjectConverters.NotEqual}, ConverterParameter=0}">
+                                        <TextBlock
+                                            Text="{Binding RequestViewModel.CookiesViewModel.EnabledCookiesCount}" />
+                                    </Border>
+                                </StackPanel>
                             </Border>
 
                         </StackPanel>
@@ -757,24 +770,92 @@
                                     Margin="0,12,0,0" />
                             </StackPanel>
 
-                            <!-- PRE-REQUEST TAB CONTENT -->
-                            <StackPanel
-                                IsVisible="{Binding SelectedRequestTab, Converter={x:Static ObjectConverters.Equal}, ConverterParameter=PreRequest}">
-                                <TextBlock Text="PRE-REQUEST SCRIPT" Classes="SectionTitle" />
-                                <TextBlock Text="Pre-request script features coming soon..."
-                                           Foreground="{DynamicResource TextMuted}"
-                                           FontSize="13"
-                                           Margin="0,12,0,0" />
-                            </StackPanel>
 
-                            <!-- TESTS TAB CONTENT -->
+                            <!-- COOKIES TAB CONTENT -->
                             <StackPanel
-                                IsVisible="{Binding SelectedRequestTab, Converter={x:Static ObjectConverters.Equal}, ConverterParameter=Tests}">
-                                <TextBlock Text="TESTS" Classes="SectionTitle" />
-                                <TextBlock Text="Test script features coming soon..."
-                                           Foreground="{DynamicResource TextMuted}"
-                                           FontSize="13"
-                                           Margin="0,12,0,0" />
+                                IsVisible="{Binding SelectedRequestTab, Converter={x:Static ObjectConverters.Equal}, ConverterParameter=Cookies}">
+                                <Grid ColumnDefinitions="*, Auto, Auto" Margin="0,0,0,12">
+                                    <TextBlock Grid.Column="0"
+                                               Text="REQUEST COOKIES"
+                                               Classes="SectionTitle" />
+                                </Grid>
+
+                                <!-- Info Banner -->
+                                <Border Background="{DynamicResource BgElevated}"
+                                        BorderBrush="{DynamicResource BorderColor}"
+                                        BorderThickness="1"
+                                        CornerRadius="6"
+                                        Padding="12"
+                                        Margin="0,0,0,16">
+                                    <Grid ColumnDefinitions="Auto, *">
+                                        <lucide:Lucide Grid.Column="0"
+                                                       Icon="Info"
+                                                       StrokeBrush="#3B82F6"
+                                                       Width="16" Height="16"
+                                                       VerticalAlignment="Top"
+                                                       Margin="0,2,10,0" />
+                                        <StackPanel Grid.Column="1" Spacing="4">
+                                            <TextBlock Text="Cookies are sent as 'Cookie' header"
+                                                       Foreground="{DynamicResource TextPrimary}"
+                                                       FontSize="12"
+                                                       FontWeight="Medium" />
+                                            <TextBlock Text="Format: name1=value1; name2=value2"
+                                                       Foreground="{DynamicResource TextSecondary}"
+                                                       FontSize="11" />
+                                        </StackPanel>
+                                    </Grid>
+                                </Border>
+
+                                <!-- Cookies List -->
+                                <ItemsControl ItemsSource="{Binding RequestViewModel.CookiesViewModel.Cookies}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Grid ColumnSpacing="12" Margin="0,6">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="40" />
+                                                    <ColumnDefinition Width="*" MinWidth="80" />
+                                                    <ColumnDefinition Width="*" MinWidth="80" />
+                                                    <ColumnDefinition Width="40" />
+                                                </Grid.ColumnDefinitions>
+
+                                                <CheckBox Grid.Column="0"
+                                                          IsChecked="{Binding IsEnabled}"
+                                                          VerticalAlignment="Center" />
+
+                                                <TextBox Grid.Column="1"
+                                                         Text="{Binding Key}"
+                                                         Classes="KvInput"
+                                                         Watermark="Cookie name" />
+
+                                                <TextBox Grid.Column="2"
+                                                         Text="{Binding Value}"
+                                                         Classes="KvInput"
+                                                         Watermark="Cookie value" />
+
+                                                <Button Grid.Column="3"
+                                                        Classes="IconButton"
+                                                        Command="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).RequestViewModel.CookiesViewModel.RemoveCookieCommand}"
+                                                        CommandParameter="{Binding}">
+                                                    <lucide:Lucide Icon="Trash2"
+                                                                   StrokeBrush="{DynamicResource TextMuted}"
+                                                                   Width="16" Height="16" />
+                                                </Button>
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+
+                                <!-- Add Cookie Button -->
+                                <Button Classes="AddRowButton"
+                                        Margin="0,12,0,0"
+                                        Command="{Binding RequestViewModel.CookiesViewModel.AddCookieCommand}">
+                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                        <lucide:Lucide Icon="Plus"
+                                                       StrokeBrush="{DynamicResource TextSecondary}"
+                                                       Width="14" Height="14" />
+                                        <TextBlock Text="Add Cookie" />
+                                    </StackPanel>
+                                </Button>
                             </StackPanel>
 
                         </StackPanel>
@@ -896,7 +977,6 @@
                                 </Border>
                             </StackPanel>
                         </Border>
-                        <!-- RESPONSE CONTENT -->
                         <!-- RESPONSE CONTENT -->
                         <Grid Grid.Row="2" Background="{DynamicResource BgMain}">
 

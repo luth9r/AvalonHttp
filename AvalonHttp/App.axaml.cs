@@ -59,6 +59,7 @@ public partial class App : Application
         services.AddTransient<HeadersViewModel>();
         services.AddTransient<AuthViewModel>();
         services.AddTransient<QueryParamsViewModel>();
+        services.AddTransient<CookiesViewModel>();
         
         services.AddTransient<RequestViewModel>();
         
