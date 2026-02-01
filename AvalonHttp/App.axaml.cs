@@ -37,12 +37,8 @@ public partial class App : Application
             // Avoid duplicate validations from both Avalonia and the CommunityToolkit. 
             // More info: https://docs.avaloniaui.net/docs/guides/development-guides/data-validation#manage-validationplugins
             DisableAvaloniaDataAnnotationValidation();
-            var mainViewModel = Services.GetRequiredService<MainWindowViewModel>();
 
-            desktop.MainWindow = new MainWindow
-            {
-                DataContext = mainViewModel,
-            };
+            desktop.MainWindow = Services.GetRequiredService<MainWindow>();
             
             desktop.ShutdownMode = ShutdownMode.OnMainWindowClose;
             
@@ -69,6 +65,8 @@ public partial class App : Application
         services.AddTransient<CollectionsViewModel>();
         
         services.AddTransient<MainWindowViewModel>();
+        
+        services.AddTransient<MainWindow>();
     }
     
     private void OnApplicationExit(object? sender, ControlledApplicationLifetimeExitEventArgs e)

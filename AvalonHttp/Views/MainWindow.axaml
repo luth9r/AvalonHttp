@@ -329,7 +329,7 @@
                                                                     <KeyBinding Gesture="Enter"
                                                                             Command="{Binding FinishRenameCommand}" />
                                                                     <KeyBinding Gesture="Escape"
-                                                                            Command="{Binding FinishRenameCommand}" />
+                                                                            Command="{Binding CancelRenameCommand}" />
                                                                 </TextBox.KeyBindings>
                                                                 
                                                                 <Interaction.Behaviors>

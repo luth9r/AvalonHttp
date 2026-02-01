@@ -1,6 +1,7 @@
 using System;
 using AvalonHttp.Controls;
 using AvalonHttp.ViewModels;
+using AvalonHttp.ViewModels.CollectionAggregate;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
@@ -9,10 +10,23 @@ namespace AvalonHttp.Views;
 
 public partial class MainWindow : Window
 {
-    public MainWindow()
+    private readonly MainWindowViewModel  _viewModel;
+    
+    public MainWindow(MainWindowViewModel viewModel)
     {
         InitializeComponent();
         Focusable = true;
+        
+        _viewModel = viewModel ?? throw new ArgumentNullException(nameof(viewModel));
+        
+        DataContext = _viewModel;
+        
+        Loaded += OnWindowLoaded;
+    }
+    
+    private async void OnWindowLoaded(object? sender, EventArgs e)
+    {
+        await _viewModel.CollectionsViewModel.InitializeAsync();
     }
     
     private void SelectRequestTab(object? sender, PointerPressedEventArgs e)
