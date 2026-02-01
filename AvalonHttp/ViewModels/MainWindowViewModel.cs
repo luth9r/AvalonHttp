@@ -17,18 +17,14 @@ namespace AvalonHttp.ViewModels;
 
 public partial class MainWindowViewModel : ViewModelBase, IDisposable
 {
-    [ObservableProperty]
-    private ObservableCollection<ApiCollection> _collections;
-    
-    public CollectionAggregate.CollectionsViewModel CollectionsViewModel { get; }
+    public CollectionsViewModel CollectionsViewModel { get; }
+    public RequestViewModel RequestViewModel { get; }
 
     [ObservableProperty]
     private bool _isSidebarVisible = true;
 
     [ObservableProperty]
     private double _sidebarWidth = 280;
-
-    public RequestViewModel RequestViewModel { get; }
     
     [ObservableProperty]
     private bool _isDialogOpen;
@@ -39,9 +35,18 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
     [ObservableProperty]
     private string _dialogMessage = "";
     
+    [ObservableProperty] 
+    private string _confirmButtonText = "Confirm";
+    
+    [ObservableProperty]
+    private string _selectedRequestTab = "Params";
+    
+    [ObservableProperty]
+    private string _selectedResponseTab = "Body";
+    
     private Func<Task>? _pendingConfirmAction;
 
-    public ObservableCollection<string> HttpMethods { get; } = new ObservableCollection<string>()
+    public ObservableCollection<string> HttpMethods { get; } = new()
     {
         "GET",
         "POST",
@@ -52,14 +57,61 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
         "OPTIONS",
     };
 
-    [ObservableProperty] 
-    private string _confirmButtonText = "Exit Anyway";
+    public MainWindowViewModel(
+        CollectionsViewModel collectionsViewModel, 
+        RequestViewModel requestViewModel)
+    {
+        CollectionsViewModel = collectionsViewModel ?? 
+            throw new ArgumentNullException(nameof(collectionsViewModel));
+        RequestViewModel = requestViewModel ?? 
+            throw new ArgumentNullException(nameof(requestViewModel));
 
-    [ObservableProperty]
-    private string _selectedRequestTab = "Params";
+        // Subscribe to events
+        CollectionsViewModel.RequestSelected += OnRequestSelected;
+        RequestViewModel.RequestSaved += OnRequestSaved;
+        RequestViewModel.PropertyChanged += OnRequestViewModelPropertyChanged;
+        
+        WeakReferenceMessenger.Default.Register<ConfirmMessage>(this, OnConfirmMessageReceived);
+    }
     
-    [ObservableProperty]
-    private string _selectedResponseTab = "Body";
+    private void OnConfirmMessageReceived(object recipient, ConfirmMessage message)
+    {
+        DialogTitle = message.Title;
+        DialogMessage = message.Message;
+        ConfirmButtonText = message.ConfirmButtonText ?? "Confirm";
+        _pendingConfirmAction = message.OnConfirm;
+        
+        IsDialogOpen = true;
+    }
+    
+    [RelayCommand]
+    private async Task ExecuteConfirm()
+    {
+        IsDialogOpen = false;
+        
+        if (_pendingConfirmAction != null)
+        {
+            try
+            {
+                await _pendingConfirmAction.Invoke();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Confirm action failed: {ex.Message}");
+            }
+            finally
+            {
+                _pendingConfirmAction = null;
+            }
+        }
+    }
+
+    [RelayCommand]
+    private void CancelConfirm()
+    {
+        IsDialogOpen = false;
+        _pendingConfirmAction = null;
+    }
     
     [RelayCommand]
     private void SelectRequestTab(string tabName)
@@ -71,47 +123,6 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
     private void SelectResponseTab(string tabName)
     {
         SelectedResponseTab = tabName;
-    }
-
-    public MainWindowViewModel(CollectionsViewModel collectionsViewModel, RequestViewModel requestViewModel)
-    {
-        CollectionsViewModel = collectionsViewModel;
-        RequestViewModel = requestViewModel;
-
-        CollectionsViewModel.RequestSelected += OnRequestSelected;
-        RequestViewModel.RequestSaved += OnRequestSaved;
-        RequestViewModel.PropertyChanged += OnRequestViewModelPropertyChanged;
-        
-        WeakReferenceMessenger.Default.Register<ConfirmMessage>(this, OnConfirmMessageReceived);
-        
-        InitializeCollections();
-    }
-    
-    private void OnConfirmMessageReceived(object recipient, ConfirmMessage message)
-    {
-        DialogTitle = message.Title;
-        DialogMessage = message.Message;
-        _pendingConfirmAction = message.OnConfirm;
-        
-        IsDialogOpen = true;
-    }
-    
-    [RelayCommand]
-    private async Task ExecuteConfirm()
-    {
-        IsDialogOpen = false;
-        if (_pendingConfirmAction != null)
-        {
-            await _pendingConfirmAction.Invoke();
-            _pendingConfirmAction = null;
-        }
-    }
-
-    [RelayCommand]
-    private void CancelConfirm()
-    {
-        IsDialogOpen = false;
-        _pendingConfirmAction = null;
     }
     
     private void OnRequestViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
@@ -131,35 +142,23 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
         RequestViewModel.LoadRequest(request);
     }
 
-    private void OnRequestSaved(object? sender, ApiRequest savedRequest)
+    private async void OnRequestSaved(object? sender, ApiRequest savedRequest)
     {
         var selectedItem = CollectionsViewModel.SelectedRequest;
 
-        if (selectedItem != null && selectedItem.ToModel() == savedRequest)
+        if (selectedItem != null && selectedItem.Id == savedRequest.Id)
         {
             var collectionVm = selectedItem.Parent;
             
-            if (CollectionsViewModel.SaveCollectionCommand.CanExecute(collectionVm))
+            try
             {
-                CollectionsViewModel.SaveCollectionCommand.ExecuteAsync(collectionVm);
+                await CollectionsViewModel.SaveCollectionCommand.ExecuteAsync(collectionVm);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Failed to save collection after request save: {ex.Message}");
             }
         }
-    }
-    
-    private void InitializeCollections()
-    {
-        Collections = new ObservableCollection<ApiCollection>
-        {
-            new ApiCollection
-            {
-                Name = "API Testing",
-                Requests = new ObservableCollection<ApiRequest>
-                {
-                    new() { Name = "Get Users", Method = HttpMethod.Get, Url = "https://jsonplaceholder.typicode.com/users" },
-                    new() { Name = "Create User", Method = HttpMethod.Post, Url = "https://jsonplaceholder.typicode.com/users" }
-                }
-            }
-        };
     }
 
     [RelayCommand]
@@ -172,29 +171,47 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
     [RelayCommand]
     private async Task CopyResponse()
     {
-        if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+        try
         {
-            var mainWindow = desktop.MainWindow;
-            if (mainWindow?.Clipboard != null)
+            if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
             {
-                await mainWindow.Clipboard.SetTextAsync(RequestViewModel.ResponseContent);
+                var mainWindow = desktop.MainWindow;
+                if (mainWindow?.Clipboard != null && !string.IsNullOrEmpty(RequestViewModel.ResponseContent))
+                {
+                    await mainWindow.Clipboard.SetTextAsync(RequestViewModel.ResponseContent);
+                }
             }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Failed to copy response: {ex.Message}");
         }
     }
     
     [RelayCommand]
-    public void CloseAllEdits()
+    public async Task CloseAllEdits()
     {
-        foreach (var collection in CollectionsViewModel.Collections)
+        try
         {
-            if (collection.IsEditing)
-                collection.FinishRenameCommand?.Execute(null);
-            
-            foreach (var request in collection.Requests)
+            foreach (var collection in CollectionsViewModel.Collections)
             {
-                if (request.IsEditing)
-                    request.FinishRenameCommand?.Execute(null);
+                if (collection.IsEditing)
+                {
+                    await collection.FinishRenameCommand.ExecuteAsync(null);
+                }
+                
+                foreach (var request in collection.Requests)
+                {
+                    if (request.IsEditing)
+                    {
+                        await request.FinishRenameCommand.ExecuteAsync(null);
+                    }
+                }
             }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Failed to close edits: {ex.Message}");
         }
     }
     
@@ -208,29 +225,49 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
                 "You have unsaved changes. Exit anyway?",
                 () => 
                 {
-                    System.Environment.Exit(0); 
+                    Environment.Exit(0); 
                     return Task.CompletedTask;
                 },
-                this.ConfirmButtonText
+                "Exit Anyway"
             ));
         }
         else
         {
-            System.Environment.Exit(0);
+            Environment.Exit(0);
         }
     }
     
     public void Dispose()
     {
-        if (RequestViewModel is IDisposable disposableRequest)
+        try
         {
-            disposableRequest.Dispose();
+            // Unsubscribe from events
+            if (CollectionsViewModel != null)
+            {
+                CollectionsViewModel.RequestSelected -= OnRequestSelected;
+            }
+
+            if (RequestViewModel != null)
+            {
+                RequestViewModel.RequestSaved -= OnRequestSaved;
+                RequestViewModel.PropertyChanged -= OnRequestViewModelPropertyChanged;
+                
+                if (RequestViewModel is IDisposable disposableRequest)
+                {
+                    disposableRequest.Dispose();
+                }
+            }
+
+            // Unregister from messenger
+            WeakReferenceMessenger.Default.UnregisterAll(this);
         }
-        
-        CollectionsViewModel.RequestSelected -= OnRequestSelected;
-        WeakReferenceMessenger.Default.UnregisterAll(this);
-        Collections.Clear();
-        
-        GC.SuppressFinalize(this);
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Error during MainWindowViewModel disposal: {ex.Message}");
+        }
+        finally
+        {
+            GC.SuppressFinalize(this);
+        }
     }
 }

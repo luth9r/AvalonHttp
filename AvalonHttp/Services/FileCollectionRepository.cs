@@ -95,7 +95,30 @@ public class FileCollectionRepository : ICollectionRepository
 
             try
             {
+                System.Diagnostics.Debug.WriteLine($"=== SAVING COLLECTION: {collection.Name} ===");
+                System.Diagnostics.Debug.WriteLine($"File path: {newFilePath}");
+                System.Diagnostics.Debug.WriteLine($"Requests count: {collection.Requests.Count}");
+                
+                foreach (var request in collection.Requests)
+                {
+                    System.Diagnostics.Debug.WriteLine($"  Request: {request.Name}");
+                    System.Diagnostics.Debug.WriteLine($"    Body: '{request.Body}' (length: {request.Body?.Length ?? 0})");
+                    System.Diagnostics.Debug.WriteLine($"    Cookies: {request.Cookies?.Count ?? 0}");
+                    System.Diagnostics.Debug.WriteLine($"    Auth Type: {request.AuthData?.Type ?? "null"}");
+                
+                    if (request.AuthData != null)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"    Auth Details: User={request.AuthData.BasicUsername}, Token={request.AuthData.BearerToken}");
+                    }
+                }
+                
                 var json = JsonSerializer.Serialize(collection, _jsonOptions);
+                
+                System.Diagnostics.Debug.WriteLine($"JSON length: {json.Length} characters");
+                System.Diagnostics.Debug.WriteLine($"JSON preview (first 1000 chars):");
+                System.Diagnostics.Debug.WriteLine(json.Substring(0, Math.Min(1000, json.Length)));
+                System.Diagnostics.Debug.WriteLine("---");
+                
                 await File.WriteAllTextAsync(tempFilePath, json);
                 
                 if (oldFilePath != newFilePath && File.Exists(oldFilePath))
@@ -111,9 +134,14 @@ public class FileCollectionRepository : ICollectionRepository
                 File.Move(tempFilePath, newFilePath);
                 
                 _filePathCache[collection.Id] = newFilePath;
+                
+                System.Diagnostics.Debug.WriteLine($"✅ Collection saved successfully to: {newFilePath}");
             }
             catch (Exception ex)
             {
+                System.Diagnostics.Debug.WriteLine($"❌ SAVE ERROR: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Stack trace: {ex.StackTrace}");
+                
                 if (File.Exists(tempFilePath))
                 {
                     File.Delete(tempFilePath);
@@ -157,18 +185,56 @@ public class FileCollectionRepository : ICollectionRepository
     }
 
     private async Task<ApiCollection?> LoadCollectionFromFileAsync(string filePath)
+{
+    try
     {
-        try
+        System.Diagnostics.Debug.WriteLine($"=== LOADING COLLECTION FROM: {filePath} ===");
+        
+        var json = await File.ReadAllTextAsync(filePath);
+        
+        System.Diagnostics.Debug.WriteLine($"JSON length: {json.Length} characters");
+        System.Diagnostics.Debug.WriteLine($"JSON preview (first 1000 chars):");
+        System.Diagnostics.Debug.WriteLine(json.Substring(0, Math.Min(1000, json.Length)));
+        System.Diagnostics.Debug.WriteLine("---");
+        
+        var collection = JsonSerializer.Deserialize<ApiCollection>(json, _jsonOptions);
+        
+        if (collection != null)
         {
-            var json = await File.ReadAllTextAsync(filePath);
-            return JsonSerializer.Deserialize<ApiCollection>(json, _jsonOptions);
+            System.Diagnostics.Debug.WriteLine($"✅ Loaded collection: {collection.Name}");
+            System.Diagnostics.Debug.WriteLine($"Requests count: {collection.Requests?.Count ?? 0}");
+            
+            if (collection.Requests != null)
+            {
+                foreach (var request in collection.Requests)
+                {
+                    System.Diagnostics.Debug.WriteLine($"  Request: {request.Name}");
+                    System.Diagnostics.Debug.WriteLine($"    Body: '{request.Body}' (length: {request.Body?.Length ?? 0})");
+                    System.Diagnostics.Debug.WriteLine($"    Cookies: {request.Cookies?.Count ?? 0}");
+                    System.Diagnostics.Debug.WriteLine($"    Auth Type: {request.AuthData?.Type ?? "null"}");
+                    
+                    // ✅ Initialize null collections
+                    request.Headers ??= new System.Collections.ObjectModel.ObservableCollection<AvalonHttp.Models.KeyValueItemModel>();
+                    request.QueryParameters ??= new System.Collections.ObjectModel.ObservableCollection<AvalonHttp.Models.KeyValueItemModel>();
+                    request.Cookies ??= new System.Collections.ObjectModel.ObservableCollection<AvalonHttp.Models.KeyValueItemModel>();
+                    request.AuthData ??= new AuthData();
+                }
+            }
         }
-        catch (Exception ex)
+        else
         {
-            System.Diagnostics.Debug.WriteLine($"Failed to load {filePath}: {ex.Message}");
-            return null;
+            System.Diagnostics.Debug.WriteLine("⚠️ Deserialization returned null");
         }
+        
+        return collection;
     }
+    catch (Exception ex)
+    {
+        System.Diagnostics.Debug.WriteLine($"❌ LOAD ERROR from {filePath}: {ex.Message}");
+        System.Diagnostics.Debug.WriteLine($"Stack trace: {ex.StackTrace}");
+        return null;
+    }
+}
 
     private string GenerateFilePath(ApiCollection collection)
     {
