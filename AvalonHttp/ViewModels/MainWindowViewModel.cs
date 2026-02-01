@@ -2,7 +2,6 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Net.Http;
-using AvalonHttp.Services;
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -10,7 +9,6 @@ using CommunityToolkit.Mvvm.Input;
 using System.Threading.Tasks;
 using AvalonHttp.Messages;
 using AvalonHttp.Models.CollectionAggregate;
-using AvalonHttp.Services.Interfaces;
 using AvalonHttp.ViewModels.CollectionAggregate;
 using CommunityToolkit.Mvvm.Messaging;
 using ApiRequest = AvalonHttp.Models.CollectionAggregate.ApiRequest;
@@ -75,22 +73,12 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
         SelectedResponseTab = tabName;
     }
 
-    public MainWindowViewModel(CollectionsViewModel collectionsViewModel)
+    public MainWindowViewModel(CollectionsViewModel collectionsViewModel, RequestViewModel requestViewModel)
     {
         CollectionsViewModel = collectionsViewModel;
-        
-        // Initialize services
-        var httpService = new HttpService();
-        var urlParserService = new UrlParserService();
-
-        // Initialize ViewModels
-        var headersViewModel = new HeadersViewModel();
-        var queryParamsViewModel = new QueryParamsViewModel(urlParserService);
-        var authViewModel = new AuthViewModel();
-        var sessionService = new SessionService();
+        RequestViewModel = requestViewModel;
 
         CollectionsViewModel.RequestSelected += OnRequestSelected;
-        RequestViewModel = new RequestViewModel(httpService, headersViewModel, queryParamsViewModel, authViewModel);
         RequestViewModel.RequestSaved += OnRequestSaved;
         RequestViewModel.PropertyChanged += OnRequestViewModelPropertyChanged;
         

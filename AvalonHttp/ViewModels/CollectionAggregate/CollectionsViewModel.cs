@@ -16,7 +16,7 @@ namespace AvalonHttp.ViewModels.CollectionAggregate;
 public partial class CollectionsViewModel : ViewModelBase
 {
     private readonly ICollectionRepository _collectionService;
-    private readonly SessionService _sessionService;
+    private readonly ISessionService _sessionService;
 
     [ObservableProperty]
     private ObservableCollection<CollectionItemViewModel> _collections = new();
@@ -32,7 +32,7 @@ public partial class CollectionsViewModel : ViewModelBase
 
     public event EventHandler<ApiRequest>? RequestSelected;
 
-    public CollectionsViewModel(ICollectionRepository collectionService, SessionService sessionService)
+    public CollectionsViewModel(ICollectionRepository collectionService, ISessionService sessionService)
     {
         _collectionService = collectionService;
         _sessionService = sessionService;
