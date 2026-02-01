@@ -56,10 +56,13 @@ public partial class App : Application
     {
         services.AddSingleton<IFileNameSanitizer, FileNameSanitizer>();
         services.AddSingleton<ICollectionRepository, FileCollectionRepository>();
+        services.AddSingleton<IHttpService, HttpService>();
+        services.AddSingleton<IUrlParserService, UrlParserService>();
         
         services.AddSingleton<SessionService>();
         
         services.AddTransient<CollectionsViewModel>();
+        services.AddTransient<RequestViewModel>();
         
         services.AddTransient<MainWindowViewModel>();
     }
