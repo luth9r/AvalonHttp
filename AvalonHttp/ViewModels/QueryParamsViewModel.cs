@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
+using System.ComponentModel;
 using System.Linq;
 using AvalonHttp.Models;
 using AvalonHttp.Services.Interfaces;
@@ -15,6 +17,7 @@ public partial class QueryParamsViewModel : ViewModelBase, IDisposable
     private bool _isUpdating = false;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(EnabledParametersCount))]
     private ObservableCollection<KeyValueItemModel> _parameters;
 
     public int EnabledParametersCount => 
@@ -24,14 +27,18 @@ public partial class QueryParamsViewModel : ViewModelBase, IDisposable
 
     public QueryParamsViewModel(IUrlParserService urlParserService)
     {
-        _urlParserService = urlParserService;
+        _urlParserService = urlParserService ?? throw new ArgumentNullException(nameof(urlParserService));
         _parameters = new ObservableCollection<KeyValueItemModel>();
-        _parameters.CollectionChanged += OnParametersChanged;
+        _parameters.CollectionChanged += OnParametersCollectionChanged;
     }
 
+    /// <summary>
+    /// Load parameters from URL string.
+    /// </summary>
     public void LoadFromUrl(string url)
     {
-        if (_isUpdating) return;
+        if (_isUpdating || string.IsNullOrWhiteSpace(url))
+            return;
 
         try
         {
@@ -39,12 +46,16 @@ public partial class QueryParamsViewModel : ViewModelBase, IDisposable
 
             var (_, parameters) = _urlParserService.ParseUrl(url);
 
-            Parameters.Clear();
+            Clear();
+            
             foreach (var param in parameters)
             {
-                param.PropertyChanged += OnParameterPropertyChanged;
                 Parameters.Add(param);
             }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Failed to load parameters from URL: {ex.Message}");
         }
         finally
         {
@@ -53,38 +64,143 @@ public partial class QueryParamsViewModel : ViewModelBase, IDisposable
         }
     }
 
+    /// <summary>
+    /// Load parameters from collection.
+    /// </summary>
+    public void LoadParameters(IEnumerable<KeyValueItemModel>? parameters)
+    {
+        if (_isUpdating)
+            return;
+
+        try
+        {
+            _isUpdating = true;
+
+            Clear();
+
+            if (parameters != null)
+            {
+                foreach (var param in parameters)
+                {
+                    // Create new instance to break reference
+                    Parameters.Add(new KeyValueItemModel
+                    {
+                        IsEnabled = param.IsEnabled,
+                        Key = param.Key,
+                        Value = param.Value
+                    });
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Failed to load parameters: {ex.Message}");
+        }
+        finally
+        {
+            _isUpdating = false;
+            OnPropertyChanged(nameof(EnabledParametersCount));
+        }
+    }
+
+    /// <summary>
+    /// Build URL with query parameters.
+    /// </summary>
     public string BuildUrl(string baseUrl)
     {
-        return _urlParserService.BuildUrl(baseUrl, Parameters);
+        if (string.IsNullOrWhiteSpace(baseUrl))
+            return string.Empty;
+
+        try
+        {
+            return _urlParserService.BuildUrl(baseUrl, Parameters);
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Failed to build URL: {ex.Message}");
+            return baseUrl;
+        }
+    }
+
+    /// <summary>
+    /// Get enabled parameters as key-value pairs (HTTP-compliant, supports duplicates).
+    /// </summary>
+    public IEnumerable<KeyValuePair<string, string>> GetEnabledParameters()
+    {
+        foreach (var param in Parameters.Where(p => p.IsEnabled && !string.IsNullOrWhiteSpace(p.Key)))
+        {
+            var key = param.Key.Trim();
+            var value = (param.Value ?? "").Trim();
+            
+            yield return new KeyValuePair<string, string>(key, value);
+        }
+    }
+
+    /// <summary>
+    /// Export parameters to collection.
+    /// </summary>
+    public ObservableCollection<KeyValueItemModel> ToCollection()
+    {
+        return new ObservableCollection<KeyValueItemModel>(
+            Parameters.Select(p => new KeyValueItemModel
+            {
+                IsEnabled = p.IsEnabled,
+                Key = p.Key,
+                Value = p.Value
+            })
+        );
     }
 
     [RelayCommand]
     private void AddParameter()
     {
         var newParam = new KeyValueItemModel { IsEnabled = true, Key = "", Value = "" };
-        newParam.PropertyChanged += OnParameterPropertyChanged;
         Parameters.Add(newParam);
     }
 
     [RelayCommand]
-    private void RemoveParameter(KeyValueItemModel param)
+    private void RemoveParameter(KeyValueItemModel? param)
     {
-        param.PropertyChanged -= OnParameterPropertyChanged;
-        Parameters.Remove(param);
+        if (param != null)
+        {
+            Parameters.Remove(param);
+        }
     }
 
-    private void OnParametersChanged(object? sender, NotifyCollectionChangedEventArgs e)
+    [RelayCommand]
+    private void ToggleAll(bool isEnabled)
     {
-        if (_isUpdating) return;
-
-        if (e.NewItems != null)
+        foreach (var param in Parameters)
         {
-            foreach (KeyValueItemModel param in e.NewItems)
-            {
-                param.PropertyChanged += OnParameterPropertyChanged;
-            }
+            param.IsEnabled = isEnabled;
+        }
+    }
+
+    /// <summary>
+    /// Clear all parameters with proper cleanup.
+    /// </summary>
+    public void Clear()
+    {
+        // Unsubscribe from all items
+        foreach (var param in Parameters)
+        {
+            param.PropertyChanged -= OnParameterPropertyChanged;
         }
 
+        Parameters.Clear();
+    }
+
+    private void OnParametersCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
+    {
+        // Handle Reset action
+        if (e.Action == NotifyCollectionChangedAction.Reset)
+        {
+            OnPropertyChanged(nameof(EnabledParametersCount));
+            NotifyUrlChanged();
+            return;
+        }
+
+        // Unsubscribe from old items
         if (e.OldItems != null)
         {
             foreach (KeyValueItemModel param in e.OldItems)
@@ -93,11 +209,20 @@ public partial class QueryParamsViewModel : ViewModelBase, IDisposable
             }
         }
 
+        // Subscribe to new items
+        if (e.NewItems != null)
+        {
+            foreach (KeyValueItemModel param in e.NewItems)
+            {
+                param.PropertyChanged += OnParameterPropertyChanged;
+            }
+        }
+
         OnPropertyChanged(nameof(EnabledParametersCount));
         NotifyUrlChanged();
     }
 
-    private void OnParameterPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    private void OnParameterPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
         if (e.PropertyName == nameof(KeyValueItemModel.Key) ||
             e.PropertyName == nameof(KeyValueItemModel.Value) ||
@@ -110,27 +235,42 @@ public partial class QueryParamsViewModel : ViewModelBase, IDisposable
 
     private void NotifyUrlChanged()
     {
-        if (_isUpdating) return;
+        if (_isUpdating)
+            return;
+
         UrlChanged?.Invoke(this, string.Empty);
     }
 
     public void Dispose()
     {
-        if (_parameters != null)
+        try
         {
-            _parameters.CollectionChanged -= OnParametersChanged;
-        }
-
-        if (_parameters != null)
-        {
-            foreach (var param in _parameters)
+            // Unsubscribe from collection changes
+            if (Parameters != null)
             {
-                param.PropertyChanged -= OnParameterPropertyChanged;
+                Parameters.CollectionChanged -= OnParametersCollectionChanged;
+
+                // Unsubscribe from all parameter property changes
+                foreach (var param in Parameters)
+                {
+                    param.PropertyChanged -= OnParameterPropertyChanged;
+                }
+
+                Parameters.Clear();
+            }
+
+            // Clear event handlers (safer than setting to null)
+            if (UrlChanged != null)
+            {
+                foreach (var handler in UrlChanged.GetInvocationList())
+                {
+                    UrlChanged -= (EventHandler<string>)handler;
+                }
             }
         }
-        
-        _parameters?.Clear();
-        
-        UrlChanged = null;
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Error during QueryParamsViewModel disposal: {ex.Message}");
+        }
     }
 }

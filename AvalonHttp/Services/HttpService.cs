@@ -31,7 +31,7 @@ public class HttpService : IHttpService, IDisposable
     public async Task<HttpResponseMessage> SendRequestAsync(
         string url,
         string method,
-        Dictionary<string, string> headers,
+        IEnumerable<KeyValuePair<string, string>> headers,
         string? body = null,
         string? contentType = null,
         CancellationToken cancellationToken = default)
