@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Net.Http;
+using System.Threading;
 using System.Threading.Tasks;
 using AvalonHttp.Models;
 
@@ -11,7 +12,9 @@ public interface IHttpService
         string url, 
         string method, 
         Dictionary<string, string> headers,
-        string? body = null);
+        string? body = null,
+        string? contentType = null,
+        CancellationToken cancellationToken = default);
     
     RequestMetrics LastRequestMetrics { get; }
 }

@@ -1,11 +1,8 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
-using System.Net;
 using System.Net.Http;
-using System.Net.Security;
-using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -16,142 +13,87 @@ namespace AvalonHttp.Services;
 
 public class HttpService : IHttpService, IDisposable
 {
-    private RequestMetrics _lastMetrics = new();
+    private readonly HttpClient _httpClient;
+    private readonly ConcurrentDictionary<string, RequestMetrics> _metricsStore = new();
+    
+    public RequestMetrics? LastRequestMetrics { get; private set; }
 
-    public RequestMetrics LastRequestMetrics => _lastMetrics;
+    public HttpService()
+    {
+        // Reuse HttpClient with custom handler
+        var metricsHandler = new MetricsHandler(_metricsStore);
+        _httpClient = new HttpClient(metricsHandler)
+        {
+            Timeout = TimeSpan.FromSeconds(30)
+        };
+    }
 
     public async Task<HttpResponseMessage> SendRequestAsync(
         string url,
         string method,
         Dictionary<string, string> headers,
-        string body)
+        string? body = null,
+        string? contentType = null,
+        CancellationToken cancellationToken = default)
     {
-        var metricsHandler = new MetricsHandler();
-        using var client = new HttpClient(metricsHandler)
-        {
-            Timeout = TimeSpan.FromSeconds(30)
-        };
-
+        var requestId = Guid.NewGuid().ToString();
         var totalStopwatch = Stopwatch.StartNew();
 
         var request = new HttpRequestMessage(new HttpMethod(method), url);
+        
+        // Store request ID for metrics correlation
+        request.Options.Set(new HttpRequestOptionsKey<string>("MetricsRequestId"), requestId);
 
+        request.Headers.Connection.Add("close");
+        
+        // Add headers
         foreach (var header in headers)
         {
+            if (header.Key.Equals("Connection", StringComparison.OrdinalIgnoreCase))
+                continue;
+            
             request.Headers.TryAddWithoutValidation(header.Key, header.Value);
         }
 
+        // Add body with flexible content type
         if (!string.IsNullOrEmpty(body))
         {
-            request.Content = new StringContent(body, Encoding.UTF8, "application/json");
+            var mediaType = contentType ?? "application/json";
+            request.Content = new StringContent(body, Encoding.UTF8, mediaType);
         }
 
-        var response = await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
+        // Send request and measure TTFB
+        var response = await _httpClient.SendAsync(
+            request, 
+            HttpCompletionOption.ResponseHeadersRead,
+            cancellationToken);
+        
         var ttfb = totalStopwatch.Elapsed.TotalMilliseconds;
 
-        await response.Content.ReadAsStringAsync();
+        // Download content
+        await response.Content.ReadAsStringAsync(cancellationToken);
         totalStopwatch.Stop();
 
-        _lastMetrics.DnsLookup = metricsHandler.DnsTime;
-        _lastMetrics.TcpHandshake = metricsHandler.TcpTime;
-        _lastMetrics.SslHandshake = metricsHandler.SslTime;
+        // Calculate metrics
+        var metrics = new RequestMetrics();
+        
+        if (_metricsStore.TryRemove(requestId, out var connectionMetrics))
+        {
+            metrics.DnsLookup = connectionMetrics.DnsLookup;
+            metrics.TcpHandshake = connectionMetrics.TcpHandshake;
+            metrics.SslHandshake = connectionMetrics.SslHandshake;
+        }
 
-        var connectionTime = _lastMetrics.DnsLookup + _lastMetrics.TcpHandshake + _lastMetrics.SslHandshake;
-        _lastMetrics.TimeToFirstByte = Math.Max(0, ttfb - connectionTime);
-        _lastMetrics.ContentDownload = totalStopwatch.Elapsed.TotalMilliseconds - ttfb;
+        var connectionTime = metrics.DnsLookup + metrics.TcpHandshake + metrics.SslHandshake;
+        metrics.TimeToFirstByte = Math.Max(0, ttfb - connectionTime);
+        metrics.ContentDownload = totalStopwatch.Elapsed.TotalMilliseconds - ttfb;
 
+        LastRequestMetrics = metrics;
         return response;
     }
 
     public void Dispose()
     {
-    }
-}
-
-public class MetricsHandler : DelegatingHandler
-{
-    private double _dnsTime;
-    private double _tcpTime;
-    private double _sslTime;
-
-    public double DnsTime => _dnsTime;
-    public double TcpTime => _tcpTime;
-    public double SslTime => _sslTime;
-
-    public MetricsHandler() : base(CreateSocketsHandler())
-    {
-        if (InnerHandler is SocketsHttpHandler socketsHandler)
-        {
-            socketsHandler.ConnectCallback = ConnectCallback;
-        }
-    }
-
-    private static SocketsHttpHandler CreateSocketsHandler()
-    {
-        return new SocketsHttpHandler
-        {
-            PooledConnectionLifetime = TimeSpan.FromMinutes(2),
-            PooledConnectionIdleTimeout = TimeSpan.FromSeconds(90),
-            EnableMultipleHttp2Connections = true,
-            MaxConnectionsPerServer = 10
-        };
-    }
-
-    private async ValueTask<Stream> ConnectCallback(
-        SocketsHttpConnectionContext context,
-        CancellationToken cancellationToken)
-    {
-        _dnsTime = 0;
-        _tcpTime = 0;
-        _sslTime = 0;
-
-        var sw = Stopwatch.StartNew();
-
-        // 1. DNS Lookup
-        var dnsStart = sw.Elapsed.TotalMilliseconds;
-        var addresses = await Dns.GetHostAddressesAsync(context.DnsEndPoint.Host, cancellationToken);
-        _dnsTime = sw.Elapsed.TotalMilliseconds - dnsStart;
-
-        // 2. TCP Handshake
-        var tcpStart = sw.Elapsed.TotalMilliseconds;
-        var socket = new Socket(SocketType.Stream, ProtocolType.Tcp) { NoDelay = true };
-
-        try
-        {
-            await socket.ConnectAsync(addresses, context.DnsEndPoint.Port, cancellationToken);
-            _tcpTime = sw.Elapsed.TotalMilliseconds - tcpStart;
-        }
-        catch
-        {
-            socket.Dispose();
-            throw;
-        }
-
-        var networkStream = new NetworkStream(socket, ownsSocket: true);
-        
-        if (context.InitialRequestMessage.RequestUri?.Scheme == "https")
-        {
-            var sslStart = sw.Elapsed.TotalMilliseconds;
-            var sslStream = new SslStream(networkStream, leaveInnerStreamOpen: false);
-
-            try
-            {
-                await sslStream.AuthenticateAsClientAsync(
-                    context.DnsEndPoint.Host,
-                    null,
-                    System.Security.Authentication.SslProtocols.None,
-                    checkCertificateRevocation: false);
-
-                _sslTime = sw.Elapsed.TotalMilliseconds - sslStart;
-                return sslStream;
-            }
-            catch
-            {
-                await sslStream.DisposeAsync();
-                throw;
-            }
-        }
-
-        return networkStream;
+        _httpClient?.Dispose();
     }
 }
