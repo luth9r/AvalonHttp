@@ -14,6 +14,8 @@ public partial class RequestItemViewModel : ObservableObject, IDisposable
     private readonly ApiRequest _originalRequest;
     private string _originalName = string.Empty;
     
+    public ApiRequest Request => _originalRequest;
+    
     public CollectionItemViewModel Parent => _parent;
     public Guid Id { get; }
     
@@ -43,6 +45,13 @@ public partial class RequestItemViewModel : ObservableObject, IDisposable
     {
         _parent = parent ?? throw new ArgumentNullException(nameof(parent));
         _originalRequest = request ?? throw new ArgumentNullException(nameof(request));
+        
+        System.Diagnostics.Debug.WriteLine($"🔵 RequestItemViewModel constructor:");
+        System.Diagnostics.Debug.WriteLine($"  Request ID: {request.Id}");
+        System.Diagnostics.Debug.WriteLine($"  Request hash: {request.GetHashCode()}");
+        System.Diagnostics.Debug.WriteLine($"  Request.Body: '{request.Body}'");
+        System.Diagnostics.Debug.WriteLine($"  _originalRequest hash: {_originalRequest.GetHashCode()}");
+        System.Diagnostics.Debug.WriteLine($"  Same? {ReferenceEquals(request, _originalRequest)}");
         
         Id = request.Id;
         _name = request.Name;
@@ -191,7 +200,7 @@ public partial class RequestItemViewModel : ObservableObject, IDisposable
             MethodString = _originalRequest.MethodString,
             Body = _originalRequest.Body,
             Headers = _originalRequest.Headers,
-            QueryParams = _originalRequest.QueryParams
+            QueryParameters = _originalRequest.QueryParameters
         };
     }
 

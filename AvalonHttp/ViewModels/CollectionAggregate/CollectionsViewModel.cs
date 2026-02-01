@@ -16,7 +16,7 @@ namespace AvalonHttp.ViewModels.CollectionAggregate;
 public partial class CollectionsViewModel : ViewModelBase
 {
     private readonly ICollectionRepository _collectionService;
-    private readonly ISessionService _sessionService;
+    private readonly ISessionService _sessionRepo;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasCollections))]
@@ -39,7 +39,7 @@ public partial class CollectionsViewModel : ViewModelBase
         ISessionService sessionService)
     {
         _collectionService = collectionService ?? throw new ArgumentNullException(nameof(collectionService));
-        _sessionService = sessionService ?? throw new ArgumentNullException(nameof(sessionService));
+        _sessionRepo = sessionService ?? throw new ArgumentNullException(nameof(sessionService));
     }
 
     //  Call this from View.OnLoaded or App startup, not constructor
@@ -86,7 +86,7 @@ public partial class CollectionsViewModel : ViewModelBase
     {
         try
         {
-            var state = await _sessionService.LoadStateAsync();
+            var state = await _sessionRepo.LoadStateAsync();
             
             if (state.LastSelectedRequestId == null) 
                 return;
@@ -101,7 +101,7 @@ public partial class CollectionsViewModel : ViewModelBase
                 {
                     collection.IsExpanded = true;
                     
-                    // ✅ Use Dispatcher instead of Task.Delay
+                    // Use Dispatcher instead of Task.Delay
                     await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
                     {
                         SelectRequest(request);
@@ -182,26 +182,36 @@ public partial class CollectionsViewModel : ViewModelBase
     }
 
     [RelayCommand]
-    public async Task SaveCollection(CollectionItemViewModel collection)
+    private async Task SaveCollection(CollectionItemViewModel collectionVm)
     {
-        if (collection == null) return;
-
         try
         {
-            await _collectionService.SaveAsync(collection.ToModel());
+            System.Diagnostics.Debug.WriteLine($"=== SAVING COLLECTION: {collectionVm.Name} ===");
+            
+            collectionVm.Collection.Name = collectionVm.Name;
+            collectionVm.Collection.Description = collectionVm.Description;
+            collectionVm.Collection.UpdatedAt = DateTime.Now;
+    
+            System.Diagnostics.Debug.WriteLine($"Collection hash: {collectionVm.Collection.GetHashCode()}");
+            System.Diagnostics.Debug.WriteLine($"Requests in collection: {collectionVm.Collection.Requests.Count}");
+    
+            foreach (var req in collectionVm.Collection.Requests)
+            {
+                System.Diagnostics.Debug.WriteLine($"  Request: {req.Name}");
+                System.Diagnostics.Debug.WriteLine($"    Hash: {req.GetHashCode()}");
+                System.Diagnostics.Debug.WriteLine($"    Body: '{req.Body}' (length: {req.Body?.Length ?? 0})");
+            }
+            
+            await _collectionService.SaveAsync(collectionVm.Collection);
+    
+            System.Diagnostics.Debug.WriteLine($"✅ Collection saved successfully");
         }
         catch (Exception ex)
         {
             System.Diagnostics.Debug.WriteLine($"Failed to save collection: {ex.Message}");
-            
-            // WeakReferenceMessenger.Default.Send(new ErrorMessage(
-            //     "Failed to Save Collection",
-            //     $"An error occurred: {ex.Message}"
-            // ));
-            
-            throw; // Re-throw so caller knows save failed
         }
     }
+
 
     [RelayCommand]
     private async Task DuplicateCollection(CollectionItemViewModel collection)
@@ -212,14 +222,14 @@ public partial class CollectionsViewModel : ViewModelBase
         {
             var newCollection = new ApiCollection
             {
-                Id = Guid.NewGuid(), // ✅ New ID
+                Id = Guid.NewGuid(), // New ID
                 Name = GenerateUniqueCollectionName($"{collection.Name} (Copy)"),
                 Description = collection.Description,
                 Requests = new ObservableCollection<ApiRequest>(
                     collection.Requests.Select(r =>
                     {
                         var newRequest = r.ToModel();
-                        newRequest.Id = Guid.NewGuid(); // ✅ New ID for each request
+                        newRequest.Id = Guid.NewGuid(); // New ID for each request
                         return newRequest;
                     }))
             };
@@ -244,31 +254,37 @@ public partial class CollectionsViewModel : ViewModelBase
     {
         if (requestVm == null || SelectedRequest == requestVm) 
             return;
-        
+    
         // Deselect previous
         if (SelectedRequest != null)
         {
             SelectedRequest.IsSelected = false;
         }
-        
+    
         // Select new
         SelectedRequest = requestVm;
         SelectedRequest.IsSelected = true;
-        
-        // Notify listeners
-        OnRequestSelected(requestVm.ToModel());
-        
-        // ✅ Proper async handling - don't block UI
+    
+        System.Diagnostics.Debug.WriteLine($"=== SELECTING REQUEST ===");
+        System.Diagnostics.Debug.WriteLine($"  Name: {requestVm.Request.Name}");
+        System.Diagnostics.Debug.WriteLine($"  Request hash: {requestVm.Request.GetHashCode()}");
+        System.Diagnostics.Debug.WriteLine($"  Body: '{requestVm.Request.Body}'");
+    
+        // Pass ORIGINAL object
+        OnRequestSelected(requestVm.Request); 
+    
+        System.Diagnostics.Debug.WriteLine($"  Passed to OnRequestSelected");
+    
+        // Save session
         _ = Task.Run(async () =>
         {
             try
             {
-                await _sessionService.SaveLastRequestAsync(requestVm.Id);
+                await _sessionRepo.SaveLastRequestAsync(requestVm.Id);
             }
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"Failed to save session: {ex.Message}");
-                // Don't show error - not critical
             }
         });
     }
@@ -290,12 +306,18 @@ public partial class CollectionsViewModel : ViewModelBase
     public async Task SaveAllAsync()
     {
         var errors = new List<string>();
-        
+    
         foreach (var collection in Collections)
         {
             try
             {
-                await _collectionService.SaveAsync(collection.ToModel());
+                // Update properties before saving
+                collection.Collection.Name = collection.Name;
+                collection.Collection.Description = collection.Description;
+                collection.Collection.UpdatedAt = DateTime.Now;
+            
+                // Save the original collection
+                await _collectionService.SaveAsync(collection.Collection);
             }
             catch (Exception ex)
             {
@@ -305,11 +327,7 @@ public partial class CollectionsViewModel : ViewModelBase
 
         if (errors.Any())
         {
-            // var errorMessage = string.Join("\n", errors);
-            // WeakReferenceMessenger.Default.Send(new ErrorMessage(
-            //     "Failed to Save Some Collections",
-            //     errorMessage
-            // ));
+            System.Diagnostics.Debug.WriteLine($"Save errors: {string.Join(", ", errors)}");
         }
     }
     
@@ -317,14 +335,13 @@ public partial class CollectionsViewModel : ViewModelBase
     private async Task CloseAllEditModes()
     {
         var modifiedCollections = new List<CollectionItemViewModel>();
-        
+    
         foreach (var collection in Collections)
         {
             var wasEdited = false;
-            
+        
             if (collection.IsEditing)
             {
-                // Finish rename will validate and save
                 await collection.FinishRenameCommand.ExecuteAsync(null);
                 wasEdited = true;
             }
@@ -337,19 +354,24 @@ public partial class CollectionsViewModel : ViewModelBase
                     wasEdited = true;
                 }
             }
-            
+        
             if (wasEdited && !modifiedCollections.Contains(collection))
             {
                 modifiedCollections.Add(collection);
             }
         }
-        
+    
         // Save modified collections
         foreach (var collection in modifiedCollections)
         {
             try
             {
-                await _collectionService.SaveAsync(collection.ToModel());
+                // Update and save original collection
+                collection.Collection.Name = collection.Name;
+                collection.Collection.Description = collection.Description;
+                collection.Collection.UpdatedAt = DateTime.Now;
+            
+                await _collectionService.SaveAsync(collection.Collection);
             }
             catch (Exception ex)
             {

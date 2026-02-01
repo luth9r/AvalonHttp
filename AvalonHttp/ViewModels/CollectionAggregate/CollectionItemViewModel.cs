@@ -11,10 +11,13 @@ namespace AvalonHttp.ViewModels.CollectionAggregate;
 
 public partial class CollectionItemViewModel : ObservableObject
 {
+    private readonly ApiCollection _collection; // Store reference
     private readonly CollectionsViewModel _parent;
     private string _originalName = string.Empty;
     
     public CollectionsViewModel Parent => _parent;
+    public ApiCollection Collection => _collection; // Expose collection
+
 
     [ObservableProperty]
     private Guid _id;
@@ -36,14 +39,26 @@ public partial class CollectionItemViewModel : ObservableObject
 
     public CollectionItemViewModel(ApiCollection collection, CollectionsViewModel parent)
     {
-        _parent = parent ?? throw new ArgumentNullException(nameof(parent));;
+        _parent = parent ?? throw new ArgumentNullException(nameof(parent));
+        _collection = collection ?? throw new ArgumentNullException(nameof(collection));
         _id = collection.Id;
         _name = collection.Name;
         _description = collection.Description;
 
+        System.Diagnostics.Debug.WriteLine($"🟢 === CollectionItemViewModel Constructor ===");
+        System.Diagnostics.Debug.WriteLine($"Collection: {collection.Name}");
+        System.Diagnostics.Debug.WriteLine($"Collection hash: {collection.GetHashCode()}");
+        System.Diagnostics.Debug.WriteLine($"Collection.Requests count: {collection.Requests.Count}");
+        
         foreach (var request in collection.Requests)
         {
-            Requests.Add(new RequestItemViewModel(request, this));
+            System.Diagnostics.Debug.WriteLine($"🟢 Creating RequestItemVM:");
+            System.Diagnostics.Debug.WriteLine($"    Request: {request.Name}");
+            System.Diagnostics.Debug.WriteLine($"    Hash: {request.GetHashCode()}");
+            System.Diagnostics.Debug.WriteLine($"    Body: '{request.Body}'");
+            
+            var requestVm = new RequestItemViewModel(request, this);
+            Requests.Add(requestVm);
         }
     }
 
@@ -72,6 +87,8 @@ public partial class CollectionItemViewModel : ObservableObject
         }
 
         IsEditing = false;
+        _collection.Name = Name;
+        _collection.UpdatedAt = DateTime.Now;
         
         try
         {
@@ -108,6 +125,7 @@ public partial class CollectionItemViewModel : ObservableObject
                 MethodString = "GET"
             };
 
+            _collection.Requests.Add(request);
             var viewModel = new RequestItemViewModel(request, this);
             Requests.Add(viewModel);
             
@@ -130,6 +148,7 @@ public partial class CollectionItemViewModel : ObservableObject
         try
         {
             var index = Requests.IndexOf(request);
+            _collection.Requests.Remove(request.Request);
             Requests.Remove(request);
             
             // Select adjacent request if available
@@ -159,9 +178,10 @@ public partial class CollectionItemViewModel : ObservableObject
         try
         {
             var newRequest = request.ToModel();
-            newRequest.Id = Guid.NewGuid(); // ✅ New unique ID
+            newRequest.Id = Guid.NewGuid();
             newRequest.Name = GenerateUniqueName($"{request.Name} (Copy)");
 
+            _collection.Requests.Add(newRequest);
             var viewModel = new RequestItemViewModel(newRequest, this);
             var index = Requests.IndexOf(request);
             Requests.Insert(index + 1, viewModel);
@@ -188,18 +208,6 @@ public partial class CollectionItemViewModel : ObservableObject
         }
         
         return name;
-    }
-
-    public ApiCollection ToModel()
-    {
-        return new ApiCollection
-        {
-            Id = Id,
-            Name = Name,
-            Description = Description,
-            Requests = new ObservableCollection<ApiRequest>(
-                Enumerable.Select<RequestItemViewModel, ApiRequest>(Requests, r => r.ToModel()))
-        };
     }
     
     public void UpdateFromModel(ApiCollection collection)
