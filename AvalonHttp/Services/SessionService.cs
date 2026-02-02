@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using AvalonHttp.Models;
 using AvalonHttp.Services.Interfaces;
+using Environment = System.Environment;
 
 namespace AvalonHttp.Services;
 

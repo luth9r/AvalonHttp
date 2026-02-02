@@ -29,7 +29,9 @@
         <SolidColorBrush x:Key="Warning">#F59E0B</SolidColorBrush>
         <SolidColorBrush x:Key="GlassBg">#0DFFFFFF</SolidColorBrush>
         <SolidColorBrush x:Key="GlassBorder">#1AFFFFFF</SolidColorBrush>
+        <SolidColorBrush x:Key="TextControlSelectionHighlightColor" Color="#663B82F6"/>
         
+        <converters:BoolToFontWeightConverter x:Key="BoolToFontWeightConverter"/>
         <converters:PercentToPixelConverter x:Key="PercentToPixelConverter"/>
         <converters:BoolToAngleConverter x:Key="BoolToAngleConverter" />
         <converters:MethodToBrushConverter x:Key="MethodToBrushConverter"/>
@@ -39,6 +41,7 @@
     <Application.Styles>
         <FluentTheme />
         <StyleInclude Source="avares://AvaloniaEdit/Themes/Fluent/AvaloniaEdit.xaml" />
+        <StyleInclude Source="/Controls/VariableTextBox.axaml" />
         
         <!-- Global Font -->
         <Style Selector="Window">
@@ -72,11 +75,6 @@
             <Setter Property="VerticalContentAlignment" Value="Center"/>
         </Style>
 
-        <Style Selector="Button:pointerover /template/ ContentPresenter">
-            <Setter Property="Background" Value="{StaticResource GlassBg}"/>
-            <Setter Property="BorderBrush" Value="{StaticResource BorderBright}"/>
-        </Style>
-
         <Style Selector="Button:pressed /template/ ContentPresenter">
             <Setter Property="Background" Value="{StaticResource BorderColor}"/>
         </Style>
@@ -107,6 +105,7 @@
         
         <Style Selector="TextBox:pointerover /template/ Border#PART_BorderElement">
             <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}"/>
+            <Setter Property="Background" Value="{StaticResource BgElevated}"/>
         </Style>
         
         <Style Selector="TextBox:disabled /template/ Border#PART_BorderElement">
@@ -284,16 +283,16 @@
             <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
         </Style>
-
-        <Style Selector="TextBox.UrlInput">
-            <Setter Property="Background" Value="{StaticResource BgMain}"/>
-            <Setter Property="BorderBrush" Value="{StaticResource BorderBright}"/>
-            <Setter Property="FontFamily" Value="JetBrains Mono, Cascadia Code, Consolas, monospace"/>
-        </Style>
         
         <Style Selector="TextBox.KvInput">
             <Setter Property="FontFamily" Value="JetBrains Mono, Cascadia Code, Consolas, monospace"/>
             <Setter Property="Padding" Value="12,8"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"></Setter>
+            <Setter Property="CornerRadius" Value="8"/>
+            
+            <Style Selector="^ /template/ TextBlock#PART_Watermark">
+                <Setter Property="Foreground" Value="{DynamicResource TextSecondary}"/>
+            </Style>
         </Style>
 
         <!-- Buttons -->
@@ -420,6 +419,14 @@
             <Setter Property="Background" Value="#153B82F6" />
             <Setter Property="BorderThickness" Value="0" />
             <Setter Property="Padding" Value="10,8" />
+        </Style>
+        
+        <Style Selector="FlyoutPresenter.CleanFlyout">
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="MaxWidth" Value="1000" /> 
         </Style>
     </Application.Styles>
     

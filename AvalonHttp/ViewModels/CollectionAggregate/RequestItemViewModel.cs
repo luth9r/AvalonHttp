@@ -1,6 +1,10 @@
 ﻿using System;
+using System.Collections.ObjectModel;
+using System.Linq;
 using System.Threading.Tasks;
 using AvalonHttp.Messages;
+using AvalonHttp.Models;
+using AvalonHttp.Models.CollectionAggregate;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
@@ -10,56 +14,75 @@ namespace AvalonHttp.ViewModels.CollectionAggregate;
 
 public partial class RequestItemViewModel : ObservableObject, IDisposable
 {
+    // ========================================
+    // Fields
+    // ========================================
+    
     private readonly CollectionItemViewModel _parent;
     private readonly ApiRequest _originalRequest;
     private string _originalName = string.Empty;
     
-    public ApiRequest Request => _originalRequest;
+    // ========================================
+    // Properties
+    // ========================================
     
+    public ApiRequest Request => _originalRequest;
     public CollectionItemViewModel Parent => _parent;
     public Guid Id { get; }
     
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(FinishRenameCommand))]
-    private string _name;
+    private string _name = string.Empty;
 
     [ObservableProperty]
-    private string _url;
+    private string _url = string.Empty;
 
     [ObservableProperty]
-    private string _method;
+    private string _method = string.Empty;
 
     [ObservableProperty]
-    private string _body;
+    private string _body = string.Empty;
 
     [ObservableProperty]
-    private bool _isEditing = false;
+    private bool _isEditing;
     
     [ObservableProperty]
-    private bool _isDirty = false;
+    private bool _isDirty;
 
     [ObservableProperty]
-    private bool _isSelected = false;
+    private bool _isSelected;
 
+    // ========================================
+    // Constructor
+    // ========================================
+    
     public RequestItemViewModel(ApiRequest request, CollectionItemViewModel parent)
     {
         _parent = parent ?? throw new ArgumentNullException(nameof(parent));
         _originalRequest = request ?? throw new ArgumentNullException(nameof(request));
         
-        System.Diagnostics.Debug.WriteLine($"🔵 RequestItemViewModel constructor:");
-        System.Diagnostics.Debug.WriteLine($"  Request ID: {request.Id}");
-        System.Diagnostics.Debug.WriteLine($"  Request hash: {request.GetHashCode()}");
-        System.Diagnostics.Debug.WriteLine($"  Request.Body: '{request.Body}'");
-        System.Diagnostics.Debug.WriteLine($"  _originalRequest hash: {_originalRequest.GetHashCode()}");
-        System.Diagnostics.Debug.WriteLine($"  Same? {ReferenceEquals(request, _originalRequest)}");
-        
         Id = request.Id;
-        _name = request.Name;
-        _url = request.Url;
-        _method = request.MethodString;
-        _body = request.Body ?? string.Empty;
+        
+        // Load data from model
+        LoadFromModel();
     }
 
+    // ========================================
+    // Load from Model
+    // ========================================
+    
+    private void LoadFromModel()
+    {
+        _name = _originalRequest.Name;
+        _url = _originalRequest.Url;
+        _method = _originalRequest.MethodString;
+        _body = _originalRequest.Body ?? string.Empty;
+    }
+
+    // ========================================
+    // Commands
+    // ========================================
+    
     [RelayCommand]
     private void Select()
     {
@@ -78,21 +101,27 @@ public partial class RequestItemViewModel : ObservableObject, IDisposable
     {
         if (!CanFinishRename())
         {
-            Name = _originalName;
-            IsEditing = false;
+            CancelRename();
             return;
         }
 
         IsEditing = false;
         
+        // Only save if name changed
+        if (Name == _originalName)
+            return;
+        
         try
         {
-            UpdateModel();
+            SyncToModel();
             await _parent.Parent.SaveCollectionCommand.ExecuteAsync(_parent);
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"Failed to finish rename: {ex.Message}");
+            WeakReferenceMessenger.Default.Send(new ErrorMessage(
+                "Failed to Update Request",
+                $"An error occurred: {ex.Message}"
+            ));
             Name = _originalName;
         }
     }
@@ -123,7 +152,10 @@ public partial class RequestItemViewModel : ObservableObject, IDisposable
                 }
                 catch (Exception ex)
                 {
-                    System.Diagnostics.Debug.WriteLine($"Failed to delete request: {ex.Message}");
+                    WeakReferenceMessenger.Default.Send(new ErrorMessage(
+                        "Failed to Delete Request",
+                        $"An error occurred: {ex.Message}"
+                    ));
                 }
             }
         ));
@@ -138,12 +170,15 @@ public partial class RequestItemViewModel : ObservableObject, IDisposable
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"Failed to duplicate request: {ex.Message}");
+            WeakReferenceMessenger.Default.Send(new ErrorMessage(
+                "Failed to Duplicate Request",
+                $"An error occurred: {ex.Message}"
+            ));
         }
     }
 
     [RelayCommand]
-    private async Task MoveToCollection(CollectionItemViewModel targetCollection)
+    private async Task MoveToCollection(CollectionItemViewModel? targetCollection)
     {
         if (targetCollection == null || targetCollection == _parent)
             return;
@@ -152,58 +187,125 @@ public partial class RequestItemViewModel : ObservableObject, IDisposable
         {
             var oldParent = _parent;
             
-            // Create new ViewModel in target collection
-            var movedRequest = new RequestItemViewModel(this.ToModel(), targetCollection);
+            // Sync current changes to model
+            SyncToModel();
             
-            // Remove from old, add to new
+            // Remove from old collection MODEL
+            oldParent.Collection.Requests.Remove(_originalRequest);
+            
+            // Add to new collection MODEL
+            targetCollection.Collection.Requests.Add(_originalRequest);
+            
+            // Update ViewModels
             oldParent.Requests.Remove(this);
-            targetCollection.Requests.Add(movedRequest);
+            
+            var movedVm = new RequestItemViewModel(_originalRequest, targetCollection);
+            targetCollection.Requests.Add(movedVm);
 
             // Select the moved request
-            targetCollection.Parent.SelectRequest(movedRequest);
+            targetCollection.Parent.SelectRequest(movedVm);
 
-            // Save both collections in parallel
+            // Save both collections
             await Task.WhenAll(
                 oldParent.Parent.SaveCollectionCommand.ExecuteAsync(oldParent),
                 targetCollection.Parent.SaveCollectionCommand.ExecuteAsync(targetCollection)
             );
+            
+            // Dispose old VM
+            Dispose();
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"Failed to move request: {ex.Message}");
-            
-            // WeakReferenceMessenger.Default.Send(new ErrorMessage(
-            //     "Failed to Move Request",
-            //     $"An error occurred: {ex.Message}"
-            // ));
+            WeakReferenceMessenger.Default.Send(new ErrorMessage(
+                "Failed to Move Request",
+                $"An error occurred: {ex.Message}"
+            ));
         }
     }
+
+    // ========================================
+    // Model Synchronization
+    // ========================================
     
-    private void UpdateModel()
+    /// <summary>
+    /// Sync ViewModel properties to Model
+    /// </summary>
+    public void SyncToModel()
     {
         _originalRequest.Name = Name;
         _originalRequest.Url = Url;
         _originalRequest.MethodString = Method;
         _originalRequest.Body = Body;
+        _originalRequest.UpdatedAt = DateTime.Now;
     }
     
-    public ApiRequest ToModel()
+    /// <summary>
+    /// Create a deep copy of the request (for duplication)
+    /// </summary>
+    public ApiRequest CreateDeepCopy()
     {
-        UpdateModel();
+        // Sync current VM state to model first
+        SyncToModel();
         
-        // Return a copy to avoid external mutations
         return new ApiRequest
         {
-            Id = _originalRequest.Id,
+            // NEW ID for duplicate
+            Id = Guid.NewGuid(),
+            
+            // Basic properties
             Name = _originalRequest.Name,
             Url = _originalRequest.Url,
             MethodString = _originalRequest.MethodString,
             Body = _originalRequest.Body,
-            Headers = _originalRequest.Headers,
-            QueryParameters = _originalRequest.QueryParameters
+            
+            // Timestamps
+            CreatedAt = DateTime.Now,
+            UpdatedAt = DateTime.Now,
+        
+            // Deep copy Headers
+            Headers = new ObservableCollection<KeyValueItemModel>(
+                _originalRequest.Headers.Select(h => new KeyValueItemModel
+                {
+                    Key = h.Key,
+                    Value = h.Value,
+                    IsEnabled = h.IsEnabled
+                })),
+        
+            // Deep copy QueryParameters
+            QueryParameters = new ObservableCollection<KeyValueItemModel>(
+                _originalRequest.QueryParameters.Select(p => new KeyValueItemModel
+                {
+                    Key = p.Key,
+                    Value = p.Value,
+                    IsEnabled = p.IsEnabled
+                })),
+        
+            // Deep copy Cookies
+            Cookies = new ObservableCollection<KeyValueItemModel>(
+                _originalRequest.Cookies.Select(c => new KeyValueItemModel
+                {
+                    Key = c.Key,
+                    Value = c.Value,
+                    IsEnabled = c.IsEnabled
+                })),
+        
+            // Deep copy AuthData
+            AuthData = _originalRequest.AuthData != null ? new AuthData
+            {
+                Type = _originalRequest.AuthData.Type,
+                BasicUsername = _originalRequest.AuthData.BasicUsername,
+                BasicPassword = _originalRequest.AuthData.BasicPassword,
+                BearerToken = _originalRequest.AuthData.BearerToken,
+                ApiKeyName = _originalRequest.AuthData.ApiKeyName,
+                ApiKeyValue = _originalRequest.AuthData.ApiKeyValue,
+                ApiKeyLocation = _originalRequest.AuthData.ApiKeyLocation
+            } : new AuthData()
         };
     }
 
+    /// <summary>
+    /// Update ViewModel from Model (when model changes externally)
+    /// </summary>
     public void UpdateFromModel(ApiRequest request)
     {
         if (request == null || request.Id != Id)
@@ -217,8 +319,12 @@ public partial class RequestItemViewModel : ObservableObject, IDisposable
         IsDirty = false;
     }
 
+    // ========================================
+    // Dispose
+    // ========================================
+    
     public void Dispose()
     {
-        // No subscriptions to clean up anymore
+        // Clean up if needed
     }
 }

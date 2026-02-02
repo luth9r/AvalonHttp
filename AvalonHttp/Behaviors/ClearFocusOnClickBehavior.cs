@@ -41,7 +41,7 @@ public class ClearFocusOnClickBehavior : Behavior<Control>
         {
             window.Focus();
             
-            if (window.DataContext is MainWindowViewModel vm)
+            if (window.DataContext is CollectionWorkspaceViewModel vm)
             {
                 vm.CollectionsViewModel.CloseAllEditModesCommand.Execute(null);
             }

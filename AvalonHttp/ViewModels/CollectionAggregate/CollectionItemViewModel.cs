@@ -5,68 +5,82 @@ using System.Threading.Tasks;
 using AvalonHttp.Models.CollectionAggregate;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using ApiRequest = AvalonHttp.Models.CollectionAggregate.ApiRequest;
 
 namespace AvalonHttp.ViewModels.CollectionAggregate;
 
-public partial class CollectionItemViewModel : ObservableObject
+public partial class CollectionItemViewModel : ObservableObject, IDisposable
 {
-    private readonly ApiCollection _collection; // Store reference
+    // ========================================
+    // Fields
+    // ========================================
+
+    private readonly ApiCollection _collection;
     private readonly CollectionsViewModel _parent;
     private string _originalName = string.Empty;
-    
-    public CollectionsViewModel Parent => _parent;
-    public ApiCollection Collection => _collection; // Expose collection
 
+    // ========================================
+    // Properties
+    // ========================================
+
+    public CollectionsViewModel Parent => _parent;
+    public ApiCollection Collection => _collection;
 
     [ObservableProperty]
     private Guid _id;
 
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(FinishRenameCommand))]
-    private string _name;
+    private string _name = string.Empty;
 
     [ObservableProperty]
-    private string _description;
+    private string _description = string.Empty;
 
     [ObservableProperty]
     private bool _isExpanded = true;
 
     [ObservableProperty]
-    private bool _isEditing = false;
+    private bool _isEditing;
 
     public ObservableCollection<RequestItemViewModel> Requests { get; } = new();
+
+    // ========================================
+    // Constructor
+    // ========================================
 
     public CollectionItemViewModel(ApiCollection collection, CollectionsViewModel parent)
     {
         _parent = parent ?? throw new ArgumentNullException(nameof(parent));
         _collection = collection ?? throw new ArgumentNullException(nameof(collection));
-        _id = collection.Id;
-        _name = collection.Name;
-        _description = collection.Description;
 
-        System.Diagnostics.Debug.WriteLine($"🟢 === CollectionItemViewModel Constructor ===");
-        System.Diagnostics.Debug.WriteLine($"Collection: {collection.Name}");
-        System.Diagnostics.Debug.WriteLine($"Collection hash: {collection.GetHashCode()}");
-        System.Diagnostics.Debug.WriteLine($"Collection.Requests count: {collection.Requests.Count}");
-        
-        foreach (var request in collection.Requests)
+        Id = collection.Id;
+        Name = collection.Name;
+        Description = collection.Description;
+
+        LoadRequests();
+    }
+
+    private void LoadRequests()
+    {
+        foreach (var request in _collection.Requests)
         {
-            System.Diagnostics.Debug.WriteLine($"🟢 Creating RequestItemVM:");
-            System.Diagnostics.Debug.WriteLine($"    Request: {request.Name}");
-            System.Diagnostics.Debug.WriteLine($"    Hash: {request.GetHashCode()}");
-            System.Diagnostics.Debug.WriteLine($"    Body: '{request.Body}'");
-            
             var requestVm = new RequestItemViewModel(request, this);
             Requests.Add(requestVm);
         }
     }
+
+    // ========================================
+    // Expand/Collapse
+    // ========================================
 
     [RelayCommand]
     private void ToggleExpand()
     {
         IsExpanded = !IsExpanded;
     }
+
+    // ========================================
+    // Rename Commands
+    // ========================================
 
     [RelayCommand]
     private void StartRename()
@@ -80,38 +94,37 @@ public partial class CollectionItemViewModel : ObservableObject
     {
         if (!CanFinishRename())
         {
-            // Restore original name if invalid
-            Name = _originalName;
-            IsEditing = false;
+            CancelRename();
             return;
         }
 
         IsEditing = false;
+
+        // Only save if name actually changed
+        if (Name == _originalName)
+            return;
+
         _collection.Name = Name;
         _collection.UpdatedAt = DateTime.Now;
-        
-        try
-        {
-            await _parent.SaveCollectionCommand.ExecuteAsync(this);
-        }
-        catch (Exception ex)
-        {
-            System.Diagnostics.Debug.WriteLine($"Failed to save collection: {ex.Message}");
-            // TODO: Show error to user
-        }
+
+        await SaveCollection();
     }
-    
+
     private bool CanFinishRename()
     {
         return !string.IsNullOrWhiteSpace(Name);
     }
-    
+
     [RelayCommand]
     private void CancelRename()
     {
         Name = _originalName;
         IsEditing = false;
     }
+
+    // ========================================
+    // Request Management
+    // ========================================
 
     [RelayCommand]
     private async Task AddRequest()
@@ -120,19 +133,19 @@ public partial class CollectionItemViewModel : ObservableObject
         {
             var request = new ApiRequest
             {
-                Name = "New Request",
+                Id = Guid.NewGuid(),
+                Name = GenerateUniqueName("New Request"),
                 Url = "https://api.example.com",
-                MethodString = "GET"
+                MethodString = "GET",
             };
 
             _collection.Requests.Add(request);
+
             var viewModel = new RequestItemViewModel(request, this);
             Requests.Add(viewModel);
-            
-            // Select the new request
+
             _parent.SelectRequest(viewModel);
-            
-            await _parent.SaveCollectionCommand.ExecuteAsync(this);
+            await SaveCollection();
         }
         catch (Exception ex)
         {
@@ -141,28 +154,21 @@ public partial class CollectionItemViewModel : ObservableObject
     }
 
     [RelayCommand]
-    private async Task DeleteRequest(RequestItemViewModel request)
+    private async Task DeleteRequest(RequestItemViewModel? request)
     {
         if (request == null) return;
 
         try
         {
             var index = Requests.IndexOf(request);
+
             _collection.Requests.Remove(request.Request);
             Requests.Remove(request);
-            
-            // Select adjacent request if available
-            if (Requests.Count > 0)
-            {
-                var newIndex = Math.Min(index, Requests.Count - 1);
-                _parent.SelectRequest(Requests[newIndex]);
-            }
-            else
-            {
-                _parent.ClearSelection();
-            }
-            
-            await _parent.SaveCollectionCommand.ExecuteAsync(this);
+
+            request.Dispose();
+
+            SelectAdjacentRequest(index);
+            await SaveCollection();
         }
         catch (Exception ex)
         {
@@ -171,55 +177,224 @@ public partial class CollectionItemViewModel : ObservableObject
     }
 
     [RelayCommand]
-    private async Task DuplicateRequest(RequestItemViewModel request)
+    private async Task DuplicateRequest(RequestItemViewModel? request)
     {
         if (request == null) return;
 
         try
         {
-            var newRequest = request.ToModel();
-            newRequest.Id = Guid.NewGuid();
+            // Create deep copy with NEW ID
+            var newRequest = request.CreateDeepCopy();
             newRequest.Name = GenerateUniqueName($"{request.Name} (Copy)");
 
+            // Add to MODEL
             _collection.Requests.Add(newRequest);
+
+            // Create ViewModel
             var viewModel = new RequestItemViewModel(newRequest, this);
+
+            // Insert after original
             var index = Requests.IndexOf(request);
             Requests.Insert(index + 1, viewModel);
-            
-            // Select the duplicated request
+
+            // Select duplicated request
             _parent.SelectRequest(viewModel);
-            
-            await _parent.SaveCollectionCommand.ExecuteAsync(this);
+
+            // Save
+            await SaveCollection();
+
+            System.Diagnostics.Debug.WriteLine($"✅ Duplicated request:");
+            System.Diagnostics.Debug.WriteLine($"   Original ID: {request.Id}");
+            System.Diagnostics.Debug.WriteLine($"   New ID: {newRequest.Id}");
+            System.Diagnostics.Debug.WriteLine($"   Same object? {ReferenceEquals(request.Request, newRequest)}");
         }
         catch (Exception ex)
         {
             System.Diagnostics.Debug.WriteLine($"Failed to duplicate request: {ex.Message}");
         }
     }
-    
+
+    // ========================================
+    // Helper Methods
+    // ========================================
+
+    private void SelectAdjacentRequest(int deletedIndex)
+    {
+        if (Requests.Count > 0)
+        {
+            var newIndex = Math.Min(deletedIndex, Requests.Count - 1);
+            _parent.SelectRequest(Requests[newIndex]);
+        }
+        else
+        {
+            _parent.ClearSelection();
+        }
+    }
+
     private string GenerateUniqueName(string baseName)
     {
-        var name = baseName;
+        if (!Requests.Any(r => r.Name == baseName))
+            return baseName;
+
         var counter = 1;
-        
-        while (Requests.Any(r => r.Name == name))
+        string name;
+
+        do
         {
             name = $"{baseName} ({counter++})";
-        }
-        
+        } while (Requests.Any(r => r.Name == name));
+
         return name;
     }
-    
+
+    private async Task SaveCollection()
+    {
+        try
+        {
+            await _parent.SaveCollectionCommand.ExecuteAsync(this);
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Failed to save collection: {ex.Message}");
+            // TODO: Show error notification to user
+        }
+    }
+
+    // ========================================
+    // Update from Model
+    // ========================================
+
     public void UpdateFromModel(ApiCollection collection)
     {
+        if (collection == null) return;
+
         Name = collection.Name;
         Description = collection.Description;
-        
-        // Update requests (simple version - replace all)
-        Requests.Clear();
-        foreach (var request in collection.Requests)
+
+        // Smart update - reuse existing VMs where possible
+        UpdateRequests(collection.Requests);
+    }
+
+    private void UpdateRequests(ObservableCollection<ApiRequest> newRequests)
+    {
+        // Remove deleted requests
+        for (int i = Requests.Count - 1; i >= 0; i--)
         {
-            Requests.Add(new RequestItemViewModel(request, this));
+            if (!newRequests.Any(r => r.Id == Requests[i].Id))
+            {
+                Requests[i].Dispose();
+                Requests.RemoveAt(i);
+            }
         }
+
+        for (int i = 0; i < newRequests.Count; i++)
+        {
+            var request = newRequests[i];
+            var existingVm = Requests.FirstOrDefault(r => r.Id == request.Id);
+
+            if (existingVm != null)
+            {
+                // Update existing
+                existingVm.UpdateFromModel(request);
+
+                var currentIndex = Requests.IndexOf(existingVm);
+                if (currentIndex != i)
+                {
+                    Requests.Move(currentIndex, i);
+                }
+            }
+            else
+            {
+                // Add new at correct position
+                var newVm = new RequestItemViewModel(request, this);
+
+                if (i >= Requests.Count)
+                {
+                    Requests.Add(newVm);
+                }
+                else
+                {
+                    Requests.Insert(i, newVm);
+                }
+            }
+        }
+    }
+
+    // ========================================
+// Request Reordering
+// ========================================
+
+    [RelayCommand(CanExecute = nameof(CanMoveRequestUp))]
+    private async Task MoveRequestUp(RequestItemViewModel? request)
+    {
+        if (request == null) return;
+
+        try
+        {
+            var index = Requests.IndexOf(request);
+            if (index <= 0) return;
+
+            // Move in ViewModel
+            Requests.Move(index, index - 1);
+
+            // Move in Model
+            _collection.Requests.Move(index, index - 1);
+
+            await SaveCollection();
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Failed to move request up: {ex.Message}");
+        }
+    }
+
+    private bool CanMoveRequestUp(RequestItemViewModel? request)
+    {
+        return request != null && Requests.IndexOf(request) > 0;
+    }
+
+    [RelayCommand(CanExecute = nameof(CanMoveRequestDown))]
+    private async Task MoveRequestDown(RequestItemViewModel? request)
+    {
+        if (request == null) return;
+
+        try
+        {
+            var index = Requests.IndexOf(request);
+            if (index < 0 || index >= Requests.Count - 1) return;
+
+            // Move in ViewModel
+            Requests.Move(index, index + 1);
+
+            // Move in Model
+            _collection.Requests.Move(index, index + 1);
+
+            await SaveCollection();
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Failed to move request down: {ex.Message}");
+        }
+    }
+
+    private bool CanMoveRequestDown(RequestItemViewModel? request)
+    {
+        return request != null &&
+               Requests.IndexOf(request) >= 0 &&
+               Requests.IndexOf(request) < Requests.Count - 1;
+    }
+
+    // ========================================
+    // Dispose
+    // ========================================
+
+    public void Dispose()
+    {
+        foreach (var request in Requests)
+        {
+            request.Dispose();
+        }
+
+        Requests.Clear();
     }
 }

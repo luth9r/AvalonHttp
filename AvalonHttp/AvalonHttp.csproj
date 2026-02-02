@@ -30,4 +30,11 @@
         <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.2" />
         <PackageReference Include="Xaml.Behaviors.Interactions" Version="11.3.9.3" />
     </ItemGroup>
+
+    <ItemGroup>
+      <Compile Update="Views\CollectionsWorkspaceView.axaml.cs">
+        <DependentUpon>CollectionsWorkspaceView.axaml</DependentUpon>
+        <SubType>Code</SubType>
+      </Compile>
+    </ItemGroup>
 </Project>

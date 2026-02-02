@@ -71,10 +71,10 @@ public partial class CollectionsViewModel : ViewModelBase
             System.Diagnostics.Debug.WriteLine($"Failed to load collections: {ex.Message}");
             
             // Show error to user
-            // WeakReferenceMessenger.Default.Send(new ErrorMessage(
-            //     "Failed to Load Collections",
-            //     $"An error occurred while loading your collections: {ex.Message}"
-            // ));
+            WeakReferenceMessenger.Default.Send(new ErrorMessage(
+                "Failed to Load Collections",
+                $"An error occurred while loading your collections: {ex.Message}"
+            ));
         }
         finally
         {
@@ -140,10 +140,10 @@ public partial class CollectionsViewModel : ViewModelBase
         {
             System.Diagnostics.Debug.WriteLine($"Failed to create collection: {ex.Message}");
             
-            // WeakReferenceMessenger.Default.Send(new ErrorMessage(
-            //     "Failed to Create Collection",
-            //     $"An error occurred: {ex.Message}"
-            // ));
+            WeakReferenceMessenger.Default.Send(new ErrorMessage(
+                "Failed to Create Collection",
+                $"An error occurred: {ex.Message}"
+            ));
         }
     }
 
@@ -172,10 +172,10 @@ public partial class CollectionsViewModel : ViewModelBase
                 {
                     System.Diagnostics.Debug.WriteLine($"Failed to delete collection: {ex.Message}");
                     
-                    // WeakReferenceMessenger.Default.Send(new ErrorMessage(
-                    //     "Failed to Delete Collection",
-                    //     $"An error occurred: {ex.Message}"
-                    // ));
+                    WeakReferenceMessenger.Default.Send(new ErrorMessage(
+                        "Failed to Delete Collection",
+                        $"An error occurred: {ex.Message}"
+                    ));
                 }
             }
         ));
@@ -228,7 +228,7 @@ public partial class CollectionsViewModel : ViewModelBase
                 Requests = new ObservableCollection<ApiRequest>(
                     collection.Requests.Select(r =>
                     {
-                        var newRequest = r.ToModel();
+                        var newRequest = r.CreateDeepCopy();
                         newRequest.Id = Guid.NewGuid(); // New ID for each request
                         return newRequest;
                     }))
@@ -243,10 +243,10 @@ public partial class CollectionsViewModel : ViewModelBase
         {
             System.Diagnostics.Debug.WriteLine($"Failed to duplicate collection: {ex.Message}");
             
-            // WeakReferenceMessenger.Default.Send(new ErrorMessage(
-            //     "Failed to Duplicate Collection",
-            //     $"An error occurred: {ex.Message}"
-            // ));
+            WeakReferenceMessenger.Default.Send(new ErrorMessage(
+                "Failed to Duplicate Collection",
+                $"An error occurred: {ex.Message}"
+            ));
         }
     }
     

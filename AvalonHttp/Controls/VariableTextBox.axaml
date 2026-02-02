@@ -1,0 +1,112 @@
+﻿<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:controls="clr-namespace:AvalonHttp.Controls">
+
+    <Style Selector="controls|VariableTextBox">
+        <Setter Property="Background" Value="{DynamicResource BgElevated}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource BorderColor}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="8" />
+        <Setter Property="Padding" Value="12,10" />
+        <Setter Property="FontFamily" Value="Inter, Segoe UI, Ubuntu, sans-serif" />
+        <Setter Property="FontSize" Value="13" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="MinHeight" Value="32" />
+
+        <Setter Property="Template">
+            <ControlTemplate>
+                <Border Name="PART_Border"
+                        Background="{TemplateBinding Background}"
+                        BorderBrush="{TemplateBinding BorderBrush}"
+                        BorderThickness="{TemplateBinding BorderThickness}"
+                        CornerRadius="{TemplateBinding CornerRadius}"
+                        Padding="{TemplateBinding Padding}">
+                    
+                    <ScrollViewer Name="PART_ScrollViewer"
+                                  HorizontalScrollBarVisibility="Hidden"
+                                  VerticalScrollBarVisibility="Disabled">
+                        <Grid>
+                            <TextBlock Name="PART_HighlightText"
+                                       FontFamily="{TemplateBinding FontFamily}"
+                                       FontSize="{TemplateBinding FontSize}"
+                                       VerticalAlignment="Center"
+                                       IsHitTestVisible="False"
+                                       TextWrapping="NoWrap"
+                                       TextTrimming="None" />
+                            
+                            <TextBox Name="PART_TextBox"
+                                     Text="{TemplateBinding Text, Mode=TwoWay}"
+                                     Watermark="{TemplateBinding Watermark}"
+                                     FontFamily="{TemplateBinding FontFamily}"
+                                     FontSize="{TemplateBinding FontSize}"
+                                     PasswordChar="{TemplateBinding PasswordChar}"
+                                     AcceptsReturn="{TemplateBinding AcceptsReturn}"
+                                     Background="Transparent"
+                                     BorderThickness="0"
+                                     Padding="0"
+                                     VerticalAlignment="Center"
+                                     VerticalContentAlignment="Center"
+                                     TextWrapping="NoWrap"
+                                     CaretBrush="{DynamicResource AccentBrush}"
+                                     SelectionBrush="#663B82F6"
+                                     SelectionForegroundBrush="Transparent"
+                                     MinHeight="0"
+                                     MinWidth="0">
+                                <TextBox.Styles>
+                                    <Style Selector="TextBox:focus /template/ Border#PART_BorderElement">
+                                        <Setter Property="BorderThickness" Value="0" />
+                                        <Setter Property="Background" Value="Transparent" />
+                                    </Style>
+                                    <Style Selector="TextBox:pointerover /template/ Border#PART_BorderElement">
+                                        <Setter Property="BorderThickness" Value="0" />
+                                        <Setter Property="Background" Value="Transparent" />
+                                    </Style>
+                                    <Style Selector="TextBox /template/ TextBlock#PART_Watermark">
+                                        <Setter Property="Foreground" Value="{DynamicResource TextSecondary}" />
+                                    </Style>
+                                    <Style Selector="TextBox /template/ ScrollViewer#PART_ScrollViewer">
+                                        <Setter Property="HorizontalScrollBarVisibility" Value="Hidden" />
+                                    </Style>
+                                </TextBox.Styles>
+                            </TextBox>
+                        </Grid>
+                    </ScrollViewer>
+                </Border>
+            </ControlTemplate>
+        </Setter>
+    </Style>
+
+    <Style Selector="controls|VariableTextBox:pointerover /template/ Border#PART_Border">
+        <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+    </Style>
+
+    <Style Selector="controls|VariableTextBox:focus-within /template/ Border#PART_Border">
+        <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+        <Setter Property="Background" Value="{DynamicResource BgElevated}" />
+    </Style>
+
+    <Style Selector="controls|VariableTextBox.UrlInput">
+        <Setter Property="FontFamily" Value="JetBrains Mono, Cascadia Code, Consolas, monospace" />
+        <Setter Property="Padding" Value="12,10" />
+        <Setter Property="Background" Value="{DynamicResource BgMain}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource BorderBright}" />
+    </Style>
+    
+    <Style Selector="controls|VariableTextBox.UrlInput:focus-within /template/ Border#PART_Border">
+        <Setter Property="Background" Value="{DynamicResource BgMain}" />
+    </Style>
+
+    <Style Selector="controls|VariableTextBox.KvInput">
+        <Setter Property="FontFamily" Value="JetBrains Mono, Cascadia Code, Consolas, monospace" />
+        <Setter Property="Padding" Value="12,8" />
+        <Setter Property="Background" Value="{DynamicResource BgElevated}" />
+        <Setter Property="CornerRadius" Value="8" />
+        <Setter Property="MinHeight" Value="0" />
+    </Style>
+
+    <Style Selector="controls|VariableTextBox.KvInput:pointerover /template/ Border#PART_Border">
+        <Setter Property="Background" Value="{DynamicResource GlassBg}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+    </Style>
+
+</Styles>

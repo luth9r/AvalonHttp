@@ -9,13 +9,14 @@ using System.Text;
 using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Threading.Tasks;
+using System.Web;
 using AvalonHttp.Models;
 using AvalonHttp.Models.CollectionAggregate;
 using AvalonHttp.Services.Interfaces;
+using AvalonHttp.ViewModels.EnvironmentAggregate;
 using Avalonia.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using ApiRequest = AvalonHttp.Models.CollectionAggregate.ApiRequest;
 
 namespace AvalonHttp.ViewModels;
 
@@ -43,6 +44,15 @@ public partial class RequestViewModel : ViewModelBase, IDisposable
     }
 
     // ========================================
+    // Static Collections
+    // ========================================
+    
+    public static ObservableCollection<string> HttpMethods { get; } = new()
+    {
+        "GET", "POST", "PUT", "DELETE", "PATCH", "HEAD", "OPTIONS"
+    };
+
+    // ========================================
     // Fields
     // ========================================
     
@@ -59,7 +69,7 @@ public partial class RequestViewModel : ViewModelBase, IDisposable
     private string _name = "No Request";
 
     [ObservableProperty]
-    private string _requestUrl = "";
+    private string _requestUrl = string.Empty;
 
     [ObservableProperty]
     private string _requestName = "New Request";
@@ -68,10 +78,10 @@ public partial class RequestViewModel : ViewModelBase, IDisposable
     private string _selectedMethod = "GET";
 
     [ObservableProperty]
-    private string _requestBody = "";
+    private string _requestBody = string.Empty;
 
     [ObservableProperty]
-    private string _responseContent = "";
+    private string _responseContent = string.Empty;
 
     [ObservableProperty]
     private string _rawResponseContent = string.Empty;
@@ -133,6 +143,7 @@ public partial class RequestViewModel : ViewModelBase, IDisposable
     public QueryParamsViewModel QueryParamsViewModel { get; }
     public AuthViewModel AuthViewModel { get; }
     public CookiesViewModel CookiesViewModel { get; }
+    public EnvironmentsViewModel EnvironmentsViewModel { get; }
 
     // ========================================
     // Events
@@ -149,13 +160,15 @@ public partial class RequestViewModel : ViewModelBase, IDisposable
         HeadersViewModel headersViewModel,
         QueryParamsViewModel queryParamsViewModel,
         AuthViewModel authViewModel,
-        CookiesViewModel cookiesViewModel)
+        CookiesViewModel cookiesViewModel,
+        EnvironmentsViewModel environmentsViewModel)
     {
         _httpService = httpService ?? throw new ArgumentNullException(nameof(httpService));
         HeadersViewModel = headersViewModel ?? throw new ArgumentNullException(nameof(headersViewModel));
         QueryParamsViewModel = queryParamsViewModel ?? throw new ArgumentNullException(nameof(queryParamsViewModel));
         AuthViewModel = authViewModel ?? throw new ArgumentNullException(nameof(authViewModel));
         CookiesViewModel = cookiesViewModel ?? throw new ArgumentNullException(nameof(cookiesViewModel));
+        EnvironmentsViewModel = environmentsViewModel ?? throw new ArgumentNullException(nameof(environmentsViewModel));
 
         SubscribeToEvents();
     }
@@ -166,11 +179,9 @@ public partial class RequestViewModel : ViewModelBase, IDisposable
     
     private void SubscribeToEvents()
     {
-        // Child ViewModels
         QueryParamsViewModel.UrlChanged += OnQueryParamsUrlChanged;
         AuthViewModel.PropertyChanged += OnAuthPropertyChanged;
         
-        // Collections
         HeadersViewModel.Headers.CollectionChanged += OnHeadersCollectionChanged;
         QueryParamsViewModel.Parameters.CollectionChanged += OnParamsCollectionChanged;
         CookiesViewModel.Cookies.CollectionChanged += OnCookiesCollectionChanged;
@@ -221,13 +232,6 @@ public partial class RequestViewModel : ViewModelBase, IDisposable
 
     private void HandleCollectionChanged(NotifyCollectionChangedEventArgs e)
     {
-        UnsubscribeFromOldItems(e);
-        SubscribeToNewItems(e);
-        MarkAsDirty();
-    }
-
-    private void UnsubscribeFromOldItems(NotifyCollectionChangedEventArgs e)
-    {
         if (e.OldItems != null)
         {
             foreach (KeyValueItemModel item in e.OldItems)
@@ -235,10 +239,7 @@ public partial class RequestViewModel : ViewModelBase, IDisposable
                 item.PropertyChanged -= OnItemPropertyChanged;
             }
         }
-    }
 
-    private void SubscribeToNewItems(NotifyCollectionChangedEventArgs e)
-    {
         if (e.NewItems != null)
         {
             foreach (KeyValueItemModel item in e.NewItems)
@@ -247,6 +248,8 @@ public partial class RequestViewModel : ViewModelBase, IDisposable
                 item.PropertyChanged += OnItemPropertyChanged;
             }
         }
+
+        MarkAsDirty();
     }
 
     private void OnItemPropertyChanged(object? sender, PropertyChangedEventArgs e)
@@ -348,22 +351,19 @@ public partial class RequestViewModel : ViewModelBase, IDisposable
         ApplyFormat();
     }
 
-    [RelayCommand]
+    [RelayCommand(CanExecute = nameof(CanSaveRequest))]
     private void SaveCurrentRequest()
     {
-        if (_activeRequest == null)
-        {
-            System.Diagnostics.Debug.WriteLine("❌ SaveCurrentRequest: _activeRequest is null!");
-            return;
-        }
+        if (_activeRequest == null) return;
 
-        LogBeforeSave();
         SaveRequestData();
-        LogAfterSave();
-
         RequestSaved?.Invoke(this, _activeRequest);
         IsDirty = false;
+        
+        System.Diagnostics.Debug.WriteLine($"💾 Saved request '{_activeRequest.Name}'");
     }
+
+    private bool CanSaveRequest() => IsDirty && _activeRequest != null;
 
     // ========================================
     // HTTP Request Methods
@@ -392,8 +392,8 @@ public partial class RequestViewModel : ViewModelBase, IDisposable
 
     private void ClearResponseCollections()
     {
-        ResponseContent = "";
-        RawResponseContent = "";
+        ResponseContent = string.Empty;
+        RawResponseContent = string.Empty;
         ResponseHeaders.Clear();
         ResponseCookies.Clear();
         TimelineStages.Clear();
@@ -404,27 +404,31 @@ public partial class RequestViewModel : ViewModelBase, IDisposable
     {
         var headersList = BuildHeadersList();
         var finalUrl = BuildFinalUrl();
+        var finalBody = ResolveVariables(RequestBody);
 
         return await _httpService.SendRequestAsync(
             finalUrl,
             SelectedMethod,
             headersList,
-            RequestBody);
+            finalBody);
     }
 
     private List<KeyValuePair<string, string>> BuildHeadersList()
     {
-        var headersList = new List<KeyValuePair<string, string>>(HeadersViewModel.GetEnabledHeaders());
+        var headersList = new List<KeyValuePair<string, string>>();
+    
+        // Add custom headers (with variable resolution)
+        headersList.AddRange(HeadersViewModel.GetEnabledHeaders(ResolveVariables));
 
-        // Add cookies
-        var cookieHeaderValue = CookiesViewModel.GetCookieHeaderValue();
+        // Add cookies as Cookie header
+        var cookieHeaderValue = CookiesViewModel.GetCookieHeaderValue(ResolveVariables);
         if (!string.IsNullOrWhiteSpace(cookieHeaderValue))
         {
             headersList.Add(new KeyValuePair<string, string>("Cookie", cookieHeaderValue));
         }
 
         // Add auth headers
-        var authHeaders = AuthViewModel.GetAuthHeaders();
+        var authHeaders = AuthViewModel.GetAuthHeaders(ResolveVariables);
         headersList.AddRange(authHeaders);
 
         return headersList;
@@ -432,31 +436,39 @@ public partial class RequestViewModel : ViewModelBase, IDisposable
 
     private string BuildFinalUrl()
     {
-        var finalUrl = RequestUrl;
-        var authQueryParams = AuthViewModel.GetAuthQueryParams();
-        
+        var finalUrl = ResolveVariables(RequestUrl);
+    
+        // Add auth query params if needed
+        var authQueryParams = AuthViewModel.GetAuthQueryParams(ResolveVariables);
+    
         if (authQueryParams.Count > 0)
         {
-            try
-            {
-                var uriBuilder = new UriBuilder(RequestUrl);
-                var query = System.Web.HttpUtility.ParseQueryString(uriBuilder.Query);
-
-                foreach (var param in authQueryParams)
-                {
-                    query[param.Key] = param.Value;
-                }
-
-                uriBuilder.Query = query.ToString();
-                finalUrl = uriBuilder.ToString();
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"Failed to add auth query params: {ex.Message}");
-            }
+            finalUrl = AppendQueryParams(finalUrl, authQueryParams);
         }
 
         return finalUrl;
+    }
+
+    private string AppendQueryParams(string url, Dictionary<string, string> queryParams)
+    {
+        try
+        {
+            var uriBuilder = new UriBuilder(url);
+            var query = HttpUtility.ParseQueryString(uriBuilder.Query);
+
+            foreach (var param in queryParams)
+            {
+                query[param.Key] = param.Value;
+            }
+
+            uriBuilder.Query = query.ToString();
+            return uriBuilder.ToString();
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Failed to append query params: {ex.Message}");
+            return url;
+        }
     }
 
     private async Task ProcessResponseAsync(HttpResponseMessage response, double duration)
@@ -576,6 +588,11 @@ public partial class RequestViewModel : ViewModelBase, IDisposable
         {
             UnsubscribeFromActiveRequest();
             
+            System.Diagnostics.Debug.WriteLine($"🔵 LoadRequest:");
+            System.Diagnostics.Debug.WriteLine($"   Request ID: {request.Id}");
+            System.Diagnostics.Debug.WriteLine($"   Request hash: {request.GetHashCode()}");
+            System.Diagnostics.Debug.WriteLine($"   Body: '{request.Body}'");
+            
             _activeRequest = request;
             _activeRequest.PropertyChanged += OnActiveRequestPropertyChanged;
 
@@ -605,7 +622,7 @@ public partial class RequestViewModel : ViewModelBase, IDisposable
         Name = request.Name;
         RequestUrl = request.Url;
         SelectedMethod = request.MethodString;
-        RequestBody = request.Body ?? "";
+        RequestBody = request.Body ?? string.Empty;
     }
 
     private void LoadCollections(ApiRequest request)
@@ -614,10 +631,11 @@ public partial class RequestViewModel : ViewModelBase, IDisposable
         LoadCollection(CookiesViewModel.Cookies, request.Cookies);
         
         QueryParamsViewModel.LoadFromUrl(request.Url);
-        foreach (var param in QueryParamsViewModel.Parameters)
-        {
-            param.PropertyChanged += OnItemPropertyChanged;
-        }
+        
+        // Subscribe to all items
+        SubscribeToCollection(HeadersViewModel.Headers);
+        SubscribeToCollection(QueryParamsViewModel.Parameters);
+        SubscribeToCollection(CookiesViewModel.Cookies);
     }
 
     private void LoadCollection(
@@ -627,46 +645,53 @@ public partial class RequestViewModel : ViewModelBase, IDisposable
         target.Clear();
         foreach (var item in source)
         {
-            var newItem = new KeyValueItemModel
+            target.Add(new KeyValueItemModel
             {
-                Key = item.Key,
-                Value = item.Value,
+                Key = item.Key ?? string.Empty,
+                Value = item.Value ?? string.Empty,
                 IsEnabled = item.IsEnabled
-            };
-            newItem.PropertyChanged += OnItemPropertyChanged;
-            target.Add(newItem);
+            });
+        }
+    }
+
+    private void SubscribeToCollection(ObservableCollection<KeyValueItemModel> collection)
+    {
+        foreach (var item in collection)
+        {
+            item.PropertyChanged += OnItemPropertyChanged;
         }
     }
 
     private void LoadAuthData(AuthData? authData)
     {
-        if (authData != null)
-        {
-            AuthViewModel.SelectedAuthType = authData.Type;
-            AuthViewModel.BasicUsername = authData.BasicUsername ?? "";
-            AuthViewModel.BasicPassword = authData.BasicPassword ?? "";
-            AuthViewModel.BearerToken = authData.BearerToken ?? "";
-            AuthViewModel.ApiKeyName = authData.ApiKeyName ?? "";
-            AuthViewModel.ApiKeyValue = authData.ApiKeyValue ?? "";
-            AuthViewModel.ApiKeyLocation = authData.ApiKeyLocation;
-        }
-        else
-        {
-            AuthViewModel.Reset();
-        }
+        AuthViewModel.LoadFromAuthData(authData);
     }
 
     private void SaveRequestData()
     {
-        _activeRequest!.Name = Name;
+        if (_activeRequest == null) return;
+
+        System.Diagnostics.Debug.WriteLine($"🟢 SaveRequestData START:");
+        System.Diagnostics.Debug.WriteLine($"   Request ID: {_activeRequest.Id}");
+        System.Diagnostics.Debug.WriteLine($"   Request hash: {_activeRequest.GetHashCode()}");
+        System.Diagnostics.Debug.WriteLine($"   Name: {Name} -> {_activeRequest.Name}");
+        System.Diagnostics.Debug.WriteLine($"   URL: {RequestUrl}");
+        System.Diagnostics.Debug.WriteLine($"   Body BEFORE: '{_activeRequest.Body}'");
+        
+        _activeRequest.Name = Name;
         _activeRequest.Url = RequestUrl;
         _activeRequest.MethodString = SelectedMethod;
-        _activeRequest.Body = RequestBody ?? "";
+        _activeRequest.Body = RequestBody;
 
+        System.Diagnostics.Debug.WriteLine($"   Body AFTER: '{_activeRequest.Body}'");
+        
         SaveCollection(_activeRequest.Headers, HeadersViewModel.Headers);
         SaveCollection(_activeRequest.QueryParameters, QueryParamsViewModel.Parameters);
         SaveCollection(_activeRequest.Cookies, CookiesViewModel.Cookies);
-        SaveAuthData();
+        
+        _activeRequest.AuthData = AuthViewModel.ToAuthData();
+        
+        System.Diagnostics.Debug.WriteLine($"🟢 SaveRequestData END");
     }
 
     private void SaveCollection(
@@ -685,34 +710,27 @@ public partial class RequestViewModel : ViewModelBase, IDisposable
         }
     }
 
-    private void SaveAuthData()
-    {
-        if (_activeRequest!.AuthData == null)
-        {
-            _activeRequest.AuthData = new AuthData();
-        }
-
-        _activeRequest.AuthData.Type = AuthViewModel.SelectedAuthType;
-        _activeRequest.AuthData.BasicUsername = AuthViewModel.BasicUsername ?? "";
-        _activeRequest.AuthData.BasicPassword = AuthViewModel.BasicPassword ?? "";
-        _activeRequest.AuthData.BearerToken = AuthViewModel.BearerToken ?? "";
-        _activeRequest.AuthData.ApiKeyName = AuthViewModel.ApiKeyName ?? "";
-        _activeRequest.AuthData.ApiKeyValue = AuthViewModel.ApiKeyValue ?? "";
-        _activeRequest.AuthData.ApiKeyLocation = AuthViewModel.ApiKeyLocation;
-    }
-
     // ========================================
     // Helper Methods
     // ========================================
     
+    private string ResolveVariables(string text)
+    {
+        return EnvironmentsViewModel.ResolveVariables(text);
+    }
+    
     private void UpdateUrlFromQueryParams()
     {
-        var currentUrl = RequestUrl ?? "";
+        var currentUrl = RequestUrl ?? string.Empty;
         var baseUrl = currentUrl.Split('?')[0];
 
         if (string.IsNullOrWhiteSpace(baseUrl)) return;
 
         var newUrl = QueryParamsViewModel.BuildUrl(baseUrl);
+    
+        // Decode brackets for readability: %7B%7BVar%7D%7D → {{Var}}
+        newUrl = newUrl.Replace("%7B", "{").Replace("%7D", "}");
+
         if (RequestUrl != newUrl)
         {
             RequestUrl = newUrl;
@@ -724,8 +742,8 @@ public partial class RequestViewModel : ViewModelBase, IDisposable
         if (!HasResponseData) return;
 
         HasResponseData = false;
-        ResponseContent = "";
-        RawResponseContent = "";
+        ResponseContent = string.Empty;
+        RawResponseContent = string.Empty;
         ResponseHeaders.Clear();
         ResponseCookies.Clear();
         TimelineStages.Clear();
@@ -790,38 +808,38 @@ public partial class RequestViewModel : ViewModelBase, IDisposable
             new TimelineStageModel
             {
                 Name = "DNS Lookup",
-                Duration = metrics.DnsLookup,
+                Duration = Math.Max(0, metrics.DnsLookup),
                 Color = TimelineColors.DnsLookup
             },
             new TimelineStageModel
             {
                 Name = "TCP Handshake",
-                Duration = metrics.TcpHandshake,
+                Duration = Math.Max(0, metrics.TcpHandshake),
                 Color = TimelineColors.TcpHandshake
             },
             new TimelineStageModel
             {
                 Name = "SSL Handshake",
-                Duration = metrics.SslHandshake,
+                Duration = Math.Max(0, metrics.SslHandshake),
                 Color = TimelineColors.SslHandshake
             },
             new TimelineStageModel
             {
                 Name = "Waiting (TTFB)",
-                Duration = metrics.TimeToFirstByte,
+                Duration = Math.Max(0, metrics.TimeToFirstByte),
                 Color = TimelineColors.TimeToFirstByte
             },
             new TimelineStageModel
             {
                 Name = "Content Download",
-                Duration = metrics.ContentDownload,
+                Duration = Math.Max(0, metrics.ContentDownload),
                 Color = TimelineColors.ContentDownload
             }
         };
 
         foreach (var stage in stages)
         {
-            stage.DurationText = $"{(stage.Duration > 0 ? stage.Duration : 0):F2} ms";
+            stage.DurationText = $"{stage.Duration:F2} ms";
             stage.WidthPercent = totalTime > 0 ? (stage.Duration / totalTime) * 100 : 0;
             TimelineStages.Add(stage);
         }
@@ -842,28 +860,6 @@ public partial class RequestViewModel : ViewModelBase, IDisposable
     }
 
     // ========================================
-    // Logging
-    // ========================================
-    
-    private void LogBeforeSave()
-    {
-        System.Diagnostics.Debug.WriteLine($"=== SAVE REQUEST START ===");
-        System.Diagnostics.Debug.WriteLine($"📝 Source (ViewModel):");
-        System.Diagnostics.Debug.WriteLine($"  RequestBody: '{RequestBody}' (length: {RequestBody?.Length ?? 0})");
-        System.Diagnostics.Debug.WriteLine($"  Cookies: {CookiesViewModel.Cookies.Count}");
-        System.Diagnostics.Debug.WriteLine($"  Auth: {AuthViewModel.SelectedAuthType}");
-    }
-
-    private void LogAfterSave()
-    {
-        System.Diagnostics.Debug.WriteLine($"📦 Target (Model) AFTER:");
-        System.Diagnostics.Debug.WriteLine($"  Body: '{_activeRequest!.Body}' (length: {_activeRequest.Body?.Length ?? 0})");
-        System.Diagnostics.Debug.WriteLine($"  Cookies: {_activeRequest.Cookies.Count}");
-        System.Diagnostics.Debug.WriteLine($"  Auth: {_activeRequest.AuthData?.Type}");
-        System.Diagnostics.Debug.WriteLine($"=== SAVE REQUEST END ===");
-    }
-
-    // ========================================
     // Dispose
     // ========================================
     
@@ -871,7 +867,10 @@ public partial class RequestViewModel : ViewModelBase, IDisposable
     {
         UnsubscribeFromEvents();
         
-        CookiesViewModel?.Dispose();
+        HeadersViewModel?.Dispose();
         QueryParamsViewModel?.Dispose();
+        CookiesViewModel?.Dispose();
+        
+        GC.SuppressFinalize(this);
     }
 }

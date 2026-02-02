@@ -5,6 +5,7 @@ using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
 using System.Net;
+using System.Text;
 using AvalonHttp.Models;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -13,26 +14,53 @@ namespace AvalonHttp.ViewModels;
 
 public partial class CookiesViewModel : ViewModelBase, IDisposable
 {
+    // ========================================
+    // Observable Properties
+    // ========================================
+    
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(EnabledCookiesCount))]
     private ObservableCollection<KeyValueItemModel> _cookies = new();
 
-    public int EnabledCookiesCount => 
-        Cookies.Count(c => c.IsEnabled && !string.IsNullOrWhiteSpace(c.Key));
+    // ========================================
+    // Computed Properties
+    // ========================================
+    
+    private int _cachedEnabledCount;
+    private bool _isCountDirty = true;
 
+    public int EnabledCookiesCount
+    {
+        get
+        {
+            if (_isCountDirty)
+            {
+                _cachedEnabledCount = Cookies.Count(c => c.IsEnabled && !string.IsNullOrWhiteSpace(c.Key));
+                _isCountDirty = false;
+            }
+            return _cachedEnabledCount;
+        }
+    }
+
+    // ========================================
+    // Constructor
+    // ========================================
+    
     public CookiesViewModel()
     {
         Cookies.CollectionChanged += OnCookiesCollectionChanged;
     }
 
+    // ========================================
+    // Event Handlers
+    // ========================================
+    
     private void OnCookiesCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
-        if (e.Action == NotifyCollectionChangedAction.Reset)
-        {
-            OnPropertyChanged(nameof(EnabledCookiesCount));
-            return;
-        }
+        // Invalidate cache
+        _isCountDirty = true;
 
+        // Unsubscribe from old items
         if (e.OldItems != null)
         {
             foreach (KeyValueItemModel item in e.OldItems)
@@ -41,6 +69,7 @@ public partial class CookiesViewModel : ViewModelBase, IDisposable
             }
         }
 
+        // Subscribe to new items
         if (e.NewItems != null)
         {
             foreach (KeyValueItemModel item in e.NewItems)
@@ -57,14 +86,24 @@ public partial class CookiesViewModel : ViewModelBase, IDisposable
         if (e.PropertyName == nameof(KeyValueItemModel.IsEnabled) ||
             e.PropertyName == nameof(KeyValueItemModel.Key))
         {
+            _isCountDirty = true;
             OnPropertyChanged(nameof(EnabledCookiesCount));
         }
     }
 
+    // ========================================
+    // Commands
+    // ========================================
+    
     [RelayCommand]
     private void AddCookie()
     {
-        var cookie = new KeyValueItemModel { IsEnabled = true };
+        var cookie = new KeyValueItemModel 
+        { 
+            IsEnabled = true,
+            Key = string.Empty,
+            Value = string.Empty
+        };
         Cookies.Add(cookie);
     }
 
@@ -86,17 +125,37 @@ public partial class CookiesViewModel : ViewModelBase, IDisposable
         }
     }
 
+    // ========================================
+    // Get Cookie Data
+    // ========================================
+    
     /// <summary>
     /// Get enabled cookies as Cookie header value.
     /// Format: "name1=value1; name2=value2"
     /// </summary>
-    public string GetCookieHeaderValue()
+    public string GetCookieHeaderValue(Func<string, string>? resolver = null)
     {
-        var enabledCookies = Cookies
-            .Where(c => c.IsEnabled && !string.IsNullOrWhiteSpace(c.Key))
-            .Select(c => $"{c.Key.Trim()}={c.Value?.Trim() ?? ""}");
+        if (EnabledCookiesCount == 0) return string.Empty;
 
-        return string.Join("; ", enabledCookies);
+        var sb = new StringBuilder();
+        bool first = true;
+
+        foreach (var cookie in Cookies)
+        {
+            if (!cookie.IsEnabled || string.IsNullOrWhiteSpace(cookie.Key))
+                continue;
+
+            if (!first) sb.Append("; ");
+            first = false;
+
+            // Resolve variables in both cookie name and value
+            var key = resolver?.Invoke(cookie.Key) ?? cookie.Key;
+            var value = resolver?.Invoke(cookie.Value ?? string.Empty) ?? cookie.Value ?? string.Empty;
+            
+            sb.Append(key).Append('=').Append(value);
+        }
+
+        return sb.ToString();
     }
 
     /// <summary>
@@ -104,15 +163,22 @@ public partial class CookiesViewModel : ViewModelBase, IDisposable
     /// </summary>
     public IEnumerable<KeyValuePair<string, string>> GetEnabledCookies()
     {
-        foreach (var cookie in Cookies.Where(c => c.IsEnabled && !string.IsNullOrWhiteSpace(c.Key)))
+        foreach (var cookie in Cookies)
         {
-            var key = cookie.Key.Trim();
-            var value = (cookie.Value ?? "").Trim();
-            
-            yield return new KeyValuePair<string, string>(key, value);
+            if (!cookie.IsEnabled || string.IsNullOrWhiteSpace(cookie.Key))
+                continue;
+
+            yield return new KeyValuePair<string, string>(
+                cookie.Key.Trim(),
+                (cookie.Value ?? string.Empty).Trim()
+            );
         }
     }
 
+    // ========================================
+    // Load Cookie Data
+    // ========================================
+    
     /// <summary>
     /// Load cookies from collection.
     /// </summary>
@@ -120,8 +186,7 @@ public partial class CookiesViewModel : ViewModelBase, IDisposable
     {
         Clear();
 
-        if (cookies == null)
-            return;
+        if (cookies == null) return;
 
         try
         {
@@ -130,8 +195,8 @@ public partial class CookiesViewModel : ViewModelBase, IDisposable
                 Cookies.Add(new KeyValueItemModel
                 {
                     IsEnabled = cookie.IsEnabled,
-                    Key = cookie.Key,
-                    Value = cookie.Value
+                    Key = cookie.Key ?? string.Empty,
+                    Value = cookie.Value ?? string.Empty
                 });
             }
         }
@@ -149,23 +214,23 @@ public partial class CookiesViewModel : ViewModelBase, IDisposable
     {
         Clear();
 
-        if (string.IsNullOrWhiteSpace(cookieHeader))
-            return;
+        if (string.IsNullOrWhiteSpace(cookieHeader)) return;
 
         try
         {
-            var cookiePairs = cookieHeader.Split(';', StringSplitOptions.RemoveEmptyEntries);
+            var cookiePairs = cookieHeader.Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
             
             foreach (var pair in cookiePairs)
             {
-                var parts = pair.Split('=', 2);
-                if (parts.Length >= 1)
+                var parts = pair.Split('=', 2, StringSplitOptions.TrimEntries);
+                
+                if (parts.Length > 0 && !string.IsNullOrWhiteSpace(parts[0]))
                 {
                     Cookies.Add(new KeyValueItemModel
                     {
                         IsEnabled = true,
-                        Key = parts[0].Trim(),
-                        Value = parts.Length > 1 ? parts[1].Trim() : ""
+                        Key = parts[0],
+                        Value = parts.Length > 1 ? parts[1] : string.Empty
                     });
                 }
             }
@@ -178,11 +243,11 @@ public partial class CookiesViewModel : ViewModelBase, IDisposable
 
     /// <summary>
     /// Load cookies from CookieContainer (from response).
+    /// Updates existing cookies or adds new ones.
     /// </summary>
     public void LoadFromCookieContainer(CookieContainer? cookieContainer, Uri? requestUri)
     {
-        if (cookieContainer == null || requestUri == null)
-            return;
+        if (cookieContainer == null || requestUri == null) return;
 
         try
         {
@@ -196,12 +261,13 @@ public partial class CookiesViewModel : ViewModelBase, IDisposable
 
                 if (existing != null)
                 {
-                    // Update value
+                    // Update existing value
                     existing.Value = cookie.Value;
+                    existing.IsEnabled = true;
                 }
                 else
                 {
-                    // Add new
+                    // Add new cookie
                     Cookies.Add(new KeyValueItemModel
                     {
                         IsEnabled = true,
@@ -217,50 +283,55 @@ public partial class CookiesViewModel : ViewModelBase, IDisposable
         }
     }
 
+    // ========================================
+    // Export Cookie Data
+    // ========================================
+    
     /// <summary>
-    /// Export cookies to collection.
+    /// Get cookies collection (returns the actual collection, not a copy).
     /// </summary>
-    public ObservableCollection<KeyValueItemModel> ToCollection()
+    public ObservableCollection<KeyValueItemModel> GetCookies() => Cookies;
+
+    /// <summary>
+    /// Export cookies as new collection (creates copies).
+    /// </summary>
+    public List<KeyValueItemModel> ExportCookies()
     {
-        return new ObservableCollection<KeyValueItemModel>(
-            Cookies.Select(c => new KeyValueItemModel
-            {
-                IsEnabled = c.IsEnabled,
-                Key = c.Key,
-                Value = c.Value
-            })
-        );
+        return Cookies.Select(c => new KeyValueItemModel
+        {
+            IsEnabled = c.IsEnabled,
+            Key = c.Key,
+            Value = c.Value
+        }).ToList();
     }
 
+    // ========================================
+    // Clear
+    // ========================================
+    
     /// <summary>
     /// Clear all cookies with proper cleanup.
     /// </summary>
     public void Clear()
     {
+        // Unsubscribe from all items
         foreach (var cookie in Cookies)
         {
             cookie.PropertyChanged -= OnCookieItemPropertyChanged;
         }
 
         Cookies.Clear();
+        _isCountDirty = true;
     }
 
+    // ========================================
+    // Cleanup
+    // ========================================
+    
     public void Dispose()
     {
-        try
-        {
-            Cookies.CollectionChanged -= OnCookiesCollectionChanged;
-
-            foreach (var cookie in Cookies)
-            {
-                cookie.PropertyChanged -= OnCookieItemPropertyChanged;
-            }
-
-            Cookies.Clear();
-        }
-        catch (Exception ex)
-        {
-            System.Diagnostics.Debug.WriteLine($"Error during CookiesViewModel disposal: {ex.Message}");
-        }
+        Cookies.CollectionChanged -= OnCookiesCollectionChanged;
+        Clear();
+        GC.SuppressFinalize(this);
     }
 }

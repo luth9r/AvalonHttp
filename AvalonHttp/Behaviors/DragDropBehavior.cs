@@ -5,9 +5,7 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Xaml.Interactivity;
-using AvalonHttp.Messages;
 using AvalonHttp.ViewModels.CollectionAggregate;
-using CommunityToolkit.Mvvm.Messaging;
 
 namespace AvalonHttp.Behaviors;
 
@@ -46,7 +44,10 @@ public class DragDropBehavior : Behavior<Border>
         }
     }
 
+    // ========================================
     // Source Logic
+    // ========================================
+    
     private void OnPointerPressed(object? sender, PointerPressedEventArgs e)
     {
         var properties = e.GetCurrentPoint(AssociatedObject).Properties;
@@ -114,7 +115,10 @@ public class DragDropBehavior : Behavior<Border>
         }
     }
 
+    // ========================================
     // Target Logic with Dead Zone
+    // ========================================
+    
     private void OnDragOver(object? sender, DragEventArgs e)
     {
         var source = e.Data.Get("Context");
@@ -127,7 +131,6 @@ public class DragDropBehavior : Behavior<Border>
             return;
         }
 
-        // Validate drop target compatibility
         if (!IsValidDropTarget(source, target))
         {
             e.DragEffects = DragDropEffects.None;
@@ -194,11 +197,6 @@ public class DragDropBehavior : Behavior<Border>
         catch (Exception ex)
         {
             System.Diagnostics.Debug.WriteLine($"Drop operation failed: {ex.Message}");
-            
-            // WeakReferenceMessenger.Default.Send(new ErrorMessage(
-            //     "Failed to Move Item",
-            //     $"An error occurred: {ex.Message}"
-            // ));
         }
         finally
         {
@@ -206,7 +204,10 @@ public class DragDropBehavior : Behavior<Border>
         }
     }
 
+    // ========================================
     // Visual Feedback
+    // ========================================
+    
     private void UpdateInsertState(Point p)
     {
         if (AssociatedObject == null)
@@ -216,7 +217,7 @@ public class DragDropBehavior : Behavior<Border>
         if (height <= 0)
             return;
 
-        double yRel = p.Y / height; // 0.0 to 1.0
+        double yRel = p.Y / height;
 
         // Dead zone: 40% - 60%
         if (yRel < 0.4)
@@ -254,7 +255,10 @@ public class DragDropBehavior : Behavior<Border>
         AssociatedObject.Classes.Remove("DragBottom");
     }
 
+    // ========================================
     // Move Operations
+    // ========================================
+    
     private void MoveCollection(CollectionItemViewModel source, CollectionItemViewModel target, bool insertAfter)
     {
         var list = source.Parent.Collections;
@@ -276,7 +280,6 @@ public class DragDropBehavior : Behavior<Border>
         {
             list.Move(oldIndex, newIndex);
 
-            // Save asynchronously with error handling
             _ = Task.Run(async () =>
             {
                 try
@@ -295,21 +298,22 @@ public class DragDropBehavior : Behavior<Border>
     {
         if (source.Parent == target.Parent)
         {
-            // Move within same collection
             MoveRequestWithinCollection(source, target, insertAfter);
         }
         else
         {
-            // Move between collections
             MoveRequestBetweenCollections(source, target, insertAfter);
         }
     }
 
     private void MoveRequestWithinCollection(RequestItemViewModel source, RequestItemViewModel target, bool insertAfter)
     {
-        var list = source.Parent.Requests;
-        var oldIndex = list.IndexOf(source);
-        var newIndex = list.IndexOf(target);
+        var collection = source.Parent;
+        var vmList = collection.Requests;
+        var modelList = collection.Collection.Requests;
+        
+        var oldIndex = vmList.IndexOf(source);
+        var newIndex = vmList.IndexOf(target);
 
         if (oldIndex == -1 || newIndex == -1)
             return;
@@ -320,18 +324,19 @@ public class DragDropBehavior : Behavior<Border>
         if (oldIndex < newIndex)
             newIndex--;
 
-        newIndex = Math.Clamp(newIndex, 0, list.Count - 1);
+        newIndex = Math.Clamp(newIndex, 0, vmList.Count - 1);
 
         if (oldIndex != newIndex)
         {
-            list.Move(oldIndex, newIndex);
+            // ✅ Move in both VM and MODEL
+            vmList.Move(oldIndex, newIndex);
+            modelList.Move(oldIndex, newIndex);
 
-            // Save asynchronously
             _ = Task.Run(async () =>
             {
                 try
                 {
-                    await source.Parent.Parent.SaveCollectionCommand.ExecuteAsync(source.Parent);
+                    await collection.Parent.SaveCollectionCommand.ExecuteAsync(collection);
                 }
                 catch (Exception ex)
                 {
@@ -346,13 +351,10 @@ public class DragDropBehavior : Behavior<Border>
         var oldParent = source.Parent;
         var newParent = target.Parent;
 
-        // Remove from old collection
-        oldParent.Requests.Remove(source);
+        // ✅ Sync VM to MODEL first
+        source.SyncToModel();
 
-        // Create new RequestItemViewModel with new parent
-        var movedRequest = new RequestItemViewModel(source.ToModel(), newParent);
-
-        // Calculate insert position
+        // Calculate target position
         var targetList = newParent.Requests;
         var targetIndex = targetList.IndexOf(target);
 
@@ -361,13 +363,23 @@ public class DragDropBehavior : Behavior<Border>
 
         targetIndex = Math.Clamp(targetIndex, 0, targetList.Count);
 
-        // Insert at position
-        targetList.Insert(targetIndex, movedRequest);
+        // ✅ Move in MODEL
+        oldParent.Collection.Requests.Remove(source.Request);
+        newParent.Collection.Requests.Insert(targetIndex, source.Request);
 
-        // Select the moved request
-        newParent.Parent.SelectRequest(movedRequest);
+        // ✅ Move in VM
+        oldParent.Requests.Remove(source);
+        
+        var movedVm = new RequestItemViewModel(source.Request, newParent);
+        newParent.Requests.Insert(targetIndex, movedVm);
 
-        // Save both collections asynchronously
+        // Select moved request
+        newParent.Parent.SelectRequest(movedVm);
+
+        // ✅ Dispose old VM
+        source.Dispose();
+
+        // Save both collections
         _ = Task.Run(async () =>
         {
             try
@@ -379,7 +391,7 @@ public class DragDropBehavior : Behavior<Border>
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Failed to save after request move between collections: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Failed to save after move between collections: {ex.Message}");
             }
         });
     }
@@ -391,20 +403,26 @@ public class DragDropBehavior : Behavior<Border>
 
         var oldParent = request.Parent;
 
-        // Remove from old collection
+        // ✅ Sync VM to MODEL first
+        request.SyncToModel();
+
+        // ✅ Move in MODEL
+        oldParent.Collection.Requests.Remove(request.Request);
+        targetCollection.Collection.Requests.Add(request.Request);
+
+        // ✅ Move in VM
         oldParent.Requests.Remove(request);
-
-        // Create new RequestItemViewModel with new parent
-        var movedRequest = new RequestItemViewModel(request.ToModel(), targetCollection);
-
-        // Add to new collection
-        targetCollection.Requests.Add(movedRequest);
+        
+        var movedVm = new RequestItemViewModel(request.Request, targetCollection);
+        targetCollection.Requests.Add(movedVm);
+        
         targetCollection.IsExpanded = true;
+        targetCollection.Parent.SelectRequest(movedVm);
 
-        // Select the moved request
-        targetCollection.Parent.SelectRequest(movedRequest);
+        // ✅ Dispose old VM
+        request.Dispose();
 
-        // Save both collections asynchronously
+        // Save both collections
         _ = Task.Run(async () =>
         {
             try
@@ -416,7 +434,7 @@ public class DragDropBehavior : Behavior<Border>
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Failed to save after request move to collection: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Failed to save after move to collection: {ex.Message}");
             }
         });
     }

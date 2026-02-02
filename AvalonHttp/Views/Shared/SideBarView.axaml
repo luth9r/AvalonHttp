@@ -1,0 +1,39 @@
+﻿<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:AvalonHttp.ViewModels"
+             xmlns:lucide="clr-namespace:LucideAvalonia;assembly=LucideAvalonia"
+             x:Class="AvalonHttp.Views.Shared.SideBarView"
+             x:DataType="vm:MainWindowViewModel">
+
+    <Border Background="{DynamicResource BgSidebarBrush}"
+            BorderBrush="{DynamicResource BorderColor}"
+            BorderThickness="0,0,1,0">
+
+        <DockPanel>
+            <StackPanel DockPanel.Dock="Bottom" Margin="10,0,10,20" Spacing="12">
+                <Button Classes="NavIcon">
+                    <lucide:Lucide Icon="Settings" StrokeBrush="White" Width="20" Height="20" />
+                </Button>
+            </StackPanel>
+
+            <ScrollViewer>
+                <StackPanel Spacing="12" Margin="10,20">
+
+                    <Button Classes="NavIcon"
+                            Command="{Binding ShowCollectionsCommand}"
+                            Classes.Active="{Binding IsCollectionsView}"
+                            ToolTip.Tip="Collections">
+                        <lucide:Lucide Icon="FolderOpen" StrokeBrush="White" Width="20" Height="20" />
+                    </Button>
+
+                    <Button Classes="NavIcon"
+                            Command="{Binding ShowEnvironmentsCommand}"
+                            Classes.Active="{Binding IsEnvironmentsView}"
+                            ToolTip.Tip="Environments">
+                        <lucide:Lucide Icon="Globe" StrokeBrush="White" Width="20" Height="20" />
+                    </Button>
+                </StackPanel>
+            </ScrollViewer>
+        </DockPanel>
+    </Border>
+</UserControl>

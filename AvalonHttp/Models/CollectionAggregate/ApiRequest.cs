@@ -23,6 +23,12 @@ public partial class ApiRequest : ObservableObject
 
     [ObservableProperty]
     private string _body = "";
+    
+    [ObservableProperty]
+    private DateTime _createdAt = DateTime.Now;
+    
+    [ObservableProperty]
+    private DateTime _updatedAt = DateTime.Now;
 
     [ObservableProperty]
     private ObservableCollection<KeyValueItemModel> _headers = new();

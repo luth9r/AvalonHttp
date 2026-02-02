@@ -53,7 +53,6 @@ public class FileCollectionRepository : ICollectionRepository
         return results
             .Where(c => c != null)
             .Cast<ApiCollection>()
-            .OrderBy(c => c.Name)
             .ToList();
     }
     

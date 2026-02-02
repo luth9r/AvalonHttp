@@ -9,6 +9,7 @@ using AvalonHttp.Services.Interfaces;
 using Avalonia.Markup.Xaml;
 using AvalonHttp.ViewModels;
 using AvalonHttp.ViewModels.CollectionAggregate;
+using AvalonHttp.ViewModels.EnvironmentAggregate;
 using AvalonHttp.Views;
 using Avalonia.Controls;
 using Microsoft.Extensions.DependencyInjection;
@@ -55,17 +56,18 @@ public partial class App : Application
         services.AddSingleton<ISessionService, SessionService>();
         services.AddSingleton<IHttpService, HttpService>();
         services.AddSingleton<IUrlParserService, UrlParserService>();
+        services.AddSingleton<IEnvironmentRepository, FileEnvironmentRepository>();
         
-        services.AddTransient<HeadersViewModel>();
-        services.AddTransient<AuthViewModel>();
-        services.AddTransient<QueryParamsViewModel>();
-        services.AddTransient<CookiesViewModel>();
+        services.AddSingleton<HeadersViewModel>();
+        services.AddSingleton<AuthViewModel>();
+        services.AddSingleton<QueryParamsViewModel>();
+        services.AddSingleton<CookiesViewModel>();
+        services.AddSingleton<EnvironmentsViewModel>();
         
         services.AddTransient<RequestViewModel>();
-        
-        services.AddTransient<CollectionsViewModel>();
-        
         services.AddTransient<MainWindowViewModel>();
+        services.AddTransient<CollectionsViewModel>();
+        services.AddTransient<CollectionWorkspaceViewModel>();
         
         services.AddTransient<MainWindow>();
     }

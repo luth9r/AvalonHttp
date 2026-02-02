@@ -14,24 +14,56 @@ namespace AvalonHttp.ViewModels;
 public partial class QueryParamsViewModel : ViewModelBase, IDisposable
 {
     private readonly IUrlParserService _urlParserService;
-    private bool _isUpdating = false;
+    private bool _isUpdating;
 
+    // ========================================
+    // Observable Properties
+    // ========================================
+    
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(EnabledParametersCount))]
-    private ObservableCollection<KeyValueItemModel> _parameters;
+    private ObservableCollection<KeyValueItemModel> _parameters = new();
 
-    public int EnabledParametersCount => 
-        Parameters.Count(p => p.IsEnabled && !string.IsNullOrWhiteSpace(p.Key));
+    // ========================================
+    // Computed Properties (with caching)
+    // ========================================
+    
+    private int _cachedEnabledCount;
+    private bool _isCountDirty = true;
 
+    public int EnabledParametersCount
+    {
+        get
+        {
+            if (_isCountDirty)
+            {
+                _cachedEnabledCount = Parameters.Count(p => p.IsEnabled && !string.IsNullOrWhiteSpace(p.Key));
+                _isCountDirty = false;
+            }
+            return _cachedEnabledCount;
+        }
+    }
+
+    // ========================================
+    // Events
+    // ========================================
+    
     public event EventHandler<string>? UrlChanged;
 
+    // ========================================
+    // Constructor
+    // ========================================
+    
     public QueryParamsViewModel(IUrlParserService urlParserService)
     {
         _urlParserService = urlParserService ?? throw new ArgumentNullException(nameof(urlParserService));
-        _parameters = new ObservableCollection<KeyValueItemModel>();
-        _parameters.CollectionChanged += OnParametersCollectionChanged;
+        Parameters.CollectionChanged += OnParametersCollectionChanged;
     }
 
+    // ========================================
+    // Load Methods
+    // ========================================
+    
     /// <summary>
     /// Load parameters from URL string.
     /// </summary>
@@ -60,6 +92,7 @@ public partial class QueryParamsViewModel : ViewModelBase, IDisposable
         finally
         {
             _isUpdating = false;
+            _isCountDirty = true;
             OnPropertyChanged(nameof(EnabledParametersCount));
         }
     }
@@ -86,8 +119,8 @@ public partial class QueryParamsViewModel : ViewModelBase, IDisposable
                     Parameters.Add(new KeyValueItemModel
                     {
                         IsEnabled = param.IsEnabled,
-                        Key = param.Key,
-                        Value = param.Value
+                        Key = param.Key ?? string.Empty,
+                        Value = param.Value ?? string.Empty
                     });
                 }
             }
@@ -99,20 +132,38 @@ public partial class QueryParamsViewModel : ViewModelBase, IDisposable
         finally
         {
             _isUpdating = false;
+            _isCountDirty = true;
             OnPropertyChanged(nameof(EnabledParametersCount));
         }
     }
 
+    // ========================================
+    // Build/Get Methods
+    // ========================================
+    
     /// <summary>
     /// Build URL with query parameters.
     /// </summary>
-    public string BuildUrl(string baseUrl)
+    public string BuildUrl(string baseUrl, Func<string, string>? resolver = null)
     {
         if (string.IsNullOrWhiteSpace(baseUrl))
             return string.Empty;
 
         try
         {
+            // If resolver provided, resolve variables first
+            if (resolver != null)
+            {
+                var resolvedParams = Parameters.Select(p => new KeyValueItemModel
+                {
+                    IsEnabled = p.IsEnabled,
+                    Key = resolver(p.Key ?? string.Empty),
+                    Value = resolver(p.Value ?? string.Empty)
+                }).ToList();
+                
+                return _urlParserService.BuildUrl(baseUrl, resolvedParams);
+            }
+            
             return _urlParserService.BuildUrl(baseUrl, Parameters);
         }
         catch (Exception ex)
@@ -125,36 +176,56 @@ public partial class QueryParamsViewModel : ViewModelBase, IDisposable
     /// <summary>
     /// Get enabled parameters as key-value pairs (HTTP-compliant, supports duplicates).
     /// </summary>
-    public IEnumerable<KeyValuePair<string, string>> GetEnabledParameters()
+    public IEnumerable<KeyValuePair<string, string>> GetEnabledParameters(Func<string, string>? resolver = null)
     {
-        foreach (var param in Parameters.Where(p => p.IsEnabled && !string.IsNullOrWhiteSpace(p.Key)))
+        foreach (var param in Parameters)
         {
-            var key = param.Key.Trim();
-            var value = (param.Value ?? "").Trim();
+            if (!param.IsEnabled || string.IsNullOrWhiteSpace(param.Key))
+                continue;
+
+            // Resolve variables if resolver provided
+            var key = resolver?.Invoke(param.Key.Trim()) ?? param.Key.Trim();
+            var value = resolver?.Invoke(param.Value ?? string.Empty) ?? param.Value ?? string.Empty;
             
-            yield return new KeyValuePair<string, string>(key, value);
+            yield return new KeyValuePair<string, string>(key, value.Trim());
         }
     }
 
+    // ========================================
+    // Export Methods
+    // ========================================
+    
     /// <summary>
-    /// Export parameters to collection.
+    /// Get parameters collection (returns the actual collection, not a copy).
     /// </summary>
-    public ObservableCollection<KeyValueItemModel> ToCollection()
+    public ObservableCollection<KeyValueItemModel> GetParameters() => Parameters;
+
+    /// <summary>
+    /// Export parameters as new list (creates copies).
+    /// </summary>
+    public List<KeyValueItemModel> ExportParameters()
     {
-        return new ObservableCollection<KeyValueItemModel>(
-            Parameters.Select(p => new KeyValueItemModel
-            {
-                IsEnabled = p.IsEnabled,
-                Key = p.Key,
-                Value = p.Value
-            })
-        );
+        return Parameters.Select(p => new KeyValueItemModel
+        {
+            IsEnabled = p.IsEnabled,
+            Key = p.Key,
+            Value = p.Value
+        }).ToList();
     }
 
+    // ========================================
+    // Commands
+    // ========================================
+    
     [RelayCommand]
     private void AddParameter()
     {
-        var newParam = new KeyValueItemModel { IsEnabled = true, Key = "", Value = "" };
+        var newParam = new KeyValueItemModel 
+        { 
+            IsEnabled = true, 
+            Key = string.Empty, 
+            Value = string.Empty 
+        };
         Parameters.Add(newParam);
     }
 
@@ -176,6 +247,10 @@ public partial class QueryParamsViewModel : ViewModelBase, IDisposable
         }
     }
 
+    // ========================================
+    // Clear
+    // ========================================
+    
     /// <summary>
     /// Clear all parameters with proper cleanup.
     /// </summary>
@@ -188,17 +263,17 @@ public partial class QueryParamsViewModel : ViewModelBase, IDisposable
         }
 
         Parameters.Clear();
+        _isCountDirty = true;
     }
 
+    // ========================================
+    // Event Handlers
+    // ========================================
+    
     private void OnParametersCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
-        // Handle Reset action
-        if (e.Action == NotifyCollectionChangedAction.Reset)
-        {
-            OnPropertyChanged(nameof(EnabledParametersCount));
-            NotifyUrlChanged();
-            return;
-        }
+        // Invalidate cache
+        _isCountDirty = true;
 
         // Unsubscribe from old items
         if (e.OldItems != null)
@@ -228,6 +303,7 @@ public partial class QueryParamsViewModel : ViewModelBase, IDisposable
             e.PropertyName == nameof(KeyValueItemModel.Value) ||
             e.PropertyName == nameof(KeyValueItemModel.IsEnabled))
         {
+            _isCountDirty = true;
             OnPropertyChanged(nameof(EnabledParametersCount));
             NotifyUrlChanged();
         }
@@ -241,36 +317,18 @@ public partial class QueryParamsViewModel : ViewModelBase, IDisposable
         UrlChanged?.Invoke(this, string.Empty);
     }
 
+    // ========================================
+    // Dispose
+    // ========================================
+    
     public void Dispose()
     {
-        try
-        {
-            // Unsubscribe from collection changes
-            if (Parameters != null)
-            {
-                Parameters.CollectionChanged -= OnParametersCollectionChanged;
-
-                // Unsubscribe from all parameter property changes
-                foreach (var param in Parameters)
-                {
-                    param.PropertyChanged -= OnParameterPropertyChanged;
-                }
-
-                Parameters.Clear();
-            }
-
-            // Clear event handlers (safer than setting to null)
-            if (UrlChanged != null)
-            {
-                foreach (var handler in UrlChanged.GetInvocationList())
-                {
-                    UrlChanged -= (EventHandler<string>)handler;
-                }
-            }
-        }
-        catch (Exception ex)
-        {
-            System.Diagnostics.Debug.WriteLine($"Error during QueryParamsViewModel disposal: {ex.Message}");
-        }
+        Parameters.CollectionChanged -= OnParametersCollectionChanged;
+        Clear();
+        
+        // Clear event handlers safely
+        UrlChanged = null;
+        
+        GC.SuppressFinalize(this);
     }
 }

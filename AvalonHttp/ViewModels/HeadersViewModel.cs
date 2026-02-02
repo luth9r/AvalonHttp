@@ -10,29 +10,53 @@ using CommunityToolkit.Mvvm.Input;
 
 namespace AvalonHttp.ViewModels;
 
-public partial class HeadersViewModel : ViewModelBase
+public partial class HeadersViewModel : ViewModelBase, IDisposable
 {
+    // ========================================
+    // Observable Properties
+    // ========================================
+    
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(EnabledHeadersCount))]
     private ObservableCollection<KeyValueItemModel> _headers = new();
 
-    public int EnabledHeadersCount => 
-        Headers.Count(h => h.IsEnabled && !string.IsNullOrWhiteSpace(h.Key));
+    // ========================================
+    // Computed Properties (with caching)
+    // ========================================
+    
+    private int _cachedEnabledCount;
+    private bool _isCountDirty = true;
 
+    public int EnabledHeadersCount
+    {
+        get
+        {
+            if (_isCountDirty)
+            {
+                _cachedEnabledCount = Headers.Count(h => h.IsEnabled && !string.IsNullOrWhiteSpace(h.Key));
+                _isCountDirty = false;
+            }
+            return _cachedEnabledCount;
+        }
+    }
+
+    // ========================================
+    // Constructor
+    // ========================================
+    
     public HeadersViewModel()
     {
         Headers.CollectionChanged += OnHeadersCollectionChanged;
     }
 
+    // ========================================
+    // Event Handlers
+    // ========================================
+    
     private void OnHeadersCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
-        // Handle Reset action (e.g., Clear())
-        if (e.Action == NotifyCollectionChangedAction.Reset)
-        {
-            // Don't need to unsubscribe here - already done in Clear()
-            OnPropertyChanged(nameof(EnabledHeadersCount));
-            return;
-        }
+        // Invalidate cache
+        _isCountDirty = true;
 
         // Unsubscribe from old items
         if (e.OldItems != null)
@@ -60,14 +84,24 @@ public partial class HeadersViewModel : ViewModelBase
         if (e.PropertyName == nameof(KeyValueItemModel.IsEnabled) ||
             e.PropertyName == nameof(KeyValueItemModel.Key))
         {
+            _isCountDirty = true;
             OnPropertyChanged(nameof(EnabledHeadersCount));
         }
     }
 
+    // ========================================
+    // Commands
+    // ========================================
+    
     [RelayCommand]
     private void AddHeader()
     {
-        var header = new KeyValueItemModel { IsEnabled = true };
+        var header = new KeyValueItemModel 
+        { 
+            IsEnabled = true,
+            Key = string.Empty,
+            Value = string.Empty
+        };
         Headers.Add(header);
     }
 
@@ -89,21 +123,33 @@ public partial class HeadersViewModel : ViewModelBase
         }
     }
 
+    // ========================================
+    // Get Header Data
+    // ========================================
+    
     /// <summary>
     /// Get enabled headers as list of key-value pairs.
     /// HTTP-compliant: Allows duplicate header names.
     /// </summary>
-    public IEnumerable<KeyValuePair<string, string>> GetEnabledHeaders()
+    public IEnumerable<KeyValuePair<string, string>> GetEnabledHeaders(Func<string, string>? resolver = null)
     {
-        foreach (var header in Headers.Where(h => h.IsEnabled && !string.IsNullOrWhiteSpace(h.Key)))
+        foreach (var header in Headers)
         {
-            var key = header.Key.Trim();
-            var value = (header.Value ?? "").Trim();
+            if (!header.IsEnabled || string.IsNullOrWhiteSpace(header.Key))
+                continue;
+
+            // Resolve variables if resolver provided
+            var key = resolver?.Invoke(header.Key.Trim()) ?? header.Key.Trim();
+            var value = resolver?.Invoke(header.Value ?? string.Empty) ?? header.Value ?? string.Empty;
             
-            yield return new KeyValuePair<string, string>(key, value);
+            yield return new KeyValuePair<string, string>(key, value.Trim());
         }
     }
 
+    // ========================================
+    // Load Header Data
+    // ========================================
+    
     /// <summary>
     /// Load headers from collection.
     /// </summary>
@@ -111,8 +157,7 @@ public partial class HeadersViewModel : ViewModelBase
     {
         Clear();
 
-        if (headers == null)
-            return;
+        if (headers == null) return;
 
         try
         {
@@ -122,8 +167,8 @@ public partial class HeadersViewModel : ViewModelBase
                 Headers.Add(new KeyValueItemModel
                 {
                     IsEnabled = header.IsEnabled,
-                    Key = header.Key,
-                    Value = header.Value
+                    Key = header.Key ?? string.Empty,
+                    Value = header.Value ?? string.Empty
                 });
             }
         }
@@ -141,8 +186,7 @@ public partial class HeadersViewModel : ViewModelBase
     {
         Clear();
 
-        if (headerPairs == null)
-            return;
+        if (headerPairs == null) return;
 
         try
         {
@@ -151,8 +195,8 @@ public partial class HeadersViewModel : ViewModelBase
                 Headers.Add(new KeyValueItemModel
                 {
                     IsEnabled = true,
-                    Key = kvp.Key,
-                    Value = kvp.Value
+                    Key = kvp.Key ?? string.Empty,
+                    Value = kvp.Value ?? string.Empty
                 });
             }
         }
@@ -162,48 +206,55 @@ public partial class HeadersViewModel : ViewModelBase
         }
     }
 
+    // ========================================
+    // Export Header Data
+    // ========================================
+    
     /// <summary>
-    /// Export headers to collection.
+    /// Get headers collection (returns the actual collection, not a copy).
     /// </summary>
-    public ObservableCollection<KeyValueItemModel> ToCollection()
-    {
-        return new ObservableCollection<KeyValueItemModel>(
-            Headers.Select(h => new KeyValueItemModel
-            {
-                IsEnabled = h.IsEnabled,
-                Key = h.Key,
-                Value = h.Value
-            })
-        );
-    }
+    public ObservableCollection<KeyValueItemModel> GetHeaders() => Headers;
 
     /// <summary>
-    /// Clear all headers with proper cleanup.
+    /// Export headers as new collection (creates copies).
     /// </summary>
-    public void Clear()
+    public List<KeyValueItemModel> ExportHeaders()
     {
-        // ✅ Critical: Unsubscribe before Clear() because CollectionChanged 
-        // fires with Action=Reset and e.OldItems=null
-        foreach (var header in Headers)
+        return Headers.Select(h => new KeyValueItemModel
         {
-            header.PropertyChanged -= OnHeaderItemPropertyChanged;
-        }
-
-        Headers.Clear();
+            IsEnabled = h.IsEnabled,
+            Key = h.Key,
+            Value = h.Value
+        }).ToList();
     }
 
+    // ========================================
+    // Duplicate Detection
+    // ========================================
+    
     /// <summary>
     /// Check if there are duplicate keys (for UI warning).
     /// Note: Duplicates are valid in HTTP, but user might want to know.
     /// </summary>
     public bool HasDuplicateKeys()
     {
-        var enabledKeys = Headers
-            .Where(h => h.IsEnabled && !string.IsNullOrWhiteSpace(h.Key))
-            .Select(h => h.Key.Trim())
-            .ToList();
+        if (EnabledHeadersCount < 2) return false;
 
-        return enabledKeys.Count != enabledKeys.Distinct(StringComparer.OrdinalIgnoreCase).Count();
+        var seenKeys = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var header in Headers)
+        {
+            if (!header.IsEnabled || string.IsNullOrWhiteSpace(header.Key))
+                continue;
+
+            var key = header.Key.Trim();
+            if (!seenKeys.Add(key))
+            {
+                return true; // Found duplicate
+            }
+        }
+
+        return false;
     }
 
     /// <summary>
@@ -211,12 +262,52 @@ public partial class HeadersViewModel : ViewModelBase
     /// </summary>
     public List<string> GetDuplicateKeys()
     {
-        return Headers
-            .Where(h => h.IsEnabled && !string.IsNullOrWhiteSpace(h.Key))
-            .Select(h => h.Key.Trim())
-            .GroupBy(k => k, StringComparer.OrdinalIgnoreCase)
-            .Where(g => g.Count() > 1)
-            .Select(g => g.Key)
+        if (EnabledHeadersCount < 2) return new List<string>();
+
+        var keyGroups = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var header in Headers)
+        {
+            if (!header.IsEnabled || string.IsNullOrWhiteSpace(header.Key))
+                continue;
+
+            var key = header.Key.Trim();
+            keyGroups[key] = keyGroups.TryGetValue(key, out var count) ? count + 1 : 1;
+        }
+
+        return keyGroups
+            .Where(kvp => kvp.Value > 1)
+            .Select(kvp => kvp.Key)
             .ToList();
+    }
+
+    // ========================================
+    // Clear
+    // ========================================
+    
+    /// <summary>
+    /// Clear all headers with proper cleanup.
+    /// </summary>
+    public void Clear()
+    {
+        // Unsubscribe from all items before clearing
+        foreach (var header in Headers)
+        {
+            header.PropertyChanged -= OnHeaderItemPropertyChanged;
+        }
+
+        Headers.Clear();
+        _isCountDirty = true;
+    }
+
+    // ========================================
+    // Cleanup
+    // ========================================
+    
+    public void Dispose()
+    {
+        Headers.CollectionChanged -= OnHeadersCollectionChanged;
+        Clear();
+        GC.SuppressFinalize(this);
     }
 }

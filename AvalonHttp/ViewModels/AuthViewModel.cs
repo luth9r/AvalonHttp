@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Text;
 using AvalonHttp.Common.Constants;
 using AvalonHttp.Models.CollectionAggregate;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -8,34 +9,43 @@ namespace AvalonHttp.ViewModels;
 
 public partial class AuthViewModel : ViewModelBase
 {
+    // ========================================
+    // Observable Properties
+    // ========================================
+    
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsBasicAuthSelected))]
     [NotifyPropertyChangedFor(nameof(IsBearerTokenSelected))]
     [NotifyPropertyChangedFor(nameof(IsApiKeySelected))]
+    [NotifyPropertyChangedFor(nameof(HasAuthentication))]
     private string _selectedAuthType = AuthConstants.None;
     
     [ObservableProperty]
-    private string _basicUsername = "";
+    private string _basicUsername = string.Empty;
     
     [ObservableProperty]
-    private string _basicPassword = "";
+    private string _basicPassword = string.Empty;
     
     [ObservableProperty]
-    private string _bearerToken = "";
+    private string _bearerToken = string.Empty;
     
     [ObservableProperty]
     private string _apiKeyName = AuthConstants.ApiKeyPrefix;
     
     [ObservableProperty]
-    private string _apiKeyValue = "";
+    private string _apiKeyValue = string.Empty;
     
     [ObservableProperty]
     private string _apiKeyLocation = AuthConstants.LocationHeader;
 
-    // Computed properties for UI binding
+    // ========================================
+    // Computed Properties
+    // ========================================
+    
     public bool IsBasicAuthSelected => SelectedAuthType == AuthConstants.Basic;
     public bool IsBearerTokenSelected => SelectedAuthType == AuthConstants.Bearer;
     public bool IsApiKeySelected => SelectedAuthType == AuthConstants.ApiKey;
+    public bool HasAuthentication => SelectedAuthType != AuthConstants.None && IsValid();
     
     public List<string> AuthTypes { get; } = new() 
     { 
@@ -51,7 +61,11 @@ public partial class AuthViewModel : ViewModelBase
         AuthConstants.LocationQuery 
     };
 
-    public Dictionary<string, string> GetAuthHeaders()
+    // ========================================
+    // Get Auth Headers
+    // ========================================
+    
+    public Dictionary<string, string> GetAuthHeaders(Func<string, string>? resolver = null)
     {
         var headers = new Dictionary<string, string>();
 
@@ -60,18 +74,16 @@ public partial class AuthViewModel : ViewModelBase
             switch (SelectedAuthType)
             {
                 case var _ when SelectedAuthType == AuthConstants.Basic:
-                    AddBasicAuthHeader(headers);
+                    AddBasicAuthHeader(headers, resolver);
                     break;
 
                 case var _ when SelectedAuthType == AuthConstants.Bearer:
-                    AddBearerTokenHeader(headers);
+                    AddBearerTokenHeader(headers, resolver);
                     break;
 
-                case var _ when SelectedAuthType == AuthConstants.ApiKey:
-                    if (ApiKeyLocation == AuthConstants.LocationHeader)
-                    {
-                        AddApiKeyHeader(headers);
-                    }
+                case var _ when SelectedAuthType == AuthConstants.ApiKey 
+                    && ApiKeyLocation == AuthConstants.LocationHeader:
+                    AddApiKeyHeader(headers, resolver);
                     break;
             }
         }
@@ -83,50 +95,77 @@ public partial class AuthViewModel : ViewModelBase
         return headers;
     }
 
-    private void AddBasicAuthHeader(Dictionary<string, string> headers)
+    private void AddBasicAuthHeader(Dictionary<string, string> headers, Func<string, string>? resolver)
     {
-        if (string.IsNullOrWhiteSpace(BasicUsername) && string.IsNullOrWhiteSpace(BasicPassword))
+        var username = Resolve(BasicUsername, resolver);
+        var password = Resolve(BasicPassword, resolver);
+        
+        if (string.IsNullOrWhiteSpace(username) && string.IsNullOrWhiteSpace(password))
             return;
 
-        var credentials = $"{BasicUsername}:{BasicPassword}";
-        var base64 = Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(credentials));
-        headers["Authorization"] = $"Basic {base64}";
+        var credentials = Convert.ToBase64String(
+            Encoding.UTF8.GetBytes($"{username}:{password}"));
+        
+        headers["Authorization"] = $"Basic {credentials}";
     }
 
-    private void AddBearerTokenHeader(Dictionary<string, string> headers)
+    private void AddBearerTokenHeader(Dictionary<string, string> headers, Func<string, string>? resolver)
     {
-        if (string.IsNullOrWhiteSpace(BearerToken))
+        var token = Resolve(BearerToken, resolver);
+        
+        if (string.IsNullOrWhiteSpace(token))
             return;
 
-        headers["Authorization"] = $"Bearer {BearerToken.Trim()}";
+        headers["Authorization"] = $"Bearer {token}";
     }
 
-    private void AddApiKeyHeader(Dictionary<string, string> headers)
+    private void AddApiKeyHeader(Dictionary<string, string> headers, Func<string, string>? resolver)
     {
-        if (string.IsNullOrWhiteSpace(ApiKeyName) || string.IsNullOrWhiteSpace(ApiKeyValue))
+        var keyName = Resolve(ApiKeyName, resolver);
+        var keyValue = Resolve(ApiKeyValue, resolver);
+        
+        if (string.IsNullOrWhiteSpace(keyName) || string.IsNullOrWhiteSpace(keyValue))
             return;
 
-        headers[ApiKeyName.Trim()] = ApiKeyValue.Trim();
+        headers[keyName] = keyValue;
     }
 
-    public Dictionary<string, string> GetAuthQueryParams()
+    // ========================================
+    // Get Auth Query Params
+    // ========================================
+    
+    public Dictionary<string, string> GetAuthQueryParams(Func<string, string>? resolver = null)
     {
         var queryParams = new Dictionary<string, string>();
 
-        if (SelectedAuthType == AuthConstants.ApiKey
-            && ApiKeyLocation == AuthConstants.LocationQuery 
-            && !string.IsNullOrWhiteSpace(ApiKeyName) 
-            && !string.IsNullOrWhiteSpace(ApiKeyValue))
+        if (SelectedAuthType == AuthConstants.ApiKey 
+            && ApiKeyLocation == AuthConstants.LocationQuery)
         {
-            queryParams[ApiKeyName.Trim()] = ApiKeyValue.Trim();
+            var keyName = Resolve(ApiKeyName, resolver);
+            var keyValue = Resolve(ApiKeyValue, resolver);
+            
+            if (!string.IsNullOrWhiteSpace(keyName) && !string.IsNullOrWhiteSpace(keyValue))
+            {
+                queryParams[keyName] = keyValue;
+            }
         }
 
         return queryParams;
     }
 
-    /// <summary>
-    /// Load authentication data from AuthData model.
-    /// </summary>
+    // ========================================
+    // Helper Methods
+    // ========================================
+    
+    private static string Resolve(string value, Func<string, string>? resolver)
+    {
+        return resolver?.Invoke(value) ?? value;
+    }
+
+    // ========================================
+    // Model Conversion
+    // ========================================
+    
     public void LoadFromAuthData(AuthData? authData)
     {
         if (authData == null)
@@ -138,11 +177,11 @@ public partial class AuthViewModel : ViewModelBase
         try
         {
             SelectedAuthType = authData.Type ?? AuthConstants.None;
-            BasicUsername = authData.BasicUsername ?? "";
-            BasicPassword = authData.BasicPassword ?? "";
-            BearerToken = authData.BearerToken ?? "";
+            BasicUsername = authData.BasicUsername ?? string.Empty;
+            BasicPassword = authData.BasicPassword ?? string.Empty;
+            BearerToken = authData.BearerToken ?? string.Empty;
             ApiKeyName = authData.ApiKeyName ?? AuthConstants.ApiKeyPrefix;
-            ApiKeyValue = authData.ApiKeyValue ?? "";
+            ApiKeyValue = authData.ApiKeyValue ?? string.Empty;
             ApiKeyLocation = authData.ApiKeyLocation ?? AuthConstants.LocationHeader;
         }
         catch (Exception ex)
@@ -152,74 +191,53 @@ public partial class AuthViewModel : ViewModelBase
         }
     }
 
-    /// <summary>
-    /// Convert current state to AuthData model.
-    /// </summary>
     public AuthData ToAuthData()
     {
         return new AuthData
         {
             Type = SelectedAuthType,
-            BasicUsername = BasicUsername?.Trim() ?? string.Empty,
+            BasicUsername = BasicUsername.Trim(),
             BasicPassword = BasicPassword,
-            BearerToken = BearerToken?.Trim() ?? string.Empty,
-            ApiKeyName = ApiKeyName?.Trim() ?? "",
-            ApiKeyValue = ApiKeyValue?.Trim() ?? "",
+            BearerToken = BearerToken.Trim(),
+            ApiKeyName = ApiKeyName.Trim(),
+            ApiKeyValue = ApiKeyValue.Trim(),
             ApiKeyLocation = ApiKeyLocation
         };
     }
 
-    /// <summary>
-    /// Clear all authentication data.
-    /// </summary>
-    public void Clear()
-    {
-        SelectedAuthType = AuthConstants.None;
-        BasicUsername = "";
-        BasicPassword = "";
-        BearerToken = "";
-        ApiKeyName = AuthConstants.ApiKeyPrefix;
-        ApiKeyValue = "";
-        ApiKeyLocation = AuthConstants.LocationHeader;
-    }
-
-    /// <summary>
-    /// Validate current authentication configuration.
-    /// </summary>
+    // ========================================
+    // Validation
+    // ========================================
+    
     public bool IsValid()
     {
         return SelectedAuthType switch
         {
-            _ when SelectedAuthType == AuthConstants.None => true,
-            _ when SelectedAuthType == AuthConstants.Basic => 
+            var t when t == AuthConstants.None => true,
+            var t when t == AuthConstants.Basic => 
                 !string.IsNullOrWhiteSpace(BasicUsername) || 
                 !string.IsNullOrWhiteSpace(BasicPassword),
-            _ when SelectedAuthType == AuthConstants.Bearer => 
+            var t when t == AuthConstants.Bearer => 
                 !string.IsNullOrWhiteSpace(BearerToken),
-            _ when SelectedAuthType == AuthConstants.ApiKey => 
+            var t when t == AuthConstants.ApiKey => 
                 !string.IsNullOrWhiteSpace(ApiKeyName) && 
                 !string.IsNullOrWhiteSpace(ApiKeyValue),
             _ => false
         };
     }
 
-    /// <summary>
-    /// Check if any authentication is configured.
-    /// </summary>
-    public bool HasAuthentication()
-    {
-        return SelectedAuthType != AuthConstants.None && IsValid();
-    }
+    // ========================================
+    // Clear/Reset
+    // ========================================
     
-    public void Reset()
+    public void Clear()
     {
-        SelectedAuthType = "None";
-        BasicUsername = "";
-        BasicPassword = "";
-        BearerToken = "";
-        ApiKeyName = "";
-        ApiKeyValue = "";
-        ApiKeyLocation = "Header";
+        SelectedAuthType = AuthConstants.None;
+        BasicUsername = string.Empty;
+        BasicPassword = string.Empty;
+        BearerToken = string.Empty;
+        ApiKeyName = AuthConstants.ApiKeyPrefix;
+        ApiKeyValue = string.Empty;
+        ApiKeyLocation = AuthConstants.LocationHeader;
     }
-
 }
