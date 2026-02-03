@@ -57,7 +57,7 @@ public partial class App : Application
         services.AddSingleton<IHttpService, HttpService>();
         services.AddSingleton<IUrlParserService, UrlParserService>();
         services.AddSingleton<IEnvironmentRepository, FileEnvironmentRepository>();
-        
+        services.AddSingleton<IDirtyTrackerService, DirtyTrackerService>();
         services.AddSingleton<HeadersViewModel>();
         services.AddSingleton<AuthViewModel>();
         services.AddSingleton<QueryParamsViewModel>();

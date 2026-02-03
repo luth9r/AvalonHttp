@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Linq;
 using System.Threading.Tasks;
 using AvalonHttp.Messages;
@@ -19,7 +20,9 @@ public partial class RequestItemViewModel : ObservableObject, IDisposable
     // ========================================
     
     private readonly CollectionItemViewModel _parent;
+    
     private readonly ApiRequest _originalRequest;
+    
     private string _originalName = string.Empty;
     
     // ========================================
@@ -27,8 +30,10 @@ public partial class RequestItemViewModel : ObservableObject, IDisposable
     // ========================================
     
     public ApiRequest Request => _originalRequest;
+    
     public CollectionItemViewModel Parent => _parent;
-    public Guid Id { get; }
+    
+    public Guid Id => _originalRequest.Id;
     
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(FinishRenameCommand))]
@@ -39,9 +44,6 @@ public partial class RequestItemViewModel : ObservableObject, IDisposable
 
     [ObservableProperty]
     private string _method = string.Empty;
-
-    [ObservableProperty]
-    private string _body = string.Empty;
 
     [ObservableProperty]
     private bool _isEditing;
@@ -61,7 +63,7 @@ public partial class RequestItemViewModel : ObservableObject, IDisposable
         _parent = parent ?? throw new ArgumentNullException(nameof(parent));
         _originalRequest = request ?? throw new ArgumentNullException(nameof(request));
         
-        Id = request.Id;
+        _originalRequest.PropertyChanged += OnModelPropertyChanged;
         
         // Load data from model
         LoadFromModel();
@@ -73,10 +75,21 @@ public partial class RequestItemViewModel : ObservableObject, IDisposable
     
     private void LoadFromModel()
     {
-        _name = _originalRequest.Name;
-        _url = _originalRequest.Url;
-        _method = _originalRequest.MethodString;
-        _body = _originalRequest.Body ?? string.Empty;
+        Name = _originalRequest.Name;
+        Url = _originalRequest.Url;
+        Method = _originalRequest.MethodString;
+    }
+    
+    private void OnModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(ApiRequest.Name))
+        {
+            Name = _originalRequest.Name;
+        }
+        else if (e.PropertyName == nameof(ApiRequest.MethodString))
+        {
+            Method = _originalRequest.MethodString;
+        }
     }
 
     // ========================================
@@ -111,19 +124,8 @@ public partial class RequestItemViewModel : ObservableObject, IDisposable
         if (Name == _originalName)
             return;
         
-        try
-        {
-            SyncToModel();
-            await _parent.Parent.SaveCollectionCommand.ExecuteAsync(_parent);
-        }
-        catch (Exception ex)
-        {
-            WeakReferenceMessenger.Default.Send(new ErrorMessage(
-                "Failed to Update Request",
-                $"An error occurred: {ex.Message}"
-            ));
-            Name = _originalName;
-        }
+        SyncToModel();
+        await _parent.Parent.SaveCollectionCommand.ExecuteAsync(_parent);
     }
 
     private bool CanFinishRename()
@@ -235,7 +237,6 @@ public partial class RequestItemViewModel : ObservableObject, IDisposable
         _originalRequest.Name = Name;
         _originalRequest.Url = Url;
         _originalRequest.MethodString = Method;
-        _originalRequest.Body = Body;
         _originalRequest.UpdatedAt = DateTime.Now;
     }
     
@@ -310,14 +311,10 @@ public partial class RequestItemViewModel : ObservableObject, IDisposable
     {
         if (request == null || request.Id != Id)
             return;
-
-        Name = request.Name;
-        Url = request.Url;
-        Method = request.MethodString;
-        Body = request.Body ?? string.Empty;
-        
+        LoadFromModel();
         IsDirty = false;
     }
+    
 
     // ========================================
     // Dispose
@@ -325,6 +322,6 @@ public partial class RequestItemViewModel : ObservableObject, IDisposable
     
     public void Dispose()
     {
-        // Clean up if needed
+        _originalRequest.PropertyChanged -= OnModelPropertyChanged;
     }
 }

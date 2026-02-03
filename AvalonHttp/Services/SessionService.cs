@@ -15,6 +15,7 @@ public class SessionService : ISessionService, IDisposable
     private readonly string _filePath;
     private readonly JsonSerializerOptions _jsonOptions;
     private readonly SemaphoreSlim _fileLock = new(1, 1);
+    private CancellationTokenSource? _debounceCts;
     
     // Cache to avoid excessive file reads
     private AppState? _cachedState;
@@ -39,24 +40,29 @@ public class SessionService : ISessionService, IDisposable
 
     public async Task SaveLastRequestAsync(Guid requestId)
     {
-        await _fileLock.WaitAsync();
-        
+        _debounceCts?.Cancel();
+        _debounceCts = new CancellationTokenSource();
+        var ct = _debounceCts.Token;
+
         try
         {
-            // Load current state to preserve other properties
-            var state = await LoadStateInternalAsync();
-            state.LastSelectedRequestId = requestId;
-            state.LastUpdated = DateTime.UtcNow;
-            
-            await SaveStateInternalAsync(state);
-            
-            // Update cache
-            _cachedState = state;
-            _lastCacheTime = DateTime.UtcNow;
+            await Task.Delay(500, ct);
+        
+            await _fileLock.WaitAsync(ct);
+            try
+            {
+                var state = await LoadStateInternalAsync();
+                state.LastSelectedRequestId = requestId;
+                await SaveStateInternalAsync(state);
+                _cachedState = state;
+            }
+            finally
+            {
+                _fileLock.Release();
+            }
         }
-        finally
+        catch (OperationCanceledException)
         {
-            _fileLock.Release();
         }
     }
 

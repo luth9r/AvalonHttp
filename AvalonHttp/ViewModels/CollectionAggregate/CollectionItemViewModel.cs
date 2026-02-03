@@ -89,10 +89,10 @@ public partial class CollectionItemViewModel : ObservableObject, IDisposable
         IsEditing = true;
     }
 
-    [RelayCommand(CanExecute = nameof(CanFinishRename))]
+    [RelayCommand]
     private async Task FinishRename()
     {
-        if (!CanFinishRename())
+        if (string.IsNullOrWhiteSpace(Name) || Name == _originalName)
         {
             CancelRename();
             return;
@@ -100,20 +100,9 @@ public partial class CollectionItemViewModel : ObservableObject, IDisposable
 
         IsEditing = false;
 
-        // Only save if name actually changed
-        if (Name == _originalName)
-            return;
-
-        _collection.Name = Name;
-        _collection.UpdatedAt = DateTime.Now;
-
         await SaveCollection();
     }
 
-    private bool CanFinishRename()
-    {
-        return !string.IsNullOrWhiteSpace(Name);
-    }
 
     [RelayCommand]
     private void CancelRename()
@@ -129,28 +118,21 @@ public partial class CollectionItemViewModel : ObservableObject, IDisposable
     [RelayCommand]
     private async Task AddRequest()
     {
-        try
+        var request = new ApiRequest
         {
-            var request = new ApiRequest
-            {
-                Id = Guid.NewGuid(),
-                Name = GenerateUniqueName("New Request"),
-                Url = "https://api.example.com",
-                MethodString = "GET",
-            };
+            Id = Guid.NewGuid(),
+            Name = GenerateUniqueName("New Request"),
+            Url = "https://api.example.com",
+            MethodString = "GET",
+        };
 
-            _collection.Requests.Add(request);
+        _collection.Requests.Add(request);
 
-            var viewModel = new RequestItemViewModel(request, this);
-            Requests.Add(viewModel);
+        var viewModel = new RequestItemViewModel(request, this);
+        Requests.Add(viewModel);
 
-            _parent.SelectRequest(viewModel);
-            await SaveCollection();
-        }
-        catch (Exception ex)
-        {
-            System.Diagnostics.Debug.WriteLine($"Failed to add request: {ex.Message}");
-        }
+        _parent.SelectRequest(viewModel);
+        await SaveCollection();
     }
 
     [RelayCommand]
@@ -249,80 +231,12 @@ public partial class CollectionItemViewModel : ObservableObject, IDisposable
 
     private async Task SaveCollection()
     {
-        try
-        {
-            await _parent.SaveCollectionCommand.ExecuteAsync(this);
-        }
-        catch (Exception ex)
-        {
-            System.Diagnostics.Debug.WriteLine($"Failed to save collection: {ex.Message}");
-            // TODO: Show error notification to user
-        }
+        await _parent.SaveCollectionCommand.ExecuteAsync(this);
     }
 
     // ========================================
-    // Update from Model
+    // Request Reordering
     // ========================================
-
-    public void UpdateFromModel(ApiCollection collection)
-    {
-        if (collection == null) return;
-
-        Name = collection.Name;
-        Description = collection.Description;
-
-        // Smart update - reuse existing VMs where possible
-        UpdateRequests(collection.Requests);
-    }
-
-    private void UpdateRequests(ObservableCollection<ApiRequest> newRequests)
-    {
-        // Remove deleted requests
-        for (int i = Requests.Count - 1; i >= 0; i--)
-        {
-            if (!newRequests.Any(r => r.Id == Requests[i].Id))
-            {
-                Requests[i].Dispose();
-                Requests.RemoveAt(i);
-            }
-        }
-
-        for (int i = 0; i < newRequests.Count; i++)
-        {
-            var request = newRequests[i];
-            var existingVm = Requests.FirstOrDefault(r => r.Id == request.Id);
-
-            if (existingVm != null)
-            {
-                // Update existing
-                existingVm.UpdateFromModel(request);
-
-                var currentIndex = Requests.IndexOf(existingVm);
-                if (currentIndex != i)
-                {
-                    Requests.Move(currentIndex, i);
-                }
-            }
-            else
-            {
-                // Add new at correct position
-                var newVm = new RequestItemViewModel(request, this);
-
-                if (i >= Requests.Count)
-                {
-                    Requests.Add(newVm);
-                }
-                else
-                {
-                    Requests.Insert(i, newVm);
-                }
-            }
-        }
-    }
-
-    // ========================================
-// Request Reordering
-// ========================================
 
     [RelayCommand(CanExecute = nameof(CanMoveRequestUp))]
     private async Task MoveRequestUp(RequestItemViewModel? request)

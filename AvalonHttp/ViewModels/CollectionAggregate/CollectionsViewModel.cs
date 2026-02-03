@@ -209,6 +209,10 @@ public partial class CollectionsViewModel : ViewModelBase
         catch (Exception ex)
         {
             System.Diagnostics.Debug.WriteLine($"Failed to save collection: {ex.Message}");
+            WeakReferenceMessenger.Default.Send(new ErrorMessage(
+                "File System Error",
+                $"Could not save collection '{collectionVm.Name}': {ex.Message}"
+            ));
         }
     }
 
@@ -276,17 +280,7 @@ public partial class CollectionsViewModel : ViewModelBase
         System.Diagnostics.Debug.WriteLine($"  Passed to OnRequestSelected");
     
         // Save session
-        _ = Task.Run(async () =>
-        {
-            try
-            {
-                await _sessionRepo.SaveLastRequestAsync(requestVm.Id);
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"Failed to save session: {ex.Message}");
-            }
-        });
+        _ = _sessionRepo.SaveLastRequestAsync(requestVm.Id);
     }
 
     public void ClearSelection()
@@ -334,48 +328,15 @@ public partial class CollectionsViewModel : ViewModelBase
     [RelayCommand]
     private async Task CloseAllEditModes()
     {
-        var modifiedCollections = new List<CollectionItemViewModel>();
-    
         foreach (var collection in Collections)
         {
-            var wasEdited = false;
-        
             if (collection.IsEditing)
-            {
                 await collection.FinishRenameCommand.ExecuteAsync(null);
-                wasEdited = true;
-            }
 
             foreach (var request in collection.Requests)
             {
                 if (request.IsEditing)
-                {
                     await request.FinishRenameCommand.ExecuteAsync(null);
-                    wasEdited = true;
-                }
-            }
-        
-            if (wasEdited && !modifiedCollections.Contains(collection))
-            {
-                modifiedCollections.Add(collection);
-            }
-        }
-    
-        // Save modified collections
-        foreach (var collection in modifiedCollections)
-        {
-            try
-            {
-                // Update and save original collection
-                collection.Collection.Name = collection.Name;
-                collection.Collection.Description = collection.Description;
-                collection.Collection.UpdatedAt = DateTime.Now;
-            
-                await _collectionService.SaveAsync(collection.Collection);
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"Failed to save collection: {ex.Message}");
             }
         }
     }

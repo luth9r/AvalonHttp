@@ -58,6 +58,8 @@ public partial class RequestViewModel : ViewModelBase, IDisposable
     
     private readonly IHttpService _httpService;
     private ApiRequest? _activeRequest;
+    private readonly IDirtyTrackerService _dirtyTracker;
+    private string? _requestSnapshot;
     private bool _isLoadingData;
     private bool _isSyncingUrl;
 
@@ -161,7 +163,8 @@ public partial class RequestViewModel : ViewModelBase, IDisposable
         QueryParamsViewModel queryParamsViewModel,
         AuthViewModel authViewModel,
         CookiesViewModel cookiesViewModel,
-        EnvironmentsViewModel environmentsViewModel)
+        EnvironmentsViewModel environmentsViewModel,
+        IDirtyTrackerService dirtyTracker)
     {
         _httpService = httpService ?? throw new ArgumentNullException(nameof(httpService));
         HeadersViewModel = headersViewModel ?? throw new ArgumentNullException(nameof(headersViewModel));
@@ -169,6 +172,7 @@ public partial class RequestViewModel : ViewModelBase, IDisposable
         AuthViewModel = authViewModel ?? throw new ArgumentNullException(nameof(authViewModel));
         CookiesViewModel = cookiesViewModel ?? throw new ArgumentNullException(nameof(cookiesViewModel));
         EnvironmentsViewModel = environmentsViewModel ?? throw new ArgumentNullException(nameof(environmentsViewModel));
+        _dirtyTracker = dirtyTracker ?? throw new ArgumentNullException(nameof(dirtyTracker));
 
         SubscribeToEvents();
     }
@@ -355,12 +359,12 @@ public partial class RequestViewModel : ViewModelBase, IDisposable
     private void SaveCurrentRequest()
     {
         if (_activeRequest == null) return;
-
+        
         SaveRequestData();
-        RequestSaved?.Invoke(this, _activeRequest);
+        _requestSnapshot = _dirtyTracker.TakeSnapshot(_activeRequest);
         IsDirty = false;
         
-        System.Diagnostics.Debug.WriteLine($"💾 Saved request '{_activeRequest.Name}'");
+        RequestSaved?.Invoke(this, _activeRequest);
     }
 
     private bool CanSaveRequest() => IsDirty && _activeRequest != null;
@@ -601,6 +605,7 @@ public partial class RequestViewModel : ViewModelBase, IDisposable
             LoadAuthData(request.AuthData);
 
             ClearResponseData();
+            _requestSnapshot = _dirtyTracker.TakeSnapshot(_activeRequest);
             IsDirty = false;
         }
         finally
@@ -847,10 +852,47 @@ public partial class RequestViewModel : ViewModelBase, IDisposable
 
     private void MarkAsDirty()
     {
-        if (_isLoadingData || _activeRequest == null) return;
-        IsDirty = true;
+        if (_isLoadingData || _activeRequest == null || _requestSnapshot == null) return;
+
+        // Синхронизируем временные данные из UI в модель для проверки
+        SyncToActiveRequest(); 
+        
+        // Проверяем, отличается ли текущая модель от снимка
+        IsDirty = _dirtyTracker.IsDirty(_activeRequest, _requestSnapshot);
     }
 
+    private void SyncToActiveRequest()
+    {
+        if (_activeRequest == null) return;
+        
+        _activeRequest.Name = Name;
+        _activeRequest.Url = RequestUrl;
+        _activeRequest.MethodString = SelectedMethod;
+        _activeRequest.Body = RequestBody;
+        
+        SyncCollection(_activeRequest.Headers, HeadersViewModel.Headers);
+        SyncCollection(_activeRequest.Cookies, CookiesViewModel.Cookies);
+        SyncCollection(_activeRequest.QueryParameters, QueryParamsViewModel.Parameters);
+
+        _activeRequest.AuthData = AuthViewModel.ToAuthData();
+    }
+    
+    private void SyncCollection(ObservableCollection<KeyValueItemModel> target, ObservableCollection<KeyValueItemModel> source)
+    {
+        target.Clear();
+        foreach (var item in source)
+        {
+            target.Add(new KeyValueItemModel
+            {
+                Key = item.Key,
+                Value = item.Value,
+                IsEnabled = item.IsEnabled
+            });
+        }
+    }
+    
+    
+    
     private void UnsubscribeFromCollection(ObservableCollection<KeyValueItemModel> collection)
     {
         foreach (var item in collection)
