@@ -106,6 +106,7 @@ public partial class RequestViewModel : ViewModelBase, IDisposable
     private bool _isPrettyFormat = true;
 
     [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(SaveCurrentRequestCommand))]
     private bool _isDirty;
 
     [ObservableProperty]

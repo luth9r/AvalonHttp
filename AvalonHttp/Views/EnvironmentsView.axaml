@@ -17,7 +17,8 @@
         <Border Grid.Column="0"
                 Background="{DynamicResource BgSidebarBrush}"
                 BorderBrush="{DynamicResource BorderColor}"
-                BorderThickness="0,0,1,0">
+                BorderThickness="0,0,1,0"
+                PointerPressed="OnSidebarClicked">
             <DockPanel>
                 <StackPanel DockPanel.Dock="Top" Margin="20,20,20,16" Spacing="12">
                     <Grid ColumnDefinitions="*,Auto">
@@ -68,7 +69,7 @@
                                   Margin="12,0,12,12">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
-                                <!-- ✅ Используем Classes для стилизации -->
+                                
                                 <Border CornerRadius="6"
                                         Padding="16,12"
                                         Margin="0,0,0,8"
@@ -123,15 +124,19 @@
                                                                IsVisible="{Binding !IsGlobal}" />
                                             </Panel>
 
-                                            <!-- ✅ Режим редактирования: TextBox -->
+
+                                            
                                             <TextBox Grid.Column="1"
                                                      Text="{Binding Name}"
                                                      IsVisible="{Binding IsEditing}"
-                                                     BorderThickness="0"
-                                                     Background="Transparent"
+                                                     BorderBrush="{DynamicResource AccentBrush}"
+                                                     BorderThickness="1"
+                                                     Background="{DynamicResource BgElevated}"
                                                      Foreground="{DynamicResource TextPrimary}"
                                                      FontWeight="Medium"
                                                      FontSize="13"
+                                                     CornerRadius="4"
+                                                     Padding="6,4"
                                                      VerticalAlignment="Center">
                                                 <TextBox.KeyBindings>
                                                     <KeyBinding Gesture="Enter" Command="{Binding FinishRenameCommand}" />
@@ -144,7 +149,7 @@
                                                 </Interaction.Behaviors>
                                             </TextBox>
 
-                                            <!-- ✅ Режим просмотра: TextBlock с точкой -->
+                                            
                                             <Grid Grid.Column="1"
                                                   IsVisible="{Binding !IsEditing}"
                                                   Background="Transparent"
@@ -166,7 +171,7 @@
                                                            FontSize="13"
                                                            VerticalAlignment="Center" />
 
-                                                <!-- ✅ Точка для несохраненных изменений -->
+                                                
                                                 <Border Grid.Column="1"
                                                         Width="6" Height="6"
                                                         CornerRadius="3"
@@ -176,7 +181,7 @@
                                                         ToolTip.Tip="Unsaved changes" />
                                             </Grid>
 
-                                            <!-- ❌ Кнопка меню скрыта для Global окружения -->
+                                            
                                             <Button Grid.Column="2"
                                                     Classes="IconButton"
                                                     Padding="4"
@@ -187,7 +192,7 @@
 
                                                 <Button.Flyout>
                                                     <MenuFlyout>
-                                                        <!-- ✅ Set Active только для не-Active окружений -->
+                                                        
                                                         <MenuItem Header="Set Active"
                                                                   Command="{Binding SetActiveCommand}"
                                                                   IsVisible="{Binding !IsActive}">

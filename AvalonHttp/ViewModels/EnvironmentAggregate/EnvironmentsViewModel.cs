@@ -324,6 +324,16 @@ public partial class EnvironmentsViewModel : ViewModelBase
         return name;
     }
 
+    [RelayCommand]
+    private async Task CloseAllEditModes()
+    {
+        foreach (var environment in Environments)
+        {
+            if (environment.IsEditing)
+                await environment.FinishRenameCommand.ExecuteAsync(null);
+        }
+    }
+
     // ========================================
     // Variable Resolution Logic
     // ========================================

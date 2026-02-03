@@ -356,6 +356,31 @@
             <Setter Property="Background" Value="{StaticResource GlassBg}"/>
             <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}"/>
         </Style>
+        
+        <Style Selector="Button.SaveButton">
+            <Setter Property="Background" Value="{DynamicResource AccentBrush}" />
+            <Setter Property="Foreground" Value="White" />
+            <Setter Property="Padding" Value="12,6" />
+            <Setter Property="CornerRadius" Value="6" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Transitions">
+                <Transitions>
+                    <BrushTransition Property="Background" Duration="0:0:0.2" />
+                    <DoubleTransition Property="Opacity" Duration="0:0:0.2" />
+                </Transitions>
+            </Setter>
+        </Style>
+
+        <Style Selector="Button.SaveButton:disabled">
+            <Setter Property="Background" Value="{DynamicResource BgElevated}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderColor}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Opacity" Value="0.5" />
+        </Style>
+
+        <Style Selector="Button.SaveButton:pointerover">
+            <Setter Property="Opacity" Value="0.9" />
+        </Style>
 
         <!-- Tabs -->
         <Style Selector="Border.Tab">
