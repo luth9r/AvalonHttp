@@ -17,7 +17,7 @@ public partial class CollectionsWorkspaceView : UserControl
             border.Tag is string tabName && 
             DataContext is CollectionWorkspaceViewModel vm)
         {
-            vm.SelectRequestTabCommand.Execute(tabName);
+            vm.RequestViewModel.SelectRequestTabCommand.Execute(tabName);
         }
     }
     
@@ -27,7 +27,7 @@ public partial class CollectionsWorkspaceView : UserControl
             border.Tag is string tabName && 
             DataContext is CollectionWorkspaceViewModel vm)
         {
-            vm.SelectResponseTabCommand.Execute(tabName);
+            vm.RequestViewModel.SelectResponseTabCommand.Execute(tabName);
         }
     }
     

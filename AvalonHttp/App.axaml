@@ -40,6 +40,7 @@
 
     <Application.Styles>
         <FluentTheme />
+        <StyleInclude Source="avares://Avalonia.Controls.DataGrid/Themes/Fluent.xaml"></StyleInclude>
         <StyleInclude Source="avares://AvaloniaEdit/Themes/Fluent/AvaloniaEdit.xaml" />
         <StyleInclude Source="/Controls/VariableTextBox.axaml" />
         
@@ -62,9 +63,19 @@
             <Setter Property="Padding" Value="12,8"/>
             <Setter Property="FontSize" Value="13"/>
             <Setter Property="Cursor" Value="Hand"/>
-            
+            <Setter Property="Transitions">
+                <Transitions>
+                    <BrushTransition Property="Background" Duration="0:0:0.15"/>
+                    <BrushTransition Property="BorderBrush" Duration="0:0:0.15"/>
+                </Transitions>
+            </Setter>
             <Setter Property="HorizontalContentAlignment" Value="Center"/>
             <Setter Property="VerticalContentAlignment" Value="Center"/>
+        </Style>
+
+        <Style Selector="Button:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="{StaticResource GlassBg}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource BorderBright}"/>
         </Style>
 
         <Style Selector="Button.IconButton">
@@ -173,6 +184,66 @@
             <Setter Property="BorderBrush" Value="{StaticResource BorderBright}"/>
         </Style>
 
+        <!-- MenuItem & MenuFlyout -->
+        <Style Selector="MenuFlyout">
+            <Setter Property="Placement" Value="Bottom"/>
+        </Style>
+
+        <Style Selector="MenuFlyoutPresenter">
+            <Setter Property="Background" Value="{StaticResource BgElevated}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource BorderColor}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Padding" Value="4"/>
+            <Setter Property="MinWidth" Value="180"/>
+            <Setter Property="MaxWidth" Value="300"/>
+        </Style>
+
+        <Style Selector="MenuItem">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="{StaticResource TextPrimary}"/>
+            <Setter Property="Padding" Value="10,8"/>
+            <Setter Property="CornerRadius" Value="6"/>
+            <Setter Property="Margin" Value="2"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Transitions">
+                <Transitions>
+                    <BrushTransition Property="Background" Duration="0:0:0.15"/>
+                </Transitions>
+            </Setter>
+        </Style>
+
+        <Style Selector="MenuItem:pointerover /template/ Border#PART_LayoutRoot">
+            <Setter Property="Background" Value="{StaticResource GlassBg}"/>
+        </Style>
+
+        <Style Selector="MenuItem:pressed /template/ Border#PART_LayoutRoot">
+            <Setter Property="Background" Value="{StaticResource BorderColor}"/>
+        </Style>
+
+        <Style Selector="MenuItem /template/ ContentPresenter#PART_HeaderPresenter">
+            <Setter Property="Margin" Value="0,0,8,0"/>
+        </Style>
+
+        <Style Selector="MenuItem /template/ Path#PART_ChevronPath">
+            <Setter Property="Fill" Value="{StaticResource TextSecondary}"/>
+        </Style>
+
+        <!-- MenuItem Icon -->
+        <Style Selector="MenuItem > lucide|Lucide">
+            <Setter Property="Width" Value="16"/>
+            <Setter Property="Height" Value="16"/>
+            <Setter Property="StrokeBrush" Value="{StaticResource TextSecondary}"/>
+            <Setter Property="Margin" Value="0,0,8,0"/>
+        </Style>
+
+        <!-- Separator in Menu -->
+        <Style Selector="Separator">
+            <Setter Property="Background" Value="{StaticResource BorderColor}"/>
+            <Setter Property="Height" Value="1"/>
+            <Setter Property="Margin" Value="4,4"/>
+        </Style>
+
         <!-- ScrollBar -->
         <Style Selector="ScrollBar">
             <Setter Property="Background" Value="Transparent"/>
@@ -206,6 +277,11 @@
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Transitions">
+                <Transitions>
+                    <BrushTransition Property="Background" Duration="0:0:0.15"/>
+                </Transitions>
+            </Setter>
         </Style>
 
         <Style Selector="Button.NavIcon:pointerover /template/ ContentPresenter">
@@ -222,6 +298,13 @@
             <Setter Property="Margin" Value="0,1"/>
             <Setter Property="CornerRadius" Value="6"/>
             <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Transitions">
+                <Transitions>
+                    <BrushTransition Property="Background" Duration="0:0:0.15"/>
+                    <BrushTransition Property="BorderBrush" Duration="0:0:0.15"/>
+                    <ThicknessTransition Property="BorderThickness" Duration="0:0:0.15"/>
+                </Transitions>
+            </Setter>
         </Style>
 
         <Style Selector="Border.TreeItem:pointerover">
@@ -302,10 +385,20 @@
             <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
             <Setter Property="Padding" Value="24,10"/>
+            <Setter Property="Transitions">
+                <Transitions>
+                    <BrushTransition Property="Background" Duration="0:0:0.15"/>
+                    <DoubleTransition Property="Opacity" Duration="0:0:0.15"/>
+                </Transitions>
+            </Setter>
         </Style>
 
         <Style Selector="Button.SendButton:pointerover /template/ ContentPresenter">
             <Setter Property="Background" Value="#4A90F7"/>
+        </Style>
+
+        <Style Selector="Button.SendButton:pressed /template/ ContentPresenter">
+            <Setter Property="Background" Value="#2563EB"/>
         </Style>
 
         <Style Selector="Button.IconButton">
@@ -313,6 +406,16 @@
             <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="Width" Value="32"/>
             <Setter Property="Height" Value="32"/>
+            <Setter Property="CornerRadius" Value="6"/>
+            <Setter Property="Transitions">
+                <Transitions>
+                    <BrushTransition Property="Background" Duration="0:0:0.15"/>
+                </Transitions>
+            </Setter>
+        </Style>
+
+        <Style Selector="Button.IconButton:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="{StaticResource GlassBg}"/>
         </Style>
 
         <Style Selector="Button.AddRowButton">
@@ -321,6 +424,12 @@
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="Foreground" Value="{StaticResource TextSecondary}"/>
             <Setter Property="HorizontalAlignment" Value="Stretch"/>
+            <Setter Property="Transitions">
+                <Transitions>
+                    <BrushTransition Property="Background" Duration="0:0:0.15"/>
+                    <BrushTransition Property="BorderBrush" Duration="0:0:0.15"/>
+                </Transitions>
+            </Setter>
         </Style>
 
         <Style Selector="Button.AddRowButton:pointerover /template/ ContentPresenter">
@@ -337,6 +446,12 @@
             <Setter Property="CornerRadius" Value="6"/>
             <Setter Property="Padding" Value="8"/>
             <Setter Property="MinWidth" Value="0"/>
+            <Setter Property="Transitions">
+                <Transitions>
+                    <BrushTransition Property="Background" Duration="0:0:0.15"/>
+                    <BrushTransition Property="BorderBrush" Duration="0:0:0.15"/>
+                </Transitions>
+            </Setter>
         </Style>
 
         <Style Selector="Button.ActionButton > lucide|Lucide">
@@ -371,7 +486,7 @@
             </Setter>
         </Style>
 
-        <Style Selector="Button.SaveButton:disabled">
+        <Style Selector="Button.SaveButton:disabled, Button.ActionButton:disabled">
             <Setter Property="Background" Value="{DynamicResource BgElevated}" />
             <Setter Property="BorderBrush" Value="{DynamicResource BorderColor}" />
             <Setter Property="BorderThickness" Value="1" />
@@ -388,6 +503,12 @@
             <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="BorderThickness" Value="0,0,0,2"/>
             <Setter Property="BorderBrush" Value="Transparent"/>
+            <Setter Property="Transitions">
+                <Transitions>
+                    <BrushTransition Property="Background" Duration="0:0:0.15"/>
+                    <BrushTransition Property="BorderBrush" Duration="0:0:0.15"/>
+                </Transitions>
+            </Setter>
         </Style>
 
         <Style Selector="Border.Tab TextBlock">
@@ -452,6 +573,92 @@
             <Setter Property="Background" Value="Transparent" />
             <Setter Property="CornerRadius" Value="8" />
             <Setter Property="MaxWidth" Value="1000" /> 
+        </Style>
+        
+        <!-- DataGrid Styles -->
+        <Style Selector="DataGrid.ResponseGrid">
+            <Setter Property="IsReadOnly" Value="True" />
+            <Setter Property="CanUserResizeColumns" Value="True" />
+            <Setter Property="CanUserSortColumns" Value="False" />
+            <Setter Property="GridLinesVisibility" Value="None" />
+            <Setter Property="SelectionMode" Value="Extended" />
+            <Setter Property="Background" Value="{DynamicResource BgMain}" />
+            <Setter Property="RowBackground" Value="{DynamicResource BgMain}" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="HorizontalScrollBarVisibility" Value="Auto" />
+            <Setter Property="VerticalScrollBarVisibility" Value="Auto" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="ClipToBounds" Value="True" />
+        </Style>
+
+        <!-- DataGrid Column Headers -->
+        <Style Selector="DataGrid.ResponseGrid DataGridColumnHeader">
+            <Setter Property="Background" Value="{DynamicResource BgElevated}"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextSecondary}"/>
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Padding" Value="12,10"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderColor}"/>
+            <Setter Property="BorderThickness" Value="0,0,0,1"/>
+            <Setter Property="HorizontalContentAlignment" Value="Left"/>
+        </Style>
+
+        <!-- DataGrid Rows -->
+        <Style Selector="DataGrid.ResponseGrid DataGridRow">
+            <Setter Property="BorderThickness" Value="0,0,0,1"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderColor}"/>
+            <Setter Property="MinHeight" Value="36"/>
+        </Style>
+
+        <!-- DataGrid Row Hover State -->
+        <Style Selector="DataGrid.ResponseGrid DataGridRow:pointerover /template/ Rectangle#BackgroundRectangle">
+            <Setter Property="Fill" Value="{DynamicResource GlassBg}"/>
+            <Setter Property="Opacity" Value="1"/>
+        </Style>
+
+        <!-- DataGrid Row Selected State -->
+        <Style Selector="DataGrid.ResponseGrid DataGridRow:selected /template/ Rectangle#BackgroundRectangle">
+            <Setter Property="Fill" Value="#1A3B82F6"/>
+            <Setter Property="Opacity" Value="1"/>
+        </Style>
+
+        <!-- DataGrid Cells -->
+        <Style Selector="DataGrid.ResponseGrid DataGridCell">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="0"/>
+        </Style>
+
+        <!-- DataGrid Cell TextBlocks -->
+        <Style Selector="DataGrid.ResponseGrid DataGridCell TextBlock">
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Padding" Value="12,10"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimary}"/>
+        </Style>
+
+        <!-- First Column (Name/Key) Styling -->
+        <Style Selector="DataGrid.ResponseGrid DataGridRow DataGridCell:nth-child(1) TextBlock">
+            <Setter Property="Foreground" Value="{DynamicResource AccentBrush}"/>
+            <Setter Property="FontWeight" Value="Medium"/>
+            <Setter Property="FontFamily" Value="JetBrains Mono, Cascadia Code, Consolas, monospace"/>
+        </Style>
+
+        <!-- Second Column (Value) Styling -->
+        <Style Selector="DataGrid.ResponseGrid DataGridRow DataGridCell:nth-child(2) TextBlock">
+            <Setter Property="Foreground" Value="{DynamicResource TextSecondary}"/>
+            <Setter Property="FontFamily" Value="JetBrains Mono, Cascadia Code, Consolas, monospace"/>
+        </Style>
+
+        <!-- Remove Focus Visual -->
+        <Style Selector="DataGrid.ResponseGrid DataGridCell:focus /template/ Grid#FocusVisual">
+            <Setter Property="IsVisible" Value="False" />
+        </Style>
+
+        <!-- Column Header Separator -->
+        <Style Selector="DataGrid.ResponseGrid DataGridColumnHeader /template/ Rectangle#VerticalSeparator">
+            <Setter Property="IsVisible" Value="False" />
         </Style>
     </Application.Styles>
     

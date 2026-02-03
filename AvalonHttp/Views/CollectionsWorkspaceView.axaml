@@ -6,7 +6,7 @@
              xmlns:behaviors="clr-namespace:AvalonHttp.Behaviors"
              x:Class="AvalonHttp.Views.CollectionsWorkspaceView"
              x:DataType="vm:CollectionWorkspaceViewModel">
-    
+
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="280" MinWidth="200" MaxWidth="400" /> <ColumnDefinition Width="5" />
@@ -221,16 +221,17 @@
                                                         BorderBrush="{DynamicResource BorderColor}"
                                                         BorderThickness="1"
                                                         Classes.selected="{Binding IsSelected}">
-                                                    
+
                                                     <Border.Styles>
                                                         <!-- Selected Style -->
                                                         <Style Selector="Border.selected">
                                                             <Setter Property="Background" Value="#1A1F2E" />
-                                                            <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+                                                            <Setter Property="BorderBrush"
+                                                                    Value="{DynamicResource AccentBrush}" />
                                                             <Setter Property="BorderThickness" Value="1" />
                                                         </Style>
                                                     </Border.Styles>
-                                                    
+
                                                     <Interaction.Behaviors>
                                                         <behaviors:DragDropBehavior />
                                                     </Interaction.Behaviors>
@@ -376,20 +377,20 @@
                                  BorderThickness="0" Background="Transparent"
                                  Foreground="{DynamicResource TextPrimary}" FontWeight="Medium" FontSize="13"
                                  VerticalAlignment="Center" />
-                        
+
                         <!-- Save Button -->
                         <Button Grid.Column="3"
                                 Classes="SaveButton"
                                 Command="{Binding RequestViewModel.SaveCurrentRequestCommand}"
                                 ToolTip.Tip="Save changes (Ctrl+S)">
                             <StackPanel Orientation="Horizontal" Spacing="8">
-                                <lucide:Lucide Icon="Save" 
-                                               StrokeBrush="White" 
-                                               Width="14" Height="14" 
-                                               VerticalAlignment="Center"/>
-                                <TextBlock Text="Save" 
-                                           FontWeight="SemiBold" 
-                                           FontSize="12" 
+                                <lucide:Lucide Icon="Save"
+                                               StrokeBrush="White"
+                                               Width="14" Height="14"
+                                               VerticalAlignment="Center" />
+                                <TextBlock Text="Save"
+                                           FontWeight="SemiBold"
+                                           FontSize="12"
                                            VerticalAlignment="Center" />
                             </StackPanel>
                         </Button>
@@ -397,12 +398,13 @@
                     <!-- Request URL Bar -->
                     <Grid Grid.Row="1" ColumnDefinitions="Auto, *, Auto" ColumnSpacing="12">
                         <ComboBox Grid.Column="0" SelectedItem="{Binding RequestViewModel.SelectedMethod}"
-                                  ItemsSource="{Binding RequestViewModel.HttpMethods}" Classes="MethodDropdown" MinWidth="90" />
+                                  ItemsSource="{Binding RequestViewModel.HttpMethods}" Classes="MethodDropdown"
+                                  MinWidth="90" />
                         <controls:VariableTextBox Grid.Column="1"
                                                   Text="{Binding RequestViewModel.RequestUrl}"
                                                   Watermark="Enter request URL..."
                                                   EnvironmentsViewModel="{Binding EnvironmentsViewModel}"
-                                                  Classes="UrlInput"/>
+                                                  Classes="UrlInput" />
                         <Button Grid.Column="2" Classes="SendButton"
                                 Command="{Binding RequestViewModel.SendRequestCommand}">
                             <Grid ColumnDefinitions="Auto, Auto" ColumnSpacing="8">
@@ -422,7 +424,7 @@
                 <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
                     <StackPanel Orientation="Horizontal" Margin="20,0" Spacing="4">
                         <Border Classes="Tab"
-                                Classes.Active="{Binding SelectedRequestTab, Converter={x:Static ObjectConverters.Equal}, ConverterParameter=Params}"
+                                Classes.Active="{Binding RequestViewModel.SelectedRequestTab, Converter={x:Static ObjectConverters.Equal}, ConverterParameter=Params}"
                                 PointerPressed="SelectRequestTab" Tag="Params">
                             <StackPanel Orientation="Horizontal" Spacing="6">
                                 <TextBlock Text="Params" />
@@ -434,12 +436,12 @@
                             </StackPanel>
                         </Border>
                         <Border Classes="Tab"
-                                Classes.Active="{Binding SelectedRequestTab, Converter={x:Static ObjectConverters.Equal}, ConverterParameter=Auth}"
+                                Classes.Active="{Binding RequestViewModel.SelectedRequestTab, Converter={x:Static ObjectConverters.Equal}, ConverterParameter=Auth}"
                                 PointerPressed="SelectRequestTab" Tag="Auth">
                             <TextBlock Text="Auth" />
                         </Border>
                         <Border Classes="Tab"
-                                Classes.Active="{Binding SelectedRequestTab, Converter={x:Static ObjectConverters.Equal}, ConverterParameter=Headers}"
+                                Classes.Active="{Binding RequestViewModel.SelectedRequestTab, Converter={x:Static ObjectConverters.Equal}, ConverterParameter=Headers}"
                                 PointerPressed="SelectRequestTab" Tag="Headers">
                             <StackPanel Orientation="Horizontal" Spacing="6">
                                 <TextBlock Text="Headers" />
@@ -450,12 +452,12 @@
                             </StackPanel>
                         </Border>
                         <Border Classes="Tab"
-                                Classes.Active="{Binding SelectedRequestTab, Converter={x:Static ObjectConverters.Equal}, ConverterParameter=Body}"
+                                Classes.Active="{Binding RequestViewModel.SelectedRequestTab, Converter={x:Static ObjectConverters.Equal}, ConverterParameter=Body}"
                                 PointerPressed="SelectRequestTab" Tag="Body">
                             <TextBlock Text="Body" />
                         </Border>
                         <Border Classes="Tab"
-                                Classes.Active="{Binding SelectedRequestTab, Converter={x:Static ObjectConverters.Equal}, ConverterParameter=Cookies}"
+                                Classes.Active="{Binding RequestViewModel.SelectedRequestTab, Converter={x:Static ObjectConverters.Equal}, ConverterParameter=Cookies}"
                                 PointerPressed="SelectRequestTab" Tag="Cookies">
                             <StackPanel Orientation="Horizontal" Spacing="6">
                                 <TextBlock Text="Cookies" />
@@ -486,7 +488,7 @@
                     <StackPanel Margin="20" Spacing="24">
                         <!-- PARAMS TAB -->
                         <StackPanel
-                            IsVisible="{Binding SelectedRequestTab, Converter={x:Static ObjectConverters.Equal}, ConverterParameter=Params}">
+                            IsVisible="{Binding RequestViewModel.SelectedRequestTab, Converter={x:Static ObjectConverters.Equal}, ConverterParameter=Params}">
                             <TextBlock Text="QUERY PARAMETERS" Classes="SectionTitle" />
                             <ItemsControl ItemsSource="{Binding RequestViewModel.QueryParamsViewModel.Parameters}">
                                 <ItemsControl.ItemTemplate>
@@ -531,7 +533,7 @@
 
                         <!-- AUTH TAB -->
                         <StackPanel
-                            IsVisible="{Binding SelectedRequestTab, Converter={x:Static ObjectConverters.Equal}, ConverterParameter=Auth}">
+                            IsVisible="{Binding RequestViewModel.SelectedRequestTab, Converter={x:Static ObjectConverters.Equal}, ConverterParameter=Auth}">
                             <TextBlock Text="AUTHORIZATION" Classes="SectionTitle" Margin="0,0,0,12" />
 
                             <!-- Auth Type Selector -->
@@ -577,8 +579,7 @@
                                 <controls:VariableTextBox Text="{Binding RequestViewModel.AuthViewModel.BearerToken}"
                                                           Watermark="Enter bearer token"
                                                           Classes="KvInput"
-                                                          EnvironmentsViewModel="{Binding EnvironmentsViewModel}"
-                                                           />
+                                                          EnvironmentsViewModel="{Binding EnvironmentsViewModel}" />
                             </StackPanel>
 
                             <!-- API Key -->
@@ -642,7 +643,7 @@
 
                         <!-- HEADERS TAB -->
                         <StackPanel
-                            IsVisible="{Binding SelectedRequestTab, Converter={x:Static ObjectConverters.Equal}, ConverterParameter=Headers}">
+                            IsVisible="{Binding RequestViewModel.SelectedRequestTab, Converter={x:Static ObjectConverters.Equal}, ConverterParameter=Headers}">
                             <TextBlock Text="REQUEST HEADERS" Classes="SectionTitle" />
                             <ItemsControl ItemsSource="{Binding RequestViewModel.HeadersViewModel.Headers}">
                                 <ItemsControl.ItemTemplate>
@@ -687,7 +688,7 @@
 
                         <!-- BODY TAB -->
                         <StackPanel
-                            IsVisible="{Binding SelectedRequestTab, Converter={x:Static ObjectConverters.Equal}, ConverterParameter=Body}">
+                            IsVisible="{Binding RequestViewModel.SelectedRequestTab, Converter={x:Static ObjectConverters.Equal}, ConverterParameter=Body}">
                             <TextBlock Text="REQUEST BODY" Classes="SectionTitle" />
                             <controls:JsonBodyEditor Text="{Binding RequestViewModel.RequestBody}" MinHeight="300"
                                                      Margin="0,12,0,0" />
@@ -695,7 +696,7 @@
 
                         <!-- COOKIES TAB -->
                         <StackPanel
-                            IsVisible="{Binding SelectedRequestTab, Converter={x:Static ObjectConverters.Equal}, ConverterParameter=Cookies}">
+                            IsVisible="{Binding RequestViewModel.SelectedRequestTab, Converter={x:Static ObjectConverters.Equal}, ConverterParameter=Cookies}">
                             <TextBlock Text="REQUEST COOKIES" Classes="SectionTitle" />
                             <ItemsControl ItemsSource="{Binding RequestViewModel.CookiesViewModel.Cookies}">
                                 <ItemsControl.ItemTemplate>
@@ -784,9 +785,9 @@
                                                VerticalAlignment="Center" />
                                 </Grid>
                             </Grid>
-                            <Button Grid.Column="2" Classes="ActionButton" ToolTip.Tip="Save Changes" MinWidth="0"
-                                    Padding="8" Command="{Binding RequestViewModel.SaveCurrentRequestCommand}">
-                                <lucide:Lucide Icon="Save" StrokeBrush="{DynamicResource TextSecondary}" Width="14"
+                            <Button Grid.Column="2" IsEnabled="{Binding RequestViewModel.HasResponseData}" Classes="ActionButton" ToolTip.Tip="Save Response to File" MinWidth="0"
+                                    Padding="8" Command="{Binding RequestViewModel.SaveResponseCommand}">
+                                <lucide:Lucide Icon="Save" StrokeBrush="White" Width="14"
                                                Height="14" />
                             </Button>
                         </Grid>
@@ -797,22 +798,34 @@
                             BorderBrush="{DynamicResource BorderColor}" BorderThickness="0,0,0,1">
                         <StackPanel Orientation="Horizontal" Margin="20,0" Spacing="4">
                             <Border Classes="Tab"
-                                    Classes.Active="{Binding SelectedResponseTab, Converter={x:Static ObjectConverters.Equal}, ConverterParameter=Body}"
+                                    Classes.Active="{Binding RequestViewModel.SelectedResponseTab, Converter={x:Static ObjectConverters.Equal}, ConverterParameter=Body}"
                                     PointerPressed="SelectResponseTab" Tag="Body">
                                 <TextBlock Text="Body" />
                             </Border>
                             <Border Classes="Tab"
-                                    Classes.Active="{Binding SelectedResponseTab, Converter={x:Static ObjectConverters.Equal}, ConverterParameter=Headers}"
+                                    Classes.Active="{Binding RequestViewModel.SelectedResponseTab, Converter={x:Static ObjectConverters.Equal}, ConverterParameter=Headers}"
                                     PointerPressed="SelectResponseTab" Tag="Headers">
-                                <TextBlock Text="Headers" />
+                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                    <TextBlock Text="Headers" />
+                                    <Border Classes="Badge"
+                                            IsVisible="{Binding RequestViewModel.ResponseHeadersCount, Converter={x:Static ObjectConverters.NotEqual}, ConverterParameter=0}">
+                                        <TextBlock Text="{Binding RequestViewModel.ResponseHeadersCount}" />
+                                    </Border>
+                                </StackPanel>
                             </Border>
                             <Border Classes="Tab"
-                                    Classes.Active="{Binding SelectedResponseTab, Converter={x:Static ObjectConverters.Equal}, ConverterParameter=Cookies}"
+                                    Classes.Active="{Binding RequestViewModel.SelectedResponseTab, Converter={x:Static ObjectConverters.Equal}, ConverterParameter=Cookies}"
                                     PointerPressed="SelectResponseTab" Tag="Cookies">
-                                <TextBlock Text="Cookies" />
+                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                    <TextBlock Text="Cookies" />
+                                    <Border Classes="Badge"
+                                            IsVisible="{Binding RequestViewModel.ResponseCookiesCount, Converter={x:Static ObjectConverters.NotEqual}, ConverterParameter=0}">
+                                        <TextBlock Text="{Binding RequestViewModel.ResponseCookiesCount}" />
+                                    </Border>
+                                </StackPanel>
                             </Border>
                             <Border Classes="Tab"
-                                    Classes.Active="{Binding SelectedResponseTab, Converter={x:Static ObjectConverters.Equal}, ConverterParameter=Timeline}"
+                                    Classes.Active="{Binding RequestViewModel.SelectedResponseTab, Converter={x:Static ObjectConverters.Equal}, ConverterParameter=Timeline}"
                                     PointerPressed="SelectResponseTab" Tag="Timeline">
                                 <TextBlock Text="Timeline" />
                             </Border>
@@ -829,48 +842,96 @@
                                 CornerRadius="8"
                                 Margin="20"
                                 ClipToBounds="True"
-                                IsVisible="{Binding SelectedResponseTab, Converter={x:Static ObjectConverters.Equal}, ConverterParameter=Body}">
+                                IsVisible="{Binding RequestViewModel.SelectedResponseTab, Converter={x:Static ObjectConverters.Equal}, ConverterParameter=Body}">
                             <Grid>
                                 <!-- Empty State -->
+                                <!-- We use hardcoded value cause underneath we have avaloniaedit -->
                                 <Border Background="#1A1A1A"
-                                        CornerRadius="12"
+                                        CornerRadius="8"
                                         IsVisible="{Binding !RequestViewModel.HasResponseData}">
                                     <StackPanel VerticalAlignment="Center"
                                                 HorizontalAlignment="Center"
-                                                Spacing="20"
-                                                Margin="40">
+                                                Spacing="24"
+                                                Margin="60">
 
-                                        <Border Background="#252526"
-                                                Width="80"
-                                                Height="80"
-                                                CornerRadius="40"
+                                        <!-- Icon Circle -->
+                                        <Border Background="{DynamicResource BgMain}"
+                                                BorderBrush="{DynamicResource BorderBright}"
+                                                BorderThickness="2"
+                                                Width="96"
+                                                Height="96"
+                                                CornerRadius="48"
                                                 HorizontalAlignment="Center">
                                             <lucide:Lucide Icon="FileJson"
-                                                           StrokeBrush="#3B82F6"
-                                                           Width="40"
-                                                           Height="40"
+                                                           StrokeBrush="{DynamicResource AccentBrush}"
+                                                           Width="48"
+                                                           Height="48"
                                                            HorizontalAlignment="Center"
                                                            VerticalAlignment="Center" />
                                         </Border>
 
-                                        <StackPanel Spacing="8" HorizontalAlignment="Center">
-                                            <TextBlock Text="No Response"
-                                                       Foreground="#FFFFFF"
+                                        <!-- Text Content -->
+                                        <StackPanel Spacing="12" HorizontalAlignment="Center">
+                                            <TextBlock Text="No Response Data"
+                                                       Foreground="{DynamicResource TextPrimary}"
                                                        FontSize="18"
-                                                       FontWeight="Bold"
+                                                       FontWeight="SemiBold"
                                                        HorizontalAlignment="Center" />
 
                                             <TextBlock Text="Click 'Send' to make your first request"
-                                                       Foreground="#A0A0A0"
+                                                       Foreground="{DynamicResource TextSecondary}"
                                                        FontSize="14"
                                                        HorizontalAlignment="Center"
                                                        TextWrapping="Wrap"
                                                        TextAlignment="Center"
-                                                       MaxWidth="300" />
+                                                       MaxWidth="350" />
                                         </StackPanel>
                                     </StackPanel>
                                 </Border>
 
+                                <Border Background="Transparent"
+                                        CornerRadius="8"
+                                        IsVisible="{Binding !RequestViewModel.HasResponseData}">
+                                    <StackPanel VerticalAlignment="Center"
+                                                HorizontalAlignment="Center"
+                                                Spacing="24"
+                                                Margin="60">
+
+                                        <!-- Icon Circle -->
+                                        <Border Background="{DynamicResource BgMain}"
+                                                BorderBrush="{DynamicResource BorderBright}"
+                                                BorderThickness="2"
+                                                Width="96"
+                                                Height="96"
+                                                CornerRadius="48"
+                                                HorizontalAlignment="Center">
+                                            <lucide:Lucide Icon="FileJson"
+                                                           StrokeBrush="{DynamicResource AccentBrush}"
+                                                           Width="48"
+                                                           Height="48"
+                                                           HorizontalAlignment="Center"
+                                                           VerticalAlignment="Center" />
+                                        </Border>
+
+                                        <!-- Text Content -->
+                                        <StackPanel Spacing="12" HorizontalAlignment="Center">
+                                            <TextBlock Text="No Response Data"
+                                                       Foreground="{DynamicResource TextPrimary}"
+                                                       FontSize="18"
+                                                       FontWeight="SemiBold"
+                                                       HorizontalAlignment="Center" />
+
+                                            <TextBlock Text="Click 'Send' to make your first request"
+                                                       Foreground="{DynamicResource TextSecondary}"
+                                                       FontSize="14"
+                                                       HorizontalAlignment="Center"
+                                                       TextWrapping="Wrap"
+                                                       TextAlignment="Center"
+                                                       MaxWidth="350" />
+                                        </StackPanel>
+                                    </StackPanel>
+                                </Border>
+                                
                                 <!-- Content with data -->
                                 <Grid IsVisible="{Binding RequestViewModel.HasResponseData}">
                                     <!-- Format Menu Button -->
@@ -878,8 +939,11 @@
                                             VerticalAlignment="Top"
                                             Margin="10"
                                             ZIndex="100"
-                                            Classes="ActionButton">
-                                        <lucide:Lucide Icon="Menu" Width="16" Height="16" />
+                                            Classes="ActionButton"
+                                            MinWidth="0"
+                                            Padding="8"
+                                            ToolTip.Tip="Response Options">
+                                        <lucide:Lucide Icon="Menu" Width="14" Height="14" StrokeBrush="White" />
 
                                         <Button.Flyout>
                                             <MenuFlyout Placement="BottomEdgeAlignedRight">
@@ -907,13 +971,15 @@
 
                                     <!-- Copy Button -->
                                     <Button Classes="ActionButton"
-                                            Command="{Binding CopyResponseCommand}"
+                                            Command="{Binding RequestViewModel.CopyResponseCommand}"
                                             HorizontalAlignment="Right"
                                             VerticalAlignment="Bottom"
                                             Margin="10"
                                             ZIndex="100"
+                                            MinWidth="0"
+                                            Padding="8"
                                             ToolTip.Tip="Copy to clipboard">
-                                        <lucide:Lucide Icon="Copy" Width="16" Height="16" />
+                                        <lucide:Lucide Icon="Copy" Width="14" Height="14" StrokeBrush="White" />
                                     </Button>
 
                                     <!-- JSON Editor -->
@@ -933,45 +999,49 @@
                                 BorderThickness="1"
                                 CornerRadius="8"
                                 Margin="20"
-                                IsVisible="{Binding SelectedResponseTab, Converter={x:Static ObjectConverters.Equal}, ConverterParameter=Headers}">
+                                IsVisible="{Binding RequestViewModel.SelectedResponseTab, Converter={x:Static ObjectConverters.Equal}, ConverterParameter=Headers}">
                             <Grid>
                                 <!-- Empty State -->
-                                <Border Background="#1A1A1A"
-                                        CornerRadius="12"
+                                <Border Background="Transparent"
+                                        CornerRadius="8"
                                         IsVisible="{Binding !RequestViewModel.HasResponseData}">
                                     <StackPanel VerticalAlignment="Center"
                                                 HorizontalAlignment="Center"
-                                                Spacing="20"
-                                                Margin="40">
+                                                Spacing="24"
+                                                Margin="60">
 
-                                        <Border Background="#252526"
-                                                Width="80"
-                                                Height="80"
-                                                CornerRadius="40"
+                                        <!-- Icon Circle -->
+                                        <Border Background="{DynamicResource BgMain}"
+                                                BorderBrush="{DynamicResource BorderBright}"
+                                                BorderThickness="2"
+                                                Width="96"
+                                                Height="96"
+                                                CornerRadius="48"
                                                 HorizontalAlignment="Center">
                                             <lucide:Lucide Icon="ListTree"
-                                                           StrokeBrush="#10B981"
-                                                           Width="40"
-                                                           Height="40"
+                                                           StrokeBrush="{DynamicResource Success}"
+                                                           Width="48"
+                                                           Height="48"
                                                            HorizontalAlignment="Center"
                                                            VerticalAlignment="Center" />
                                         </Border>
 
-                                        <StackPanel Spacing="8" HorizontalAlignment="Center">
-                                            <TextBlock Text="No Headers"
-                                                       Foreground="#FFFFFF"
+                                        <!-- Text Content -->
+                                        <StackPanel Spacing="12" HorizontalAlignment="Center">
+                                            <TextBlock Text="No Response Headers"
+                                                       Foreground="{DynamicResource TextPrimary}"
                                                        FontSize="18"
-                                                       FontWeight="Bold"
+                                                       FontWeight="SemiBold"
                                                        HorizontalAlignment="Center" />
 
                                             <TextBlock
-                                                Text="Response headers will appear here after sending a request"
-                                                Foreground="#A0A0A0"
+                                                Text="Send a request to view response headers"
+                                                Foreground="{DynamicResource TextSecondary}"
                                                 FontSize="14"
                                                 HorizontalAlignment="Center"
                                                 TextWrapping="Wrap"
                                                 TextAlignment="Center"
-                                                MaxWidth="300" />
+                                                MaxWidth="350" />
                                         </StackPanel>
                                     </StackPanel>
                                 </Border>
@@ -983,34 +1053,18 @@
                                                    Classes="SectionTitle"
                                                    Margin="0,0,0,12" />
 
-                                        <ItemsControl
-                                            ItemsSource="{Binding RequestViewModel.ResponseHeaders}">
-                                            <ItemsControl.ItemTemplate>
-                                                <DataTemplate>
-                                                    <Border Background="{DynamicResource BgMain}"
-                                                            BorderBrush="{DynamicResource BorderColor}"
-                                                            BorderThickness="0,0,0,1"
-                                                            Padding="12,10">
-                                                        <Grid ColumnDefinitions="200, *">
-                                                            <TextBlock Grid.Column="0"
-                                                                       Text="{Binding Name}"
-                                                                       Foreground="{DynamicResource AccentBrush}"
-                                                                       FontWeight="Medium"
-                                                                       FontSize="12"
-                                                                       TextTrimming="CharacterEllipsis"
-                                                                       ToolTip.Tip="{Binding Name}" />
-                                                            <TextBlock Grid.Column="1"
-                                                                       Text="{Binding Value}"
-                                                                       Foreground="{DynamicResource TextSecondary}"
-                                                                       FontSize="12"
-                                                                       TextWrapping="Wrap"
-                                                                       TextTrimming="CharacterEllipsis"
-                                                                       ToolTip.Tip="{Binding Value}" />
-                                                        </Grid>
-                                                    </Border>
-                                                </DataTemplate>
-                                            </ItemsControl.ItemTemplate>
-                                        </ItemsControl>
+                                        <DataGrid ItemsSource="{Binding RequestViewModel.ResponseHeaders}"
+                                                  Classes="ResponseGrid">
+                                            <DataGrid.Columns>
+                                                <DataGridTextColumn Header="NAME" 
+                                                                    Binding="{Binding Name}" 
+                                                                    Width="200" />
+
+                                                <DataGridTextColumn Header="VALUE" 
+                                                                    Binding="{Binding Value}" 
+                                                                    Width="*" />
+                                            </DataGrid.Columns>
+                                        </DataGrid>
                                     </StackPanel>
                                 </ScrollViewer>
                             </Grid>
@@ -1022,44 +1076,48 @@
                                 BorderThickness="1"
                                 CornerRadius="8"
                                 Margin="20"
-                                IsVisible="{Binding SelectedResponseTab, Converter={x:Static ObjectConverters.Equal}, ConverterParameter=Cookies}">
+                                IsVisible="{Binding RequestViewModel.SelectedResponseTab, Converter={x:Static ObjectConverters.Equal}, ConverterParameter=Cookies}">
                             <Grid>
                                 <!-- Empty State -->
-                                <Border Background="#1A1A1A"
-                                        CornerRadius="12"
+                                <Border Background="Transparent"
+                                        CornerRadius="8"
                                         IsVisible="{Binding !RequestViewModel.HasResponseData}">
                                     <StackPanel VerticalAlignment="Center"
                                                 HorizontalAlignment="Center"
-                                                Spacing="20"
-                                                Margin="40">
+                                                Spacing="24"
+                                                Margin="60">
 
-                                        <Border Background="#252526"
-                                                Width="80"
-                                                Height="80"
-                                                CornerRadius="40"
+                                        <!-- Icon Circle -->
+                                        <Border Background="{DynamicResource BgMain}"
+                                                BorderBrush="{DynamicResource BorderBright}"
+                                                BorderThickness="2"
+                                                Width="96"
+                                                Height="96"
+                                                CornerRadius="48"
                                                 HorizontalAlignment="Center">
                                             <lucide:Lucide Icon="Cookie"
-                                                           StrokeBrush="#F59E0B"
-                                                           Width="40"
-                                                           Height="40"
+                                                           StrokeBrush="{DynamicResource Warning}"
+                                                           Width="48"
+                                                           Height="48"
                                                            HorizontalAlignment="Center"
                                                            VerticalAlignment="Center" />
                                         </Border>
 
-                                        <StackPanel Spacing="8" HorizontalAlignment="Center">
-                                            <TextBlock Text="No Cookies"
-                                                       Foreground="#FFFFFF"
+                                        <!-- Text Content -->
+                                        <StackPanel Spacing="12" HorizontalAlignment="Center">
+                                            <TextBlock Text="No Response Cookies"
+                                                       Foreground="{DynamicResource TextPrimary}"
                                                        FontSize="18"
-                                                       FontWeight="Bold"
+                                                       FontWeight="SemiBold"
                                                        HorizontalAlignment="Center" />
 
-                                            <TextBlock Text="Response cookies will be displayed here"
-                                                       Foreground="#A0A0A0"
+                                            <TextBlock Text="Send a request to view response cookies"
+                                                       Foreground="{DynamicResource TextSecondary}"
                                                        FontSize="14"
                                                        HorizontalAlignment="Center"
                                                        TextWrapping="Wrap"
                                                        TextAlignment="Center"
-                                                       MaxWidth="300" />
+                                                       MaxWidth="350" />
                                         </StackPanel>
                                     </StackPanel>
                                 </Border>
@@ -1071,33 +1129,17 @@
                                                    Classes="SectionTitle"
                                                    Margin="0,0,0,12" />
 
-                                        <ItemsControl
-                                            ItemsSource="{Binding RequestViewModel.ResponseCookies}">
-                                            <ItemsControl.ItemTemplate>
-                                                <DataTemplate>
-                                                    <Border Background="{DynamicResource BgMain}"
-                                                            BorderBrush="{DynamicResource BorderColor}"
-                                                            BorderThickness="0,0,0,1"
-                                                            Padding="12,10">
-                                                        <Grid ColumnDefinitions="200, *">
-                                                            <TextBlock Grid.Column="0"
-                                                                       Text="{Binding Name}"
-                                                                       Foreground="{DynamicResource AccentBrush}"
-                                                                       FontWeight="Medium"
-                                                                       FontSize="12"
-                                                                       TextTrimming="CharacterEllipsis"
-                                                                       ToolTip.Tip="{Binding Name}" />
-                                                            <TextBlock Grid.Column="1"
-                                                                       Text="{Binding Value}"
-                                                                       Foreground="{DynamicResource TextSecondary}"
-                                                                       FontSize="12"
-                                                                       TextTrimming="CharacterEllipsis"
-                                                                       ToolTip.Tip="{Binding Value}" />
-                                                        </Grid>
-                                                    </Border>
-                                                </DataTemplate>
-                                            </ItemsControl.ItemTemplate>
-                                        </ItemsControl>
+                                        <DataGrid ItemsSource="{Binding RequestViewModel.ResponseCookies}"
+                                                  Classes="ResponseGrid">
+                                            <DataGrid.Columns>
+                                                <DataGridTextColumn Header="NAME" 
+                                                                    Binding="{Binding Name}"
+                                                                    Width="200" />
+                                                <DataGridTextColumn Header="VALUE" 
+                                                                    Binding="{Binding Value}" 
+                                                                    Width="*" />
+                                            </DataGrid.Columns>
+                                        </DataGrid>
                                     </StackPanel>
                                 </ScrollViewer>
                             </Grid>
@@ -1109,139 +1151,169 @@
                                 BorderThickness="1"
                                 CornerRadius="8"
                                 Margin="20"
-                                IsVisible="{Binding SelectedResponseTab, Converter={x:Static ObjectConverters.Equal}, ConverterParameter=Timeline}">
+                                IsVisible="{Binding RequestViewModel.SelectedResponseTab, Converter={x:Static ObjectConverters.Equal}, ConverterParameter=Timeline}">
                             <Grid>
                                 <!-- Empty State -->
-                                <Border Background="#1A1A1A"
-                                        CornerRadius="12"
+                                <Border Background="Transparent"
+                                        CornerRadius="8"
                                         IsVisible="{Binding !RequestViewModel.HasResponseData}">
                                     <StackPanel VerticalAlignment="Center"
                                                 HorizontalAlignment="Center"
-                                                Spacing="20"
-                                                Margin="40">
+                                                Spacing="24"
+                                                Margin="60">
 
-                                        <Border Background="#252526"
-                                                Width="80"
-                                                Height="80"
-                                                CornerRadius="40"
+                                        <!-- Icon Circle -->
+                                        <Border Background="{DynamicResource BgMain}"
+                                                BorderBrush="{DynamicResource BorderBright}"
+                                                BorderThickness="2"
+                                                Width="96"
+                                                Height="96"
+                                                CornerRadius="48"
                                                 HorizontalAlignment="Center">
                                             <lucide:Lucide Icon="Timer"
-                                                           StrokeBrush="#06B6D4"
-                                                           Width="40"
-                                                           Height="40"
+                                                           StrokeBrush="{DynamicResource AccentTeal}"
+                                                           Width="48"
+                                                           Height="48"
                                                            HorizontalAlignment="Center"
                                                            VerticalAlignment="Center" />
                                         </Border>
 
-                                        <StackPanel Spacing="8" HorizontalAlignment="Center">
-                                            <TextBlock Text="No Timeline Data"
-                                                       Foreground="#FFFFFF"
+                                        <!-- Text Content -->
+                                        <StackPanel Spacing="12" HorizontalAlignment="Center">
+                                            <TextBlock Text="No Response Data"
+                                                       Foreground="{DynamicResource TextPrimary}"
                                                        FontSize="18"
-                                                       FontWeight="Bold"
+                                                       FontWeight="SemiBold"
                                                        HorizontalAlignment="Center" />
 
-                                            <TextBlock
-                                                Text="Send a request to see detailed timing breakdown"
-                                                Foreground="#A0A0A0"
-                                                FontSize="14"
-                                                HorizontalAlignment="Center"
-                                                TextWrapping="Wrap"
-                                                TextAlignment="Center"
-                                                MaxWidth="300" />
+                                            <TextBlock Text="Send a request to see detailed timing breakdown"
+                                                       Foreground="{DynamicResource TextSecondary}"
+                                                       FontSize="14"
+                                                       HorizontalAlignment="Center"
+                                                       TextWrapping="Wrap"
+                                                       TextAlignment="Center"
+                                                       MaxWidth="350" />
                                         </StackPanel>
                                     </StackPanel>
                                 </Border>
-
+                                
                                 <!-- Timeline Data -->
                                 <ScrollViewer IsVisible="{Binding RequestViewModel.HasResponseData}">
                                     <StackPanel Margin="20" Spacing="20">
 
                                         <!-- Header -->
-                                        <Grid ColumnDefinitions="*, Auto">
-                                            <StackPanel Grid.Column="0">
-                                                <TextBlock Text="Timeline"
-                                                           Foreground="{DynamicResource TextPrimary}"
-                                                           FontSize="16"
-                                                           FontWeight="SemiBold" />
-                                                <TextBlock Margin="0,4,0,0">
-                                                    <Run Text="Total "
-                                                         Foreground="{DynamicResource TextSecondary}"
-                                                         FontSize="12" />
-                                                    <Run Text="{Binding RequestViewModel.ResponseTime}"
-                                                         Foreground="{DynamicResource AccentTeal}"
-                                                         FontWeight="SemiBold"
-                                                         FontSize="12" />
-                                                </TextBlock>
-                                            </StackPanel>
-                                        </Grid>
+                                        <Border Background="{DynamicResource BgElevated}"
+                                                BorderBrush="{DynamicResource BorderColor}"
+                                                BorderThickness="1"
+                                                CornerRadius="8"
+                                                Padding="20,16">
+                                            <Grid ColumnDefinitions="*, Auto">
+                                                <StackPanel Grid.Column="0" Spacing="4">
+                                                    <TextBlock Text="Request Timeline"
+                                                               Foreground="{DynamicResource TextPrimary}"
+                                                               FontSize="15"
+                                                               FontWeight="SemiBold" />
+                                                    <TextBlock>
+                                                        <Run Text="Total Duration: "
+                                                             Foreground="{DynamicResource TextSecondary}"
+                                                             FontSize="13" />
+                                                        <Run Text="{Binding RequestViewModel.ResponseTime}"
+                                                             Foreground="{DynamicResource AccentTeal}"
+                                                             FontWeight="SemiBold"
+                                                             FontSize="13" />
+                                                    </TextBlock>
+                                                </StackPanel>
+                                            </Grid>
+                                        </Border>
 
                                         <!-- Waterfall Chart -->
                                         <Border Background="{DynamicResource BgMain}"
                                                 BorderBrush="{DynamicResource BorderColor}"
                                                 BorderThickness="1"
                                                 CornerRadius="8"
-                                                Padding="16">
+                                                Padding="20,16">
                                             <ItemsControl
                                                 ItemsSource="{Binding RequestViewModel.TimelineStages}">
                                                 <ItemsControl.ItemTemplate>
                                                     <DataTemplate>
-                                                        <Grid Margin="0,6"
-                                                              ColumnDefinitions="140, *, 80"
-                                                              ColumnSpacing="12">
+                                                        <Border Background="Transparent"
+                                                                CornerRadius="6"
+                                                                Padding="8"
+                                                                Margin="0,4">
+                                                            <Border.Styles>
+                                                                <Style Selector="Border">
+                                                                    <Setter Property="Transitions">
+                                                                        <Transitions>
+                                                                            <BrushTransition Property="Background"
+                                                                                    Duration="0:0:0.15" />
+                                                                        </Transitions>
+                                                                    </Setter>
+                                                                </Style>
+                                                                <Style Selector="Border:pointerover">
+                                                                    <Setter Property="Background"
+                                                                            Value="{StaticResource GlassBg}" />
+                                                                </Style>
+                                                            </Border.Styles>
 
-                                                            <!-- Stage Name with Color Dot -->
-                                                            <Grid Grid.Column="0"
-                                                                  ColumnDefinitions="Auto, *"
-                                                                  ColumnSpacing="8"
-                                                                  VerticalAlignment="Center">
-                                                                <Border Grid.Column="0"
-                                                                        Width="10"
-                                                                        Height="10"
-                                                                        Background="{Binding Color}"
-                                                                        CornerRadius="5" />
-                                                                <TextBlock Grid.Column="1"
-                                                                           Text="{Binding Name}"
-                                                                           Foreground="{DynamicResource TextSecondary}"
-                                                                           FontSize="12"
-                                                                           TextTrimming="CharacterEllipsis"
-                                                                           VerticalAlignment="Center" />
-                                                            </Grid>
+                                                            <Grid ColumnDefinitions="150, *, 90"
+                                                                  ColumnSpacing="16">
 
-                                                            <!-- Progress Bar Container -->
-                                                            <Border Grid.Column="1"
-                                                                    Height="20"
-                                                                    Background="{DynamicResource BgDark}"
-                                                                    CornerRadius="4"
-                                                                    VerticalAlignment="Center">
-                                                                <Grid>
-                                                                    <!-- The Bar -->
-                                                                    <Border HorizontalAlignment="Left"
+                                                                <!-- Stage Name with Color Dot -->
+                                                                <Grid Grid.Column="0"
+                                                                      ColumnDefinitions="Auto, *"
+                                                                      ColumnSpacing="10"
+                                                                      VerticalAlignment="Center">
+                                                                    <Border Grid.Column="0"
+                                                                            Width="12"
+                                                                            Height="12"
                                                                             Background="{Binding Color}"
-                                                                            CornerRadius="4"
-                                                                            Height="20">
-                                                                        <Border.Width>
-                                                                            <MultiBinding
-                                                                                Converter="{StaticResource PercentToPixelConverter}">
-                                                                                <Binding
-                                                                                    Path="WidthPercent" />
-                                                                                <Binding
-                                                                                    RelativeSource="{RelativeSource AncestorType=Border}"
-                                                                                    Path="Bounds.Width" />
-                                                                            </MultiBinding>
-                                                                        </Border.Width>
-                                                                    </Border>
+                                                                            CornerRadius="6"
+                                                                            VerticalAlignment="Center" />
+                                                                    <TextBlock Grid.Column="1"
+                                                                               Text="{Binding Name}"
+                                                                               Foreground="{DynamicResource TextPrimary}"
+                                                                               FontSize="13"
+                                                                               FontWeight="Medium"
+                                                                               TextTrimming="CharacterEllipsis"
+                                                                               VerticalAlignment="Center" />
                                                                 </Grid>
-                                                            </Border>
 
-                                                            <!-- Duration -->
-                                                            <TextBlock Grid.Column="2"
-                                                                       Text="{Binding DurationText}"
-                                                                       Foreground="{DynamicResource TextPrimary}"
-                                                                       FontWeight="Medium"
-                                                                       FontSize="12"
-                                                                       VerticalAlignment="Center"
-                                                                       TextAlignment="Right" />
-                                                        </Grid>
+                                                                <!-- Progress Bar Container -->
+                                                                <Border Grid.Column="1"
+                                                                        Height="24"
+                                                                        Background="{DynamicResource BgDark}"
+                                                                        CornerRadius="6"
+                                                                        VerticalAlignment="Center">
+                                                                    <Grid>
+                                                                        <!-- The Bar -->
+                                                                        <Border HorizontalAlignment="Left"
+                                                                                Background="{Binding Color}"
+                                                                                CornerRadius="6"
+                                                                                Height="24">
+                                                                            <Border.Width>
+                                                                                <MultiBinding
+                                                                                    Converter="{StaticResource PercentToPixelConverter}">
+                                                                                    <Binding
+                                                                                        Path="WidthPercent" />
+                                                                                    <Binding
+                                                                                        RelativeSource="{RelativeSource AncestorType=Border}"
+                                                                                        Path="Bounds.Width" />
+                                                                                </MultiBinding>
+                                                                            </Border.Width>
+                                                                        </Border>
+                                                                    </Grid>
+                                                                </Border>
+
+                                                                <!-- Duration -->
+                                                                <TextBlock Grid.Column="2"
+                                                                           Text="{Binding DurationText}"
+                                                                           Foreground="{DynamicResource TextPrimary}"
+                                                                           FontWeight="SemiBold"
+                                                                           FontSize="13"
+                                                                           VerticalAlignment="Center"
+                                                                           TextAlignment="Right" />
+                                                            </Grid>
+                                                        </Border>
                                                     </DataTemplate>
                                                 </ItemsControl.ItemTemplate>
                                             </ItemsControl>

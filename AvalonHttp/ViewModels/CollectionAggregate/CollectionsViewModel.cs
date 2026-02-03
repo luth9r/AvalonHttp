@@ -325,6 +325,28 @@ public partial class CollectionsViewModel : ViewModelBase
         }
     }
     
+    public async Task HandleRequestSavedAsync(ApiRequest request)
+    {
+        foreach (var collection in Collections)
+        {
+            var requestVm = collection.Requests.FirstOrDefault(r => r.Id == request.Id);
+            if (requestVm != null)
+            {
+                requestVm.UpdateFromModel(request);
+                await SaveCollectionCommand.ExecuteAsync(collection);
+                return;
+            }
+        }
+    }
+    
+    public void UpdateSelectedRequestDirtyState(bool isDirty)
+    {
+        if (SelectedRequest != null)
+        {
+            SelectedRequest.IsDirty = isDirty;
+        }
+    }
+    
     [RelayCommand]
     private async Task CloseAllEditModes()
     {

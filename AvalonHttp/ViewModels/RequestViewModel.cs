@@ -5,6 +5,7 @@ using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
 using System.Net.Http;
+using System.Net.Mime;
 using System.Text;
 using System.Text.Encodings.Web;
 using System.Text.Json;
@@ -14,6 +15,8 @@ using AvalonHttp.Models;
 using AvalonHttp.Models.CollectionAggregate;
 using AvalonHttp.Services.Interfaces;
 using AvalonHttp.ViewModels.EnvironmentAggregate;
+using Avalonia;
+using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -66,6 +69,12 @@ public partial class RequestViewModel : ViewModelBase, IDisposable
     // ========================================
     // Observable Properties
     // ========================================
+    
+    [ObservableProperty]
+    private string _selectedRequestTab = "Params";
+
+    [ObservableProperty]
+    private string _selectedResponseTab = "Body";
     
     [ObservableProperty]
     private string _name = "No Request";
@@ -310,6 +319,12 @@ public partial class RequestViewModel : ViewModelBase, IDisposable
     // ========================================
     
     [RelayCommand]
+    private void SelectRequestTab(string? tabName) => SelectedRequestTab = tabName ?? "Params";
+
+    [RelayCommand]
+    private void SelectResponseTab(string? tabName) => SelectedResponseTab = tabName ?? "Body";
+    
+    [RelayCommand]
     private async Task SendRequest()
     {
         if (!ValidateRequest()) return;
@@ -488,6 +503,9 @@ public partial class RequestViewModel : ViewModelBase, IDisposable
         ProcessResponseContent(content);
         LoadResponseHeaders(response);
         LoadResponseCookies(response);
+        
+        OnPropertyChanged(nameof(ResponseHeadersCount));
+        OnPropertyChanged(nameof(ResponseCookiesCount));
 
         ApplyFormat();
         HasResponseData = true;
@@ -534,19 +552,42 @@ public partial class RequestViewModel : ViewModelBase, IDisposable
 
     private void LoadResponseCookies(HttpResponseMessage response)
     {
+        ResponseCookies.Clear();
+        
         if (response.Headers.TryGetValues("Set-Cookie", out var cookies))
         {
-            foreach (var cookie in cookies)
+            ParseCookieValues(cookies);
+        }
+        
+        if (response.Content.Headers.TryGetValues("Set-Cookie", out var contentCookies))
+        {
+            ParseCookieValues(contentCookies);
+        }
+        
+    }
+    
+    private void ParseCookieValues(IEnumerable<string> cookieValues)
+    {
+        foreach (var cookie in cookieValues)
+        {
+            var firstPart = cookie.Split(';')[0];
+            var parts = firstPart.Split('=', 2);
+        
+            if (parts.Length >= 2)
             {
-                var parts = cookie.Split(';')[0].Split('=', 2);
-                if (parts.Length >= 2)
+                ResponseCookies.Add(new ResponseHeaderModel
                 {
-                    ResponseCookies.Add(new ResponseHeaderModel
-                    {
-                        Name = parts[0].Trim(),
-                        Value = parts[1].Trim()
-                    });
-                }
+                    Name = parts[0].Trim(),
+                    Value = parts[1].Trim()
+                });
+            }
+            else if (parts.Length == 1)
+            {
+                ResponseCookies.Add(new ResponseHeaderModel
+                {
+                    Name = parts[0].Trim(),
+                    Value = ""
+                });
             }
         }
     }
@@ -715,7 +756,74 @@ public partial class RequestViewModel : ViewModelBase, IDisposable
             });
         }
     }
+    
+    [RelayCommand]
+    private async Task SaveResponse()
+    {
+        // Проверка на наличие контента
+        if (string.IsNullOrEmpty(ResponseContent)) return;
 
+        try
+        {
+            if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+            {
+                var mainWindow = desktop.MainWindow;
+                if (mainWindow?.StorageProvider == null) return;
+
+                var fileTypeFilter = new Avalonia.Platform.Storage.FilePickerFileType("JSON File")
+                {
+                    Patterns = new[] { "*.json" },
+                    MimeTypes = new[] { "application/json" }
+                };
+
+                var safeFileName = string.Join("_", (Name ?? "response").Split(System.IO.Path.GetInvalidFileNameChars()));
+            
+                var file = await mainWindow.StorageProvider.SaveFilePickerAsync(new Avalonia.Platform.Storage.FilePickerSaveOptions
+                {
+                    Title = "Save Response",
+                    SuggestedFileName = $"{safeFileName}.json",
+                    FileTypeChoices = new[] { fileTypeFilter },
+                    DefaultExtension = "json"
+                });
+
+                if (file != null)
+                {
+                    await using var stream = await file.OpenWriteAsync();
+                    await using var writer = new System.IO.StreamWriter(stream);
+                    await writer.WriteAsync(ResponseContent);
+                    System.Diagnostics.Debug.WriteLine($"Response saved to: {file.Path}");
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Failed to save response: {ex.Message}");
+        }
+    }
+
+    [RelayCommand]
+    private async Task CopyResponse()
+    {
+        if (string.IsNullOrEmpty(ResponseContent)) return;
+
+        try
+        {
+            if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+            {
+                var mainWindow = desktop.MainWindow;
+                if (mainWindow?.Clipboard != null)
+                {
+                    await mainWindow.Clipboard.SetTextAsync(ResponseContent);
+                    System.Diagnostics.Debug.WriteLine("Response copied to clipboard");
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Failed to copy to clipboard: {ex.Message}");
+        }
+    }
+    
     // ========================================
     // Helper Methods
     // ========================================
