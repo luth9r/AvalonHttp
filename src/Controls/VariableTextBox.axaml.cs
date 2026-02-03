@@ -80,11 +80,8 @@ public class VariableTextBox : TemplatedControl
 
         if (_textBox != null)
         {
-            // Важно: делаем текст в TextBox прозрачным, чтобы видеть HighlightText под ним
-            // Но Caret (курсор) останется видимым благодаря стилям
             _textBox.Foreground = Brushes.Transparent;
 
-            // Синхронизация при изменении текста в TextBox
             _textBox.PropertyChanged += (s, ev) =>
             {
                 if (ev.Property == TextBox.TextProperty)
@@ -94,15 +91,13 @@ public class VariableTextBox : TemplatedControl
                 }
             };
             
-            // Обработка наведения для ToolTip
             _textBox.PointerMoved += OnTextBoxPointerMoved;
             _textBox.PointerExited += OnTextBoxPointerExited;
         }
         
         UpdateHighlights();
     }
-
-    // Синхронизация при изменении свойства Text извне (через Binding)
+    
     protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
     {
         base.OnPropertyChanged(change);
@@ -124,8 +119,7 @@ public class VariableTextBox : TemplatedControl
         _highlightText.Inlines?.Clear();
 
         if (string.IsNullOrEmpty(Text)) return;
-
-        // Регулярка ищет {{variable}}
+        
         var regex = new Regex(@"(\{\{[^}]+\}\})");
         var parts = regex.Split(Text);
 
@@ -137,10 +131,9 @@ public class VariableTextBox : TemplatedControl
 
             if (regex.IsMatch(part))
             {
-                // Переменная -> оранжевый/синий цвет
                 var run = new Run(part)
                 {
-                    Foreground = new SolidColorBrush(Color.Parse("#F59E0B")), // Postman Orange
+                    Foreground = new SolidColorBrush(Color.Parse("#F59E0B")),
                     FontWeight = FontWeight.Bold
                 };
                 _highlightText.Inlines?.Add(run);
@@ -153,8 +146,7 @@ public class VariableTextBox : TemplatedControl
                 {
                     displayText = new string(PasswordChar, part.Length);
                 }
-                
-                // Обычный текст -> стандартный цвет (белый/серый)
+
                 var run = new Run(part)
                 {
                     Foreground = new SolidColorBrush(Color.Parse("#E0E0E0")) 
@@ -176,14 +168,12 @@ public class VariableTextBox : TemplatedControl
             var variableInfo = GetVariableAtIndex(charIndex);
             if (variableInfo != null)
             {
-                // Резолвим значение переменной
                 var varName = variableInfo.Value.name;
                 var rawValue = $"{{{{{varName}}}}}";
                 var resolvedValue = EnvironmentsViewModel.ResolveVariables(rawValue);
                 
                 var displayValue = resolvedValue == rawValue ? "Unresolved" : resolvedValue;
                 
-                // Показываем тултип
                 ToolTip.SetTip(this, $"{varName}: {displayValue}");
                 ToolTip.SetIsOpen(this, true);
                 return;
@@ -214,15 +204,11 @@ public class VariableTextBox : TemplatedControl
         }
         return null;
     }
-
-    // Простой метод определения индекса символа (для моноширинного шрифта)
-    // Для более точного определения в Avalonia можно использовать TextLayout
+    
     private int GetCharacterIndexFromPoint(Point point)
     {
         if (_textBox == null || string.IsNullOrEmpty(_textBox.Text)) return -1;
-
-        // Грубая оценка: ширина символа ~8px для 13pt моноширинного шрифта
-        // Лучше использовать API Avalonia для TextHitTest, если нужно идеально точно
+        
         double charWidth = 8.0; 
         int index = (int)(point.X / charWidth);
         

@@ -1,0 +1,122 @@
+# Auto detect text files and perform LF normalization
+* text=auto
+
+#
+# Text files
+#
+
+# Source code
+*.cs        text diff=csharp
+*.csx       text diff=csharp
+*.vb        text
+*.fs        text
+*.fsx       text
+
+# XAML / Avalonia
+*.xaml      text
+*.axaml     text
+*.paml      text
+
+# Config files
+*.config    text
+*.json      text
+*.xml       text
+*.yml       text
+*.yaml      text
+
+# Documentation
+*.md        text diff=markdown
+*.txt       text
+LICENSE     text
+AUTHORS     text
+
+# Scripts
+*.sh        text eol=lf
+*.bash      text eol=lf
+*.ps1       text eol=crlf
+*.cmd       text eol=crlf
+*.bat       text eol=crlf
+
+# Project files
+*.csproj    text
+*.vbproj    text
+*.fsproj    text
+*.sln       text eol=crlf
+*.slnx      text
+*.props     text
+*.targets   text
+*.tasks     text
+*.ruleset   text
+
+# Web
+*.html      text
+*.htm       text
+*.css       text
+*.scss      text
+*.js        text
+*.ts        text
+
+# Markup
+*.resx      text
+
+#
+# Binary files
+#
+
+# Images
+*.png       binary
+*.jpg       binary
+*.jpeg      binary
+*.gif       binary
+*.ico       binary
+*.bmp       binary
+*.webp      binary
+*.svg       binary
+
+# Fonts
+*.ttf       binary
+*.otf       binary
+*.woff      binary
+*.woff2     binary
+*.eot       binary
+
+# Certificates & Keys
+*.pfx       binary
+*.snk       binary
+*.cer       binary
+*.key       binary
+
+# Compiled
+*.dll       binary
+*.exe       binary
+*.pdb       binary
+*.lib       binary
+*.obj       binary
+*.so        binary
+*.dylib     binary
+
+# Archives
+*.zip       binary
+*.7z        binary
+*.tar       binary
+*.gz        binary
+*.rar       binary
+*.nupkg     binary
+
+# Databases
+*.db        binary
+*.sqlite    binary
+*.mdb       binary
+
+# Other
+*.pdf       binary
+*.doc       binary
+*.docx      binary
+
+#
+# Export ignore (files not included in git archive)
+#
+
+.gitattributes  export-ignore
+.gitignore      export-ignore
+.editorconfig   export-ignore

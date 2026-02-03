@@ -690,7 +690,9 @@
                         <StackPanel
                             IsVisible="{Binding RequestViewModel.SelectedRequestTab, Converter={x:Static ObjectConverters.Equal}, ConverterParameter=Body}">
                             <TextBlock Text="REQUEST BODY" Classes="SectionTitle" />
-                            <controls:JsonBodyEditor Text="{Binding RequestViewModel.RequestBody}" MinHeight="300"
+                            <controls:JsonBodyEditor Text="{Binding RequestViewModel.RequestBody}" 
+                                                     ContentType="{Binding RequestViewModel.ResponseContentType}"
+                                                     MinHeight="300"
                                                      Margin="0,12,0,0" />
                         </StackPanel>
 
@@ -983,10 +985,11 @@
                                     </Button>
 
                                     <!-- JSON Editor -->
-                                    <controls:JsonEditor
+                                    <controls:JsonBodyEditor 
                                         Text="{Binding RequestViewModel.ResponseContent, Mode=OneWay}"
                                         MinWidth="100"
                                         MinHeight="100"
+                                        IsReadOnly="True"
                                         HorizontalAlignment="Stretch"
                                         VerticalAlignment="Stretch" />
                                 </Grid>

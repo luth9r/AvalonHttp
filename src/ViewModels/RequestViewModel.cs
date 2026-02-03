@@ -105,6 +105,9 @@ public partial class RequestViewModel : ViewModelBase, IDisposable
 
     [ObservableProperty]
     private bool _isLoading;
+    
+    [ObservableProperty]
+    private string _responseContentType = "json";
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsPrettyActive))]
@@ -754,7 +757,7 @@ public partial class RequestViewModel : ViewModelBase, IDisposable
         }
     }
     
-    [RelayCommand(CanExecute = nameof(HasResponseData))]
+    [RelayCommand]
     private async Task SaveResponse()
     {
         try
@@ -795,7 +798,7 @@ public partial class RequestViewModel : ViewModelBase, IDisposable
         }
     }
 
-    [RelayCommand(CanExecute = nameof(HasResponseData))]
+    [RelayCommand]
     private async Task CopyResponse()
     {
         try
@@ -819,6 +822,19 @@ public partial class RequestViewModel : ViewModelBase, IDisposable
     // ========================================
     // Helper Methods
     // ========================================
+    
+    private string GetResponseType()
+    {
+        var contentType = ResponseHeaders.FirstOrDefault(h => 
+            h.Name.Equals("Content-Type", StringComparison.OrdinalIgnoreCase))?.Value ?? "";
+
+        if (contentType.Contains("application/json", StringComparison.OrdinalIgnoreCase)) return "json";
+        if (contentType.Contains("application/xml", StringComparison.OrdinalIgnoreCase) || 
+            contentType.Contains("text/xml", StringComparison.OrdinalIgnoreCase)) return "xml";
+        if (contentType.Contains("text/html", StringComparison.OrdinalIgnoreCase)) return "html";
+
+        return "text";
+    }
     
     private string ResolveVariables(string text)
     {
@@ -868,20 +884,43 @@ public partial class RequestViewModel : ViewModelBase, IDisposable
             return;
         }
 
+        if (!IsPrettyFormat)
+        {
+            ResponseContent = RawResponseContent;
+            return;
+        }
+
+        var type = GetResponseType();
+        ResponseContentType = type;
+
         try
         {
-            if (IsPrettyFormat)
+            switch (type)
             {
-                var jsonDoc = JsonDocument.Parse(RawResponseContent);
-                ResponseContent = JsonSerializer.Serialize(jsonDoc, new JsonSerializerOptions
-                {
-                    WriteIndented = true,
-                    Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
-                });
-            }
-            else
-            {
-                ResponseContent = RawResponseContent;
+                case "json":
+                    using (var jsonDoc = JsonDocument.Parse(RawResponseContent))
+                    {
+                        ResponseContent = JsonSerializer.Serialize(jsonDoc, new JsonSerializerOptions
+                        {
+                            WriteIndented = true,
+                            Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+                        });
+                    }
+                    break;
+
+                case "xml":
+                case "html":
+                    try {
+                        var doc = System.Xml.Linq.XDocument.Parse(RawResponseContent);
+                        ResponseContent = doc.ToString();
+                    } catch {
+                        ResponseContent = RawResponseContent;
+                    }
+                    break;
+
+                default:
+                    ResponseContent = RawResponseContent;
+                    break;
             }
         }
         catch

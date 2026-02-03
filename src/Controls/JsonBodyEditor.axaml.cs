@@ -1,4 +1,7 @@
 ﻿using System;
+using System.Linq;
+using System.Net.Mime;
+using AvalonHttp.Common.FoldingStrategies;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
@@ -7,6 +10,7 @@ using Avalonia.Media;
 using AvaloniaEdit;
 using AvaloniaEdit.Document;
 using AvaloniaEdit.Editing;
+using AvaloniaEdit.Folding;
 using AvaloniaEdit.Indentation;
 using AvaloniaEdit.Indentation.CSharp;
 using AvaloniaEdit.TextMate;
@@ -22,14 +26,59 @@ public partial class JsonBodyEditor : UserControl
             string.Empty,
             defaultBindingMode: Avalonia.Data.BindingMode.TwoWay);
     
+    public static readonly StyledProperty<string> ContentTypeProperty =
+        AvaloniaProperty.Register<JsonBodyEditor, string>(
+            nameof(ContentType), 
+            "json");
+    
+    public static readonly StyledProperty<bool> IsReadOnlyProperty =
+        AvaloniaProperty.Register<JsonBodyEditor, bool>(
+            nameof(IsReadOnly), 
+            false);
+    
+    public static readonly StyledProperty<Thickness> EditorPaddingProperty =
+        AvaloniaProperty.Register<JsonBodyEditor, Thickness>(
+            nameof(EditorPadding));
+    
+    public static readonly StyledProperty<Thickness> EditorMarginProperty =
+        AvaloniaProperty.Register<JsonBodyEditor, Thickness>(
+            nameof(EditorMargin));
+    
     public string Text
     {
         get => GetValue(TextProperty);
         set => SetValue(TextProperty, value);
     }
     
+    public string ContentType
+    {
+        get => GetValue(ContentTypeProperty);
+        set => SetValue(ContentTypeProperty, value);
+    }
+    
+    public bool IsReadOnly
+    {
+        get => GetValue(IsReadOnlyProperty);
+        set => SetValue(IsReadOnlyProperty, value);
+    }
+    
+    public Thickness EditorPadding
+    {
+        get => GetValue(EditorPaddingProperty);
+        set => SetValue(EditorPaddingProperty, value);
+    }
+    
+    public Thickness EditorMargin
+    {
+        get => GetValue(EditorMarginProperty);
+        set => SetValue(EditorMarginProperty, value);
+    }
+    
     private TextEditor? _editor;
     private TextMate.Installation? _textMateInstallation;
+    private FoldingManager? _foldingManager;
+    private object? _currentFoldingStrategy;
+    private RegistryOptions? _registryOptions;
     private bool _isUpdating;
 
     public JsonBodyEditor()
@@ -45,28 +94,13 @@ public partial class JsonBodyEditor : UserControl
         
         if (_editor != null)
         {
-            _editor.Background = new SolidColorBrush(Color.Parse("#1E1E1E"));
-            _editor.Foreground = new SolidColorBrush(Color.Parse("#D4D4D4"));
+            SetupEditorDefaults();
+            SetupTextMate();
             
-            _editor.Document = new TextDocument();
-            
-            _editor.Options = new TextEditorOptions
-            {
-                ShowSpaces = false,
-                ShowTabs = false,
-                ShowEndOfLine = false,
-                IndentationSize = 2,
-                ConvertTabsToSpaces = true,
-                EnableHyperlinks = false,
-                EnableEmailHyperlinks = false,
-                AllowScrollBelowDocument = false,
-                EnableRectangularSelection = true,
-                EnableTextDragDrop = true
-            };
-            
+            _foldingManager = FoldingManager.Install(_editor.TextArea);
             _editor.TextArea.IndentationStrategy = new CSharpIndentationStrategy();
             
-            SetupTextMate();
+            UpdateLanguage();
 
             _editor.TextArea.TextEntering += OnTextEntering;
             _editor.TextArea.TextEntered += OnTextEntered;
@@ -78,13 +112,46 @@ public partial class JsonBodyEditor : UserControl
                     _isUpdating = true;
                     SetValue(TextProperty, _editor.Document.Text);
                     _isUpdating = false;
+                    UpdateFoldings();
                 }
             };
             
             _editor.Loaded += OnEditorLoaded;
         }
     }
-    
+
+    private void SetupEditorDefaults()
+    {
+        if (_editor == null) return;
+        _editor.Background = new SolidColorBrush(Color.Parse("#1E1E1E"));
+        _editor.Foreground = new SolidColorBrush(Color.Parse("#D4D4D4"));
+        _editor.Document = new TextDocument();
+        _editor.Padding = EditorPadding;
+        _editor.Margin = EditorMargin;
+        _editor.WordWrap = true;
+        
+        _editor.Options = new TextEditorOptions
+        {
+            IndentationSize = 2,
+            ConvertTabsToSpaces = true,
+            AllowScrollBelowDocument = false,
+            EnableRectangularSelection = true,
+            EnableTextDragDrop = true
+        };
+        
+        _editor.IsReadOnly = IsReadOnly;
+    }
+
+    private void SetupTextMate()
+    {
+        if (_editor == null) return;
+        
+        _registryOptions = new RegistryOptions(ThemeName.DarkPlus);
+        _textMateInstallation = _editor.InstallTextMate(_registryOptions);
+        
+        UpdateLanguage();
+    }
+
     private void OnTextEntering(object? sender, TextInputEventArgs e)
     {
         if (_editor == null || e.Text == null || e.Text.Length == 0) return;
@@ -177,30 +244,57 @@ public partial class JsonBodyEditor : UserControl
             {
                 lineNumbers.SetValue(TextBlock.FontFamilyProperty, _editor.FontFamily);
                 lineNumbers.SetValue(TextBlock.FontSizeProperty, _editor.FontSize);
-                lineNumbers.Margin = new Thickness(0, 1, 8, 0);
+                lineNumbers.Margin = new Thickness(10, 11, 4, 0);
+            }
+            else if (margin is FoldingMargin foldingMargin)
+            {
+                foldingMargin.Margin = new Thickness(0, 10, 0, 0);
             }
         }
 
+        _editor.TextArea.TextView.Margin = new Thickness(0, 10, 50, 0);
         _editor.TextArea.TextView.Redraw();
     }
     
-    private void SetupTextMate()
+    private void UpdateLanguage()
     {
-        if (_editor == null) return;
+        if (_editor == null || _textMateInstallation == null) return;
 
         try
         {
-            var registryOptions = new RegistryOptions(ThemeName.DarkPlus);
+            string ext = ContentType?.ToLower() switch
+            {
+                "xml" => ".xml",
+                "html" => ".html",
+                _ => ".json"
+            };
             
-            _textMateInstallation = _editor.InstallTextMate(registryOptions);
-            
-            _textMateInstallation.SetGrammar(registryOptions.GetScopeByLanguageId(
-                registryOptions.GetLanguageByExtension(".json").Id));
+            if (ext == ".xml" || ext == ".html")
+                _currentFoldingStrategy = new XmlFoldingStrategy();
+            else
+                _currentFoldingStrategy = new BraceFoldingStrategy();
+
+            var language = _registryOptions.GetLanguageByExtension(ext);
+            if (language != null)
+            {
+                _textMateInstallation.SetGrammar(_registryOptions.GetScopeByLanguageId(language.Id));
+            }
+            UpdateFoldings();
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"TextMate error: {ex.Message}");
+            Console.WriteLine($"TextMate Language Update error: {ex.Message}");
         }
+    }
+    
+    private void UpdateFoldings()
+    {
+        if (_foldingManager == null || _editor?.Document == null || _currentFoldingStrategy == null) return;
+
+        if (_currentFoldingStrategy is BraceFoldingStrategy bfs)
+            bfs.UpdateFoldings(_foldingManager, _editor.Document);
+        else if (_currentFoldingStrategy is XmlFoldingStrategy xfs)
+            xfs.UpdateFoldings(_foldingManager, _editor.Document);
     }
     
     protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
@@ -220,6 +314,7 @@ public partial class JsonBodyEditor : UserControl
                 _editor.Document.EndUpdate();
                 
                 _editor.TextArea?.TextView?.Redraw();
+                UpdateFoldings();
             }
             catch (Exception ex)
             {
@@ -229,6 +324,12 @@ public partial class JsonBodyEditor : UserControl
             {
                 _isUpdating = false;
             }
+        }
+        if (change.Property == ContentTypeProperty)
+        {
+            var newType = change.GetNewValue<string>() ?? "json";
+            System.Diagnostics.Debug.WriteLine($"[JsonBodyEditor] ContentType changed: {newType}");
+            UpdateLanguage();
         }
     }
 }

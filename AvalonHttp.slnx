@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="src/AvalonHttp.csproj" />
+  <Project Path="tests/AvalonHttpTests.csproj" />
+</Solution>
