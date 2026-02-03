@@ -77,13 +77,10 @@ public partial class RequestViewModel : ViewModelBase, IDisposable
     private string _selectedResponseTab = "Body";
     
     [ObservableProperty]
-    private string _name = "No Request";
+    private string _name = "New Request";
 
     [ObservableProperty]
     private string _requestUrl = string.Empty;
-
-    [ObservableProperty]
-    private string _requestName = "New Request";
 
     [ObservableProperty]
     private string _selectedMethod = "GET";
@@ -503,9 +500,6 @@ public partial class RequestViewModel : ViewModelBase, IDisposable
         ProcessResponseContent(content);
         LoadResponseHeaders(response);
         LoadResponseCookies(response);
-        
-        OnPropertyChanged(nameof(ResponseHeadersCount));
-        OnPropertyChanged(nameof(ResponseCookiesCount));
 
         ApplyFormat();
         HasResponseData = true;
@@ -548,6 +542,8 @@ public partial class RequestViewModel : ViewModelBase, IDisposable
                 Value = string.Join(", ", header.Value)
             });
         }
+        
+        OnPropertyChanged(nameof(ResponseHeadersCount));
     }
 
     private void LoadResponseCookies(HttpResponseMessage response)
@@ -564,6 +560,7 @@ public partial class RequestViewModel : ViewModelBase, IDisposable
             ParseCookieValues(contentCookies);
         }
         
+        OnPropertyChanged(nameof(ResponseCookiesCount));
     }
     
     private void ParseCookieValues(IEnumerable<string> cookieValues)
@@ -757,12 +754,9 @@ public partial class RequestViewModel : ViewModelBase, IDisposable
         }
     }
     
-    [RelayCommand]
+    [RelayCommand(CanExecute = nameof(HasResponseData))]
     private async Task SaveResponse()
     {
-        // Проверка на наличие контента
-        if (string.IsNullOrEmpty(ResponseContent)) return;
-
         try
         {
             if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
@@ -801,11 +795,9 @@ public partial class RequestViewModel : ViewModelBase, IDisposable
         }
     }
 
-    [RelayCommand]
+    [RelayCommand(CanExecute = nameof(HasResponseData))]
     private async Task CopyResponse()
     {
-        if (string.IsNullOrEmpty(ResponseContent)) return;
-
         try
         {
             if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
@@ -962,11 +954,9 @@ public partial class RequestViewModel : ViewModelBase, IDisposable
     private void MarkAsDirty()
     {
         if (_isLoadingData || _activeRequest == null || _requestSnapshot == null) return;
-
-        // Синхронизируем временные данные из UI в модель для проверки
+        
         SyncToActiveRequest(); 
         
-        // Проверяем, отличается ли текущая модель от снимка
         IsDirty = _dirtyTracker.IsDirty(_activeRequest, _requestSnapshot);
     }
 
@@ -999,8 +989,6 @@ public partial class RequestViewModel : ViewModelBase, IDisposable
             });
         }
     }
-    
-    
     
     private void UnsubscribeFromCollection(ObservableCollection<KeyValueItemModel> collection)
     {
