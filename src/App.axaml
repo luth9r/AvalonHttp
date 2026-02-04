@@ -695,6 +695,7 @@
         <Style Selector="avaloniaEdit|TextEditor ScrollViewer">
             <Setter Property="Background" Value="{StaticResource BgMain}"/>
         </Style>
+        
     </Application.Styles>
     
 </Application>

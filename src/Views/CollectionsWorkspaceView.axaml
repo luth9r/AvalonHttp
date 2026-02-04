@@ -43,7 +43,8 @@
                         </Button>
                     </Grid>
 
-                    <TextBox Watermark="Search collections..." />
+                    <TextBox Watermark="Search collections and requests..."
+                             Text="{Binding CollectionsViewModel.SearchText, Mode=TwoWay}" />
                 </StackPanel>
 
                 <!-- Bottom Add Collection Button -->
@@ -78,7 +79,7 @@
                                   Margin="12,0,12,12">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
-                                <StackPanel Margin="0,0,0,8">
+                                <StackPanel Margin="0,0,0,8" IsVisible="{Binding IsVisible}">
                                     <!-- Collection Item Card -->
                                     <Border CornerRadius="6"
                                             Padding="12,10"
@@ -208,7 +209,7 @@
 
 
                                     <!-- Requests List -->
-                                    <ItemsControl ItemsSource="{Binding Requests}"
+                                    <ItemsControl ItemsSource="{Binding FilteredRequests}"
                                                   IsVisible="{Binding IsExpanded}"
                                                   Margin="0,4,0,0">
                                         <ItemsControl.ItemTemplate>

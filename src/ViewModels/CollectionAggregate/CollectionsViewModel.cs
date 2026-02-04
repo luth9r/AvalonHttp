@@ -28,6 +28,9 @@ public partial class CollectionsViewModel : ViewModelBase
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasSelection))]
     private bool _isLoading = false;
+    
+    [ObservableProperty]
+    private string _searchText = string.Empty;
 
     public bool HasCollections => Collections.Count > 0;
     public bool HasSelection => SelectedRequest != null;
@@ -46,6 +49,7 @@ public partial class CollectionsViewModel : ViewModelBase
     public async Task InitializeAsync()
     {
         await LoadCollectionsAndRestoreStateAsync();
+        OnSearchTextChanged(string.Empty);
     }
     
     private async Task LoadCollectionsAndRestoreStateAsync()
@@ -238,9 +242,20 @@ public partial class CollectionsViewModel : ViewModelBase
                     }))
             };
 
-            var viewModel = new CollectionItemViewModel(newCollection, this);
-            Collections.Add(viewModel);
+            await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                var viewModel = new CollectionItemViewModel(newCollection, this);
             
+                // Find insert position
+                var index = Collections.IndexOf(collection);
+                Collections.Insert(index + 1, viewModel);
+            
+                // Initialize FilteredRequests for new collection
+                viewModel.ApplyFilter(SearchText);
+            
+                System.Diagnostics.Debug.WriteLine($"✅ Duplicated collection with {viewModel.Requests.Count} requests");
+            });
+        
             await _collectionService.SaveAsync(newCollection);
         }
         catch (Exception ex)
@@ -295,6 +310,14 @@ public partial class CollectionsViewModel : ViewModelBase
     private void OnRequestSelected(ApiRequest request)
     {
         RequestSelected?.Invoke(this, request);
+    }
+    
+    partial void OnSearchTextChanged(string value)
+    {
+        foreach (var collection in Collections)
+        {
+            collection.ApplyFilter(value);
+        }
     }
 
     public async Task SaveAllAsync()

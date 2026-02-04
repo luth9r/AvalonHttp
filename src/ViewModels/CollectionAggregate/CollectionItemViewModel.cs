@@ -42,6 +42,13 @@ public partial class CollectionItemViewModel : ObservableObject, IDisposable
     private bool _isEditing;
 
     public ObservableCollection<RequestItemViewModel> Requests { get; } = new();
+    
+    
+    private readonly ObservableCollection<RequestItemViewModel> _filteredRequests = new();
+    public ObservableCollection<RequestItemViewModel> FilteredRequests => _filteredRequests;
+    
+    [ObservableProperty]
+    private bool _isVisible = true;
 
     // ========================================
     // Constructor
@@ -57,6 +64,7 @@ public partial class CollectionItemViewModel : ObservableObject, IDisposable
         Description = collection.Description;
 
         LoadRequests();
+        ResetFilter();
     }
 
     private void LoadRequests()
@@ -126,12 +134,30 @@ public partial class CollectionItemViewModel : ObservableObject, IDisposable
             MethodString = "GET",
         };
 
-        _collection.Requests.Add(request);
+        await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
+        {
+            // Add to MODEL
+            _collection.Requests.Add(request);
 
-        var viewModel = new RequestItemViewModel(request, this);
-        Requests.Add(viewModel);
+            // Create ViewModel
+            var viewModel = new RequestItemViewModel(request, this);
+            Requests.Add(viewModel);
 
-        _parent.SelectRequest(viewModel);
+            // Add to FilteredRequests
+            if (string.IsNullOrWhiteSpace(_parent.SearchText))
+            {
+                FilteredRequests.Add(viewModel);
+            }
+            else
+            {
+                // Reapply filter
+                ApplyFilter(_parent.SearchText);
+            }
+
+            // Select new request
+            _parent.SelectRequest(viewModel);
+        });
+
         await SaveCollection();
     }
 
@@ -144,12 +170,23 @@ public partial class CollectionItemViewModel : ObservableObject, IDisposable
         {
             var index = Requests.IndexOf(request);
 
-            _collection.Requests.Remove(request.Request);
-            Requests.Remove(request);
+            await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                // Remove from MODEL
+                _collection.Requests.Remove(request.Request);
+            
+                // Remove from VM
+                Requests.Remove(request);
+            
+                // Remove from FilteredRequests
+                FilteredRequests.Remove(request);
 
-            request.Dispose();
+                // Dispose
+                request.Dispose();
 
-            SelectAdjacentRequest(index);
+                // Select adjacent
+                SelectAdjacentRequest(index);
+            });
             await SaveCollection();
         }
         catch (Exception ex)
@@ -177,10 +214,40 @@ public partial class CollectionItemViewModel : ObservableObject, IDisposable
 
             // Insert after original
             var index = Requests.IndexOf(request);
-            Requests.Insert(index + 1, viewModel);
+            await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                // Add to MODEL
+                _collection.Requests.Insert(index + 1, newRequest);
 
-            // Select duplicated request
-            _parent.SelectRequest(viewModel);
+                // Create ViewModel
+                var viewModel = new RequestItemViewModel(newRequest, this);
+
+                // Insert after original in VM
+                Requests.Insert(index + 1, viewModel);
+
+                // Update FilteredRequests
+                if (string.IsNullOrWhiteSpace(_parent.SearchText))
+                {
+                    // No filter - add to FilteredRequests at same position
+                    var filteredIndex = FilteredRequests.IndexOf(request);
+                    if (filteredIndex >= 0)
+                    {
+                        FilteredRequests.Insert(filteredIndex + 1, viewModel);
+                    }
+                    else
+                    {
+                        FilteredRequests.Add(viewModel);
+                    }
+                }
+                else
+                {
+                    // Reapply filter
+                    ApplyFilter(_parent.SearchText);
+                }
+
+                // Select duplicated request
+                _parent.SelectRequest(viewModel);
+            });
 
             // Save
             await SaveCollection();
@@ -296,6 +363,50 @@ public partial class CollectionItemViewModel : ObservableObject, IDisposable
         return request != null &&
                Requests.IndexOf(request) >= 0 &&
                Requests.IndexOf(request) < Requests.Count - 1;
+    }
+    
+    public void ApplyFilter(string query)
+    {
+        Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+        {
+            if (string.IsNullOrWhiteSpace(query))
+            {
+                IsVisible = true;
+                ResetFilter();
+                return;
+            }
+
+            var lowerQuery = query.ToLower();
+            var matchedRequests = Requests.Where(r => r.Name.ToLower().Contains(lowerQuery)).ToList();
+        
+            FilteredRequests.Clear();
+            foreach (var req in matchedRequests)
+            {
+                FilteredRequests.Add(req);
+            }
+        
+            bool collectionNameMatches = Name.ToLower().Contains(lowerQuery);
+            IsVisible = collectionNameMatches || FilteredRequests.Any();
+        
+            if (collectionNameMatches && !FilteredRequests.Any())
+            {
+                ResetFilter();
+            }
+        
+            if (FilteredRequests.Any() && !collectionNameMatches)
+            {
+                IsExpanded = true;
+            }
+        });
+    }
+    
+    private void ResetFilter()
+    {
+        FilteredRequests.Clear();
+        foreach (var req in Requests)
+        {
+            FilteredRequests.Add(req);
+        }
     }
 
     // ========================================
