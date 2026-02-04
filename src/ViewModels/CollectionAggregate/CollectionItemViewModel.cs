@@ -1,10 +1,18 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Reactive.Disposables;
+using System.Reactive.Disposables.Fluent;
+using System.Reactive.Linq;
 using System.Threading.Tasks;
 using AvalonHttp.Models.CollectionAggregate;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using DynamicData;
+using DynamicData.Binding;
+using ReactiveUI;
+using ReactiveUI.Avalonia;
 
 namespace AvalonHttp.ViewModels.CollectionAggregate;
 
@@ -17,6 +25,16 @@ public partial class CollectionItemViewModel : ObservableObject, IDisposable
     private readonly ApiCollection _collection;
     private readonly CollectionsViewModel _parent;
     private string _originalName = string.Empty;
+    private readonly CompositeDisposable _cleanUp = new();
+    
+    // Source of truth for requests
+    private readonly SourceList<RequestItemViewModel> _requestsSource = new();
+    
+    // UI binding for filtered requests
+    private readonly ReadOnlyObservableCollection<RequestItemViewModel> _filteredRequests;
+    public ReadOnlyObservableCollection<RequestItemViewModel> FilteredRequests => _filteredRequests;
+    
+    public IEnumerable<RequestItemViewModel> AllRequests => _requestsSource.Items;
 
     // ========================================
     // Properties
@@ -41,12 +59,6 @@ public partial class CollectionItemViewModel : ObservableObject, IDisposable
     [ObservableProperty]
     private bool _isEditing;
 
-    public ObservableCollection<RequestItemViewModel> Requests { get; } = new();
-    
-    
-    private readonly ObservableCollection<RequestItemViewModel> _filteredRequests = new();
-    public ObservableCollection<RequestItemViewModel> FilteredRequests => _filteredRequests;
-    
     [ObservableProperty]
     private bool _isVisible = true;
 
@@ -62,18 +74,50 @@ public partial class CollectionItemViewModel : ObservableObject, IDisposable
         Id = collection.Id;
         Name = collection.Name;
         Description = collection.Description;
+        
+       _requestsSource.Connect()
 
+            .Filter(_parent.WhenAnyValue(x => x.SearchText)
+                .Select(CreateFilter)) 
+            .Sort(SortExpressionComparer<RequestItemViewModel>
+                .Ascending(vm => _requestsSource.Items.IndexOf(vm)))
+            .ObserveOn(AvaloniaScheduler.Instance)
+            .Bind(out _filteredRequests)
+            .Subscribe(_ =>
+            {
+                var hasMatches = _filteredRequests.Count > 0;
+                var query = _parent.SearchText;
+                
+                IsVisible = string.IsNullOrWhiteSpace(query) || 
+                            Name.Contains(query, StringComparison.OrdinalIgnoreCase) || 
+                            hasMatches;
+
+                if (!string.IsNullOrWhiteSpace(query) && hasMatches)
+                    IsExpanded = true;
+                
+                MoveRequestUpCommand.NotifyCanExecuteChanged();
+                MoveRequestDownCommand.NotifyCanExecuteChanged();
+            })
+            .DisposeWith(_cleanUp);
+        
         LoadRequests();
-        ResetFilter();
+    }
+    
+    private Func<RequestItemViewModel, bool> CreateFilter(string query)
+    {
+        if (string.IsNullOrWhiteSpace(query)) return x => true;
+
+        var lowerQuery = query.ToLower();
+
+        bool isCollectionMatch = Name.Contains(query, StringComparison.OrdinalIgnoreCase);
+
+        return x => isCollectionMatch || x.Name.Contains(query, StringComparison.OrdinalIgnoreCase);
     }
 
     private void LoadRequests()
     {
-        foreach (var request in _collection.Requests)
-        {
-            var requestVm = new RequestItemViewModel(request, this);
-            Requests.Add(requestVm);
-        }
+        var vms = _collection.Requests.Select(r => new RequestItemViewModel(r, this));
+        _requestsSource.AddRange(vms);
     }
 
     // ========================================
@@ -129,35 +173,19 @@ public partial class CollectionItemViewModel : ObservableObject, IDisposable
         var request = new ApiRequest
         {
             Id = Guid.NewGuid(),
-            Name = GenerateUniqueName("New Request"),
+            Name = _collection.GenerateUniqueRequestName("New Request"),
             Url = "https://api.example.com",
             MethodString = "GET",
         };
 
-        await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
-        {
-            // Add to MODEL
-            _collection.Requests.Add(request);
+        _collection.Requests.Add(request);
+    
+        var viewModel = new RequestItemViewModel(request, this);
+    
+        // Just add to source of truth
+        _requestsSource.Add(viewModel);
 
-            // Create ViewModel
-            var viewModel = new RequestItemViewModel(request, this);
-            Requests.Add(viewModel);
-
-            // Add to FilteredRequests
-            if (string.IsNullOrWhiteSpace(_parent.SearchText))
-            {
-                FilteredRequests.Add(viewModel);
-            }
-            else
-            {
-                // Reapply filter
-                ApplyFilter(_parent.SearchText);
-            }
-
-            // Select new request
-            _parent.SelectRequest(viewModel);
-        });
-
+        _parent.SelectRequest(viewModel);
         await SaveCollection();
     }
 
@@ -168,25 +196,23 @@ public partial class CollectionItemViewModel : ObservableObject, IDisposable
 
         try
         {
-            var index = Requests.IndexOf(request);
+            var index = _requestsSource.Items.IndexOf(request);
 
-            await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
+            _collection.Requests.Remove(request.Request);
+            _requestsSource.Remove(request);
+        
+            request.Dispose();
+
+            if (_requestsSource.Count > 0)
             {
-                // Remove from MODEL
-                _collection.Requests.Remove(request.Request);
-            
-                // Remove from VM
-                Requests.Remove(request);
-            
-                // Remove from FilteredRequests
-                FilteredRequests.Remove(request);
-
-                // Dispose
-                request.Dispose();
-
-                // Select adjacent
-                SelectAdjacentRequest(index);
-            });
+                var newIndex = Math.Min(index, _requestsSource.Count - 1);
+                _parent.SelectRequest(_requestsSource.Items.ElementAt(newIndex));
+            }
+            else
+            {
+                _parent.ClearSelection();
+            }
+        
             await SaveCollection();
         }
         catch (Exception ex)
@@ -200,101 +226,83 @@ public partial class CollectionItemViewModel : ObservableObject, IDisposable
     {
         if (request == null) return;
 
-        try
-        {
-            // Create deep copy with NEW ID
-            var newRequest = request.CreateDeepCopy();
-            newRequest.Name = GenerateUniqueName($"{request.Name} (Copy)");
+        var index = _requestsSource.Items.ToList().IndexOf(request);
+        if (index == -1) return;
 
-            // Add to MODEL
-            _collection.Requests.Add(newRequest);
+        var newRequest = request.CreateDeepCopy();
+        newRequest.Name = _collection.GenerateUniqueRequestName($"{request.Name} (Copy)");
+        
+        _collection.Requests.Insert(index + 1, newRequest);
+        
+        var viewModel = new RequestItemViewModel(newRequest, this);
+        _requestsSource.Insert(index + 1, viewModel);
 
-            // Create ViewModel
-            var viewModel = new RequestItemViewModel(newRequest, this);
-
-            // Insert after original
-            var index = Requests.IndexOf(request);
-            await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
-            {
-                // Add to MODEL
-                _collection.Requests.Insert(index + 1, newRequest);
-
-                // Create ViewModel
-                var viewModel = new RequestItemViewModel(newRequest, this);
-
-                // Insert after original in VM
-                Requests.Insert(index + 1, viewModel);
-
-                // Update FilteredRequests
-                if (string.IsNullOrWhiteSpace(_parent.SearchText))
-                {
-                    // No filter - add to FilteredRequests at same position
-                    var filteredIndex = FilteredRequests.IndexOf(request);
-                    if (filteredIndex >= 0)
-                    {
-                        FilteredRequests.Insert(filteredIndex + 1, viewModel);
-                    }
-                    else
-                    {
-                        FilteredRequests.Add(viewModel);
-                    }
-                }
-                else
-                {
-                    // Reapply filter
-                    ApplyFilter(_parent.SearchText);
-                }
-
-                // Select duplicated request
-                _parent.SelectRequest(viewModel);
-            });
-
-            // Save
-            await SaveCollection();
-
-            System.Diagnostics.Debug.WriteLine($"✅ Duplicated request:");
-            System.Diagnostics.Debug.WriteLine($"   Original ID: {request.Id}");
-            System.Diagnostics.Debug.WriteLine($"   New ID: {newRequest.Id}");
-            System.Diagnostics.Debug.WriteLine($"   Same object? {ReferenceEquals(request.Request, newRequest)}");
-        }
-        catch (Exception ex)
-        {
-            System.Diagnostics.Debug.WriteLine($"Failed to duplicate request: {ex.Message}");
-        }
+        _parent.SelectRequest(viewModel);
+        await SaveCollection();
     }
+    
+    public void MoveRequest(RequestItemViewModel request, RequestItemViewModel target, bool insertAfter)
+    {
+        // Get current indices from SourceList
+        var items = _requestsSource.Items.ToList();
+        var oldIndex = items.IndexOf(request);
+        var targetIndex = items.IndexOf(target);
+
+        if (oldIndex < 0 || targetIndex < 0) return;
+
+        // Calculate target position
+        if (insertAfter) targetIndex++;
+        if (oldIndex < targetIndex) targetIndex--;
+
+        targetIndex = Math.Clamp(targetIndex, 0, items.Count - 1);
+
+        if (oldIndex == targetIndex) return;
+
+        // ✅ Update both in sync using Edit batch
+        _requestsSource.Edit(innerList =>
+        {
+            // Move in SourceList
+            innerList.RemoveAt(oldIndex);
+            innerList.Insert(targetIndex, request);
+        
+            // Move in model to match
+            _collection.Requests.Move(oldIndex, targetIndex);
+        });
+
+        // Save asynchronously
+        _ = Task.Run(async () => await Parent.SaveCollectionCommand.ExecuteAsync(this));
+    }
+    
+    public void InsertRequest(RequestItemViewModel request, RequestItemViewModel? target, bool insertAfter)
+    {
+        var items = _requestsSource.Items.ToList();
+        var insertIndex = -1;
+
+        if (target != null)
+        {
+            var targetIndex = items.IndexOf(target);
+            if (targetIndex >= 0)
+            {
+                insertIndex = insertAfter ? targetIndex + 1 : targetIndex;
+            }
+        }
+
+        if (insertIndex == -1 || insertIndex > items.Count)
+        {
+            insertIndex = items.Count;
+        }
+
+        _requestsSource.Insert(insertIndex, request);
+
+        _collection.Requests.Insert(insertIndex, request.Request);
+    }
+    
+    
 
     // ========================================
     // Helper Methods
     // ========================================
-
-    private void SelectAdjacentRequest(int deletedIndex)
-    {
-        if (Requests.Count > 0)
-        {
-            var newIndex = Math.Min(deletedIndex, Requests.Count - 1);
-            _parent.SelectRequest(Requests[newIndex]);
-        }
-        else
-        {
-            _parent.ClearSelection();
-        }
-    }
-
-    private string GenerateUniqueName(string baseName)
-    {
-        if (!Requests.Any(r => r.Name == baseName))
-            return baseName;
-
-        var counter = 1;
-        string name;
-
-        do
-        {
-            name = $"{baseName} ({counter++})";
-        } while (Requests.Any(r => r.Name == name));
-
-        return name;
-    }
+    
 
     private async Task SaveCollection()
     {
@@ -309,104 +317,53 @@ public partial class CollectionItemViewModel : ObservableObject, IDisposable
     private async Task MoveRequestUp(RequestItemViewModel? request)
     {
         if (request == null) return;
+        var index = _requestsSource.Items.ToList().IndexOf(request);
+        if (index <= 0) return;
 
-        try
-        {
-            var index = Requests.IndexOf(request);
-            if (index <= 0) return;
+        _requestsSource.Move(index, index - 1);
+        _collection.Requests.Move(index, index - 1);
 
-            // Move in ViewModel
-            Requests.Move(index, index - 1);
-
-            // Move in Model
-            _collection.Requests.Move(index, index - 1);
-
-            await SaveCollection();
-        }
-        catch (Exception ex)
-        {
-            System.Diagnostics.Debug.WriteLine($"Failed to move request up: {ex.Message}");
-        }
+        await SaveCollection();
     }
 
     private bool CanMoveRequestUp(RequestItemViewModel? request)
     {
-        return request != null && Requests.IndexOf(request) > 0;
+        if (request == null) return false;
+        var items = _requestsSource.Items;
+        return items.Contains(request) && items.IndexOf(request) > 0;
     }
 
     [RelayCommand(CanExecute = nameof(CanMoveRequestDown))]
     private async Task MoveRequestDown(RequestItemViewModel? request)
     {
         if (request == null) return;
+        var items = _requestsSource.Items.ToList();
+        var index = items.IndexOf(request);
+        if (index < 0 || index >= items.Count - 1) return;
 
-        try
-        {
-            var index = Requests.IndexOf(request);
-            if (index < 0 || index >= Requests.Count - 1) return;
+        _requestsSource.Move(index, index + 1);
+        _collection.Requests.Move(index, index + 1);
 
-            // Move in ViewModel
-            Requests.Move(index, index + 1);
-
-            // Move in Model
-            _collection.Requests.Move(index, index + 1);
-
-            await SaveCollection();
-        }
-        catch (Exception ex)
-        {
-            System.Diagnostics.Debug.WriteLine($"Failed to move request down: {ex.Message}");
-        }
+        await SaveCollection();
     }
 
     private bool CanMoveRequestDown(RequestItemViewModel? request)
     {
-        return request != null &&
-               Requests.IndexOf(request) >= 0 &&
-               Requests.IndexOf(request) < Requests.Count - 1;
+        if (request == null) return false;
+        var items = _requestsSource.Items;
+        var index = items.IndexOf(request);
+        return index >= 0 && index < items.Count() - 1;
     }
     
-    public void ApplyFilter(string query)
+    public void AddRequestToSource(RequestItemViewModel requestVm)
     {
-        Avalonia.Threading.Dispatcher.UIThread.Post(() =>
-        {
-            if (string.IsNullOrWhiteSpace(query))
-            {
-                IsVisible = true;
-                ResetFilter();
-                return;
-            }
-
-            var lowerQuery = query.ToLower();
-            var matchedRequests = Requests.Where(r => r.Name.ToLower().Contains(lowerQuery)).ToList();
-        
-            FilteredRequests.Clear();
-            foreach (var req in matchedRequests)
-            {
-                FilteredRequests.Add(req);
-            }
-        
-            bool collectionNameMatches = Name.ToLower().Contains(lowerQuery);
-            IsVisible = collectionNameMatches || FilteredRequests.Any();
-        
-            if (collectionNameMatches && !FilteredRequests.Any())
-            {
-                ResetFilter();
-            }
-        
-            if (FilteredRequests.Any() && !collectionNameMatches)
-            {
-                IsExpanded = true;
-            }
-        });
+        _requestsSource.Add(requestVm);
     }
     
-    private void ResetFilter()
+    public void RemoveRequestFromSource(RequestItemViewModel requestVm)
     {
-        FilteredRequests.Clear();
-        foreach (var req in Requests)
-        {
-            FilteredRequests.Add(req);
-        }
+        _requestsSource.Remove(requestVm);
+        _collection.Requests.Remove(requestVm.Request);
     }
 
     // ========================================
@@ -415,11 +372,8 @@ public partial class CollectionItemViewModel : ObservableObject, IDisposable
 
     public void Dispose()
     {
-        foreach (var request in Requests)
-        {
-            request.Dispose();
-        }
-
-        Requests.Clear();
+        _cleanUp.Dispose();
+        foreach (var request in _requestsSource.Items) request.Dispose();
+        _requestsSource.Clear();
     }
 }

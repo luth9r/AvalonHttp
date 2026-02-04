@@ -163,7 +163,7 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
                     collection.CancelRenameCommand.Execute(null);
                 }
                 
-                foreach (var request in collection.Requests)
+                foreach (var request in CollectionsWorkspace.CollectionsViewModel.Collections)
                 {
                     if (request.IsEditing)
                     {

@@ -189,39 +189,28 @@ public partial class RequestItemViewModel : ObservableObject, IDisposable
         {
             var oldParent = _parent;
             
-            // Sync current changes to model
             SyncToModel();
             
-            // Remove from old collection MODEL
             oldParent.Collection.Requests.Remove(_originalRequest);
-            
-            // Add to new collection MODEL
             targetCollection.Collection.Requests.Add(_originalRequest);
-            
-            // Update ViewModels
-            oldParent.Requests.Remove(this);
+
+            oldParent.RemoveRequestFromSource(this);
             
             var movedVm = new RequestItemViewModel(_originalRequest, targetCollection);
-            targetCollection.Requests.Add(movedVm);
+            targetCollection.AddRequestToSource(movedVm);
 
-            // Select the moved request
             targetCollection.Parent.SelectRequest(movedVm);
-
-            // Save both collections
+            
             await Task.WhenAll(
                 oldParent.Parent.SaveCollectionCommand.ExecuteAsync(oldParent),
                 targetCollection.Parent.SaveCollectionCommand.ExecuteAsync(targetCollection)
             );
-            
-            // Dispose old VM
+
             Dispose();
         }
         catch (Exception ex)
         {
-            WeakReferenceMessenger.Default.Send(new ErrorMessage(
-                "Failed to Move Request",
-                $"An error occurred: {ex.Message}"
-            ));
+            WeakReferenceMessenger.Default.Send(new ErrorMessage("Failed to Move Request", ex.Message));
         }
     }
 

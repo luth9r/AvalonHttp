@@ -2,6 +2,9 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Reactive.Disposables;
+using System.Reactive.Disposables.Fluent;
+using System.Reactive.Linq;
 using System.Threading.Tasks;
 using AvalonHttp.Messages;
 using AvalonHttp.Models.CollectionAggregate;
@@ -9,6 +12,10 @@ using AvalonHttp.Services.Interfaces;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
+using DynamicData;
+using DynamicData.Binding;
+using ReactiveUI;
+using ReactiveUI.Avalonia;
 using ApiRequest = AvalonHttp.Models.CollectionAggregate.ApiRequest;
 
 namespace AvalonHttp.ViewModels.CollectionAggregate;
@@ -17,10 +24,14 @@ public partial class CollectionsViewModel : ViewModelBase
 {
     private readonly ICollectionRepository _collectionService;
     private readonly ISessionService _sessionRepo;
-
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(HasCollections))]
-    private ObservableCollection<CollectionItemViewModel> _collections = new();
+    private readonly CompositeDisposable _cleanUp = new();
+    
+    // Source of truth for collections
+    private readonly SourceList<CollectionItemViewModel> _collectionsSource = new();
+    
+    // UI binding for visible collections
+    private readonly ReadOnlyObservableCollection<CollectionItemViewModel> _collections;
+    public ReadOnlyObservableCollection<CollectionItemViewModel> Collections => _collections;
 
     [ObservableProperty]
     private RequestItemViewModel? _selectedRequest;
@@ -32,7 +43,7 @@ public partial class CollectionsViewModel : ViewModelBase
     [ObservableProperty]
     private string _searchText = string.Empty;
 
-    public bool HasCollections => Collections.Count > 0;
+    public bool HasCollections => _collections.Count > 0;
     public bool HasSelection => SelectedRequest != null;
 
     public event EventHandler<ApiRequest>? RequestSelected;
@@ -43,41 +54,63 @@ public partial class CollectionsViewModel : ViewModelBase
     {
         _collectionService = collectionService ?? throw new ArgumentNullException(nameof(collectionService));
         _sessionRepo = sessionService ?? throw new ArgumentNullException(nameof(sessionService));
+        
+        _collectionsSource.Connect()
+            .AutoRefresh(x => x.IsVisible) // Auto-refresh when visibility changes
+            .Filter(x => x.IsVisible)
+            .Sort(SortExpressionComparer<CollectionItemViewModel>
+                .Ascending(vm => _collectionsSource.Items.IndexOf(vm)))
+            .ObserveOn(AvaloniaScheduler.Instance)
+            .Bind(out _collections)
+            .Subscribe()
+            .DisposeWith(_cleanUp);
+        
+        this.WhenAnyValue(x => x.SearchText)
+            .Throttle(TimeSpan.FromMilliseconds(250))
+            .DistinctUntilChanged()
+            .ObserveOn(AvaloniaScheduler.Instance)
+            .Subscribe(query => 
+            {
+                System.Diagnostics.Debug.WriteLine($"Search query: '{query}'");
+            })
+            .DisposeWith(_cleanUp);
     }
+    
 
     //  Call this from View.OnLoaded or App startup, not constructor
     public async Task InitializeAsync()
     {
         await LoadCollectionsAndRestoreStateAsync();
-        OnSearchTextChanged(string.Empty);
     }
     
     private async Task LoadCollectionsAndRestoreStateAsync()
     {
         if (IsLoading) return;
-        
         IsLoading = true;
         
         try
         {
             var collections = await _collectionService.LoadAllAsync();
             
-            Collections.Clear();
-            foreach (var collection in collections)
+            // Dispose old VMs
+            foreach (var vm in _collectionsSource.Items)
             {
-                Collections.Add(new CollectionItemViewModel(collection, this));
+                vm.Dispose();
             }
+            _collectionsSource.Clear();
+
+            // Load new collections
+            var viewModels = collections.Select(c => new CollectionItemViewModel(c, this));
+            _collectionsSource.AddRange(viewModels);
             
             await RestoreLastSelectionAsync();
         }
         catch (Exception ex)
         {
             System.Diagnostics.Debug.WriteLine($"Failed to load collections: {ex.Message}");
-            
-            // Show error to user
             WeakReferenceMessenger.Default.Send(new ErrorMessage(
-                "Failed to Load Collections",
-                $"An error occurred while loading your collections: {ex.Message}"
+                "Failed to Load Collections", 
+                ex.Message
             ));
         }
         finally
@@ -91,22 +124,17 @@ public partial class CollectionsViewModel : ViewModelBase
         try
         {
             var state = await _sessionRepo.LoadStateAsync();
-            
-            if (state.LastSelectedRequestId == null) 
-                return;
+            if (state.LastSelectedRequestId == null) return;
 
-            // Find the request across all collections
-            foreach (var collection in Collections)
+            // Search through all collections
+            foreach (var collection in _collectionsSource.Items)
             {
-                var request = collection.Requests.FirstOrDefault(
-                    r => r.Id == state.LastSelectedRequestId);
-                    
+                var request = collection.AllRequests.FirstOrDefault(r => r.Id == state.LastSelectedRequestId);
                 if (request != null)
                 {
                     collection.IsExpanded = true;
                     
-                    // Use Dispatcher instead of Task.Delay
-                    await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
+                    await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() => 
                     {
                         SelectRequest(request);
                     });
@@ -118,7 +146,6 @@ public partial class CollectionsViewModel : ViewModelBase
         catch (Exception ex)
         {
             System.Diagnostics.Debug.WriteLine($"Failed to restore selection: {ex.Message}");
-            // Don't show error to user - not critical
         }
     }
 
@@ -133,7 +160,7 @@ public partial class CollectionsViewModel : ViewModelBase
             };
 
             var viewModel = new CollectionItemViewModel(collection, this);
-            Collections.Add(viewModel);
+            _collectionsSource.Add(viewModel);
             
             await _collectionService.SaveAsync(collection);
             
@@ -146,7 +173,7 @@ public partial class CollectionsViewModel : ViewModelBase
             
             WeakReferenceMessenger.Default.Send(new ErrorMessage(
                 "Failed to Create Collection",
-                $"An error occurred: {ex.Message}"
+                ex.Message
             ));
         }
     }
@@ -164,13 +191,17 @@ public partial class CollectionsViewModel : ViewModelBase
                 try
                 {
                     await _collectionService.DeleteAsync(collection.Id);
-                    Collections.Remove(collection);
+                    
+                    // Remove from source - UI will update automatically
+                    _collectionsSource.Remove(collection);
                     
                     // Clear selection if deleted collection contained selected request
                     if (SelectedRequest?.Parent == collection)
                     {
                         ClearSelection();
                     }
+                    
+                    collection.Dispose();
                 }
                 catch (Exception ex)
                 {
@@ -178,7 +209,7 @@ public partial class CollectionsViewModel : ViewModelBase
                     
                     WeakReferenceMessenger.Default.Send(new ErrorMessage(
                         "Failed to Delete Collection",
-                        $"An error occurred: {ex.Message}"
+                        ex.Message
                     ));
                 }
             }
@@ -192,19 +223,12 @@ public partial class CollectionsViewModel : ViewModelBase
         {
             System.Diagnostics.Debug.WriteLine($"=== SAVING COLLECTION: {collectionVm.Name} ===");
             
+            // Sync VM → Model
             collectionVm.Collection.Name = collectionVm.Name;
             collectionVm.Collection.Description = collectionVm.Description;
             collectionVm.Collection.UpdatedAt = DateTime.Now;
     
-            System.Diagnostics.Debug.WriteLine($"Collection hash: {collectionVm.Collection.GetHashCode()}");
             System.Diagnostics.Debug.WriteLine($"Requests in collection: {collectionVm.Collection.Requests.Count}");
-    
-            foreach (var req in collectionVm.Collection.Requests)
-            {
-                System.Diagnostics.Debug.WriteLine($"  Request: {req.Name}");
-                System.Diagnostics.Debug.WriteLine($"    Hash: {req.GetHashCode()}");
-                System.Diagnostics.Debug.WriteLine($"    Body: '{req.Body}' (length: {req.Body?.Length ?? 0})");
-            }
             
             await _collectionService.SaveAsync(collectionVm.Collection);
     
@@ -228,35 +252,30 @@ public partial class CollectionsViewModel : ViewModelBase
 
         try
         {
+            // Create deep copy
             var newCollection = new ApiCollection
             {
-                Id = Guid.NewGuid(), // New ID
+                Id = Guid.NewGuid(),
                 Name = GenerateUniqueCollectionName($"{collection.Name} (Copy)"),
                 Description = collection.Description,
                 Requests = new ObservableCollection<ApiRequest>(
-                    collection.Requests.Select(r =>
+                    collection.AllRequests.Select(r =>
                     {
                         var newRequest = r.CreateDeepCopy();
-                        newRequest.Id = Guid.NewGuid(); // New ID for each request
+                        newRequest.Id = Guid.NewGuid();
                         return newRequest;
                     }))
             };
 
-            await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
-            {
-                var viewModel = new CollectionItemViewModel(newCollection, this);
+            var viewModel = new CollectionItemViewModel(newCollection, this);
             
-                // Find insert position
-                var index = Collections.IndexOf(collection);
-                Collections.Insert(index + 1, viewModel);
+            // Insert after original
+            var index = _collectionsSource.Items.ToList().IndexOf(collection);
+            _collectionsSource.Insert(index + 1, viewModel);
             
-                // Initialize FilteredRequests for new collection
-                viewModel.ApplyFilter(SearchText);
-            
-                System.Diagnostics.Debug.WriteLine($"✅ Duplicated collection with {viewModel.Requests.Count} requests");
-            });
-        
             await _collectionService.SaveAsync(newCollection);
+            
+            System.Diagnostics.Debug.WriteLine($"✅ Duplicated collection with {viewModel.AllRequests.Count()} requests");
         }
         catch (Exception ex)
         {
@@ -264,7 +283,7 @@ public partial class CollectionsViewModel : ViewModelBase
             
             WeakReferenceMessenger.Default.Send(new ErrorMessage(
                 "Failed to Duplicate Collection",
-                $"An error occurred: {ex.Message}"
+                ex.Message
             ));
         }
     }
@@ -284,15 +303,10 @@ public partial class CollectionsViewModel : ViewModelBase
         SelectedRequest = requestVm;
         SelectedRequest.IsSelected = true;
     
-        System.Diagnostics.Debug.WriteLine($"=== SELECTING REQUEST ===");
-        System.Diagnostics.Debug.WriteLine($"  Name: {requestVm.Request.Name}");
-        System.Diagnostics.Debug.WriteLine($"  Request hash: {requestVm.Request.GetHashCode()}");
-        System.Diagnostics.Debug.WriteLine($"  Body: '{requestVm.Request.Body}'");
+        System.Diagnostics.Debug.WriteLine($"=== SELECTING REQUEST: {requestVm.Request.Name} ===");
     
-        // Pass ORIGINAL object
-        OnRequestSelected(requestVm.Request); 
-    
-        System.Diagnostics.Debug.WriteLine($"  Passed to OnRequestSelected");
+        // Notify listeners
+        OnRequestSelected(requestVm.Request);
     
         // Save session
         _ = _sessionRepo.SaveLastRequestAsync(requestVm.Id);
@@ -310,14 +324,6 @@ public partial class CollectionsViewModel : ViewModelBase
     private void OnRequestSelected(ApiRequest request)
     {
         RequestSelected?.Invoke(this, request);
-    }
-    
-    partial void OnSearchTextChanged(string value)
-    {
-        foreach (var collection in Collections)
-        {
-            collection.ApplyFilter(value);
-        }
     }
 
     public async Task SaveAllAsync()
@@ -350,9 +356,9 @@ public partial class CollectionsViewModel : ViewModelBase
     
     public async Task HandleRequestSavedAsync(ApiRequest request)
     {
-        foreach (var collection in Collections)
+        foreach (var collection in _collectionsSource.Items)
         {
-            var requestVm = collection.Requests.FirstOrDefault(r => r.Id == request.Id);
+            var requestVm = collection.AllRequests.FirstOrDefault(r => r.Id == request.Id);
             if (requestVm != null)
             {
                 requestVm.UpdateFromModel(request);
@@ -373,12 +379,12 @@ public partial class CollectionsViewModel : ViewModelBase
     [RelayCommand]
     private async Task CloseAllEditModes()
     {
-        foreach (var collection in Collections)
+        foreach (var collection in _collectionsSource.Items)
         {
             if (collection.IsEditing)
                 await collection.FinishRenameCommand.ExecuteAsync(null);
 
-            foreach (var request in collection.Requests)
+            foreach (var request in collection.AllRequests)
             {
                 if (request.IsEditing)
                     await request.FinishRenameCommand.ExecuteAsync(null);
@@ -388,14 +394,54 @@ public partial class CollectionsViewModel : ViewModelBase
 
     private string GenerateUniqueCollectionName(string baseName)
     {
-        var name = baseName;
+        var existingNames = _collectionsSource.Items.Select(c => c.Name).ToHashSet();
+    
+        if (!existingNames.Contains(baseName))
+            return baseName;
+    
         var counter = 1;
-        
-        while (Collections.Any(c => c.Name == name))
+        string name;
+    
+        do
         {
             name = $"{baseName} ({counter++})";
+        } while (existingNames.Contains(name));
+    
+        return name;
+    }
+    
+    public void MoveCollection(CollectionItemViewModel source, CollectionItemViewModel target, bool insertAfter)
+    {
+        var items = _collectionsSource.Items.ToList();
+    
+        var oldIndex = items.IndexOf(source);
+        var targetIndex = items.IndexOf(target);
+
+        if (oldIndex < 0 || targetIndex < 0) return;
+
+        if (insertAfter) targetIndex++;
+        if (oldIndex < targetIndex) targetIndex--;
+    
+        targetIndex = Math.Clamp(targetIndex, 0, items.Count - 1);
+
+        if (oldIndex == targetIndex) return;
+        
+        _collectionsSource.Edit(list => {
+            list.RemoveAt(oldIndex);
+            list.Insert(targetIndex, source);
+        });
+        
+    }
+    
+    public void Dispose()
+    {
+        _cleanUp?.Dispose();
+        
+        foreach (var collection in _collectionsSource.Items)
+        {
+            collection.Dispose();
         }
         
-        return name;
+        _collectionsSource.Dispose();
     }
 }

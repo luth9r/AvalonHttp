@@ -11,7 +11,7 @@ namespace AvalonHttp.Behaviors;
 
 public class DragDropBehavior : Behavior<Border>
 {
-    private Point _startPoint;
+private Point _startPoint;
     private bool _isDragStart;
     private bool? _insertAfterState = null;
 
@@ -53,7 +53,6 @@ public class DragDropBehavior : Behavior<Border>
         var properties = e.GetCurrentPoint(AssociatedObject).Properties;
         if (properties.IsLeftButtonPressed)
         {
-            // Don't start drag from interactive elements
             if (e.Source is Control c && (c is TextBox || c is Button))
                 return;
                 
@@ -69,8 +68,7 @@ public class DragDropBehavior : Behavior<Border>
 
     private async void OnPointerMoved(object? sender, PointerEventArgs e)
     {
-        if (!_isDragStart || AssociatedObject == null)
-            return;
+        if (!_isDragStart || AssociatedObject == null) return;
 
         var point = e.GetCurrentPoint(AssociatedObject);
         if (!point.Properties.IsLeftButtonPressed)
@@ -90,14 +88,12 @@ public class DragDropBehavior : Behavior<Border>
     private async Task StartDrag(PointerEventArgs e)
     {
         var context = AssociatedObject?.DataContext;
-        if (context == null)
-            return;
+        if (context == null) return;
 
         var dragData = new DataObject();
         dragData.Set("Context", context);
 
-        if (AssociatedObject != null)
-            AssociatedObject.Opacity = 0.5;
+        if (AssociatedObject != null) AssociatedObject.Opacity = 0.5;
 
         try
         {
@@ -109,14 +105,13 @@ public class DragDropBehavior : Behavior<Border>
         }
         finally
         {
-            if (AssociatedObject != null)
-                AssociatedObject.Opacity = 1.0;
+            if (AssociatedObject != null) AssociatedObject.Opacity = 1.0;
             _insertAfterState = null;
         }
     }
 
     // ========================================
-    // Target Logic with Dead Zone
+    // Target Logic & Visuals
     // ========================================
     
     private void OnDragOver(object? sender, DragEventArgs e)
@@ -145,18 +140,9 @@ public class DragDropBehavior : Behavior<Border>
 
     private bool IsValidDropTarget(object source, object target)
     {
-        // Collection -> Collection
-        if (source is CollectionItemViewModel && target is CollectionItemViewModel)
-            return true;
-
-        // Request -> Request (same or different collection)
-        if (source is RequestItemViewModel && target is RequestItemViewModel)
-            return true;
-
-        // Request -> Collection
-        if (source is RequestItemViewModel && target is CollectionItemViewModel)
-            return true;
-
+        if (source is CollectionItemViewModel && target is CollectionItemViewModel) return true;
+        if (source is RequestItemViewModel && target is RequestItemViewModel) return true;
+        if (source is RequestItemViewModel && target is CollectionItemViewModel) return true;
         return false;
     }
 
@@ -169,39 +155,37 @@ public class DragDropBehavior : Behavior<Border>
     private void OnDrop(object? sender, DragEventArgs e)
     {
         ClearVisuals();
-
         var source = e.Data.Get("Context");
         var target = AssociatedObject?.DataContext;
 
-        if (source == null || target == null || source == target)
-            return;
+        if (source == null || target == null || source == target) return;
 
-        bool insertAfter = _insertAfterState ?? 
-            (e.GetPosition(AssociatedObject).Y > AssociatedObject!.Bounds.Height / 2);
+        bool insertAfter = _insertAfterState ?? (e.GetPosition(AssociatedObject).Y > AssociatedObject!.Bounds.Height / 2);
 
-        try
+        Avalonia.Threading.Dispatcher.UIThread.Post(() =>
         {
-            if (source is CollectionItemViewModel sCol && target is CollectionItemViewModel tCol)
+            try
             {
-                MoveCollection(sCol, tCol, insertAfter);
+                if (source is CollectionItemViewModel sCol && target is CollectionItemViewModel tCol)
+                {
+                    MoveCollection(sCol, tCol, insertAfter);
+                }
+                else if (source is RequestItemViewModel sReq && target is RequestItemViewModel tReq)
+                {
+                    MoveRequest(sReq, tReq, insertAfter);
+                }
+                else if (source is RequestItemViewModel req && target is CollectionItemViewModel col)
+                {
+                    MoveRequestToCollection(req, col);
+                }
             }
-            else if (source is RequestItemViewModel sReq && target is RequestItemViewModel tReq)
+            catch (Exception ex)
             {
-                MoveRequest(sReq, tReq, insertAfter);
+                System.Diagnostics.Debug.WriteLine($"Drop failed: {ex.Message}");
             }
-            else if (source is RequestItemViewModel req && target is CollectionItemViewModel col)
-            {
-                MoveRequestToCollection(req, col);
-            }
-        }
-        catch (Exception ex)
-        {
-            System.Diagnostics.Debug.WriteLine($"Drop operation failed: {ex.Message}");
-        }
-        finally
-        {
-            _insertAfterState = null;
-        }
+        });
+        
+        _insertAfterState = null;
     }
 
     // ========================================
@@ -261,46 +245,21 @@ public class DragDropBehavior : Behavior<Border>
     
     private void MoveCollection(CollectionItemViewModel source, CollectionItemViewModel target, bool insertAfter)
     {
-        var list = source.Parent.Collections;
-    
-        var oldIndex = list.IndexOf(source);
-        var newIndex = list.IndexOf(target);
-    
-        if (oldIndex == -1 || newIndex == -1) return;
-    
-        if (insertAfter) newIndex++;
-        if (oldIndex < newIndex) newIndex--;
-    
-        newIndex = Math.Clamp(newIndex, 0, list.Count - 1);
-    
-        if (oldIndex == newIndex) return;
-    
-        // Выполняем в UI-потоке
-        Avalonia.Threading.Dispatcher.UIThread.Post(() =>
-        {
-            list.Move(oldIndex, newIndex);
+        var parent = source.Parent;
+
+        parent.MoveCollection(source, target, insertAfter);
         
-            // Save asynchronously
-            _ = Task.Run(async () =>
-            {
-                try
-                {
-                    await source.Parent.SaveAllAsync();
-                    System.Diagnostics.Debug.WriteLine($"✅ Collection moved and saved");
-                }
-                catch (Exception ex)
-                {
-                    System.Diagnostics.Debug.WriteLine($"❌ Failed to save after collection move: {ex.Message}");
-                }
-            });
-        });
+        // Save
+        _ = Task.Run(async () => await parent.SaveAllAsync());
     }
 
     private void MoveRequest(RequestItemViewModel source, RequestItemViewModel target, bool insertAfter)
     {
         if (source.Parent == target.Parent)
         {
-            MoveRequestWithinCollection(source, target, insertAfter);
+            var collection = source.Parent;
+            collection.MoveRequest(source, target, insertAfter);
+            _ = Task.Run(async () => await collection.Parent.SaveCollectionCommand.ExecuteAsync(collection));
         }
         else
         {
@@ -308,160 +267,54 @@ public class DragDropBehavior : Behavior<Border>
         }
     }
 
-    private void MoveRequestWithinCollection(RequestItemViewModel source, RequestItemViewModel target, bool insertAfter)
-    {
-        var collection = source.Parent;
-        var vmList = collection.Requests;
-        var modelList = collection.Collection.Requests;
-    
-        var oldIndex = vmList.IndexOf(source);
-        var newIndex = vmList.IndexOf(target);
-    
-        if (oldIndex == -1 || newIndex == -1) return;
-    
-        if (insertAfter) newIndex++;
-        if (oldIndex < newIndex) newIndex--;
-    
-        newIndex = Math.Clamp(newIndex, 0, vmList.Count - 1);
-    
-        if (oldIndex == newIndex) return;
-    
-        // Выполняем все операции в UI-потоке
-        Avalonia.Threading.Dispatcher.UIThread.Post(() =>
-        {
-            // Move in both VM and MODEL
-            vmList.Move(oldIndex, newIndex);
-            modelList.Move(oldIndex, newIndex);
-        
-            // Update FilteredRequests if needed
-            collection.ApplyFilter(collection.Parent.SearchText);
-        
-            // Save asynchronously but don't block UI
-            _ = Task.Run(async () =>
-            {
-                try
-                {
-                    await collection.Parent.SaveCollectionCommand.ExecuteAsync(collection);
-                    System.Diagnostics.Debug.WriteLine($"✅ Request moved and saved");
-                }
-                catch (Exception ex)
-                {
-                    System.Diagnostics.Debug.WriteLine($"❌ Failed to save after request move: {ex.Message}");
-                }
-            });
-        });
-    }
-
     private void MoveRequestBetweenCollections(RequestItemViewModel source, RequestItemViewModel target, bool insertAfter)
     {
         var oldParent = source.Parent;
-    var newParent = target.Parent;
-    
-    // Calculate target position
-    var targetList = newParent.Requests;
-    var targetIndex = targetList.IndexOf(target);
-    
-    if (insertAfter) targetIndex++;
-    targetIndex = Math.Clamp(targetIndex, 0, targetList.Count);
-    
-    // Выполняем все операции в UI-потоке
-    Avalonia.Threading.Dispatcher.UIThread.Post(() =>
-    {
-        // Sync VM to MODEL first
+        var newParent = target.Parent;
+        
         source.SyncToModel();
-        
-        // Remove from old collection (both MODEL and VM)
-        oldParent.Collection.Requests.Remove(source.Request);
-        oldParent.Requests.Remove(source);
-        
-        // Insert into new collection MODEL
-        newParent.Collection.Requests.Insert(targetIndex, source.Request);
-        
-        // Create new VM for the request
+
+        oldParent.RemoveRequestFromSource(source);
+
         var movedVm = new RequestItemViewModel(source.Request, newParent);
-        
-        // Insert into new collection VM
-        newParent.Requests.Insert(targetIndex, movedVm);
-        
-        // Update filters
-        oldParent.ApplyFilter(oldParent.Parent.SearchText);
-        newParent.ApplyFilter(newParent.Parent.SearchText);
-        
-        // Expand target collection and select moved request
+
+        newParent.InsertRequest(movedVm, target, insertAfter);
+
         newParent.IsExpanded = true;
         newParent.Parent.SelectRequest(movedVm);
-        
-        // Dispose old VM
         source.Dispose();
-        
-        // Save both collections asynchronously
-        _ = Task.Run(async () =>
-        {
-            try
-            {
-                await Task.WhenAll(
-                    oldParent.Parent.SaveCollectionCommand.ExecuteAsync(oldParent),
-                    newParent.Parent.SaveCollectionCommand.ExecuteAsync(newParent)
-                );
-                System.Diagnostics.Debug.WriteLine($"✅ Request moved between collections and saved");
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"❌ Failed to save after move between collections: {ex.Message}");
-            }
+
+        _ = Task.Run(async () => {
+            await Task.WhenAll(
+                oldParent.Parent.SaveCollectionCommand.ExecuteAsync(oldParent),
+                newParent.Parent.SaveCollectionCommand.ExecuteAsync(newParent)
+            );
         });
-    });
     }
 
     private void MoveRequestToCollection(RequestItemViewModel request, CollectionItemViewModel targetCollection)
     {
         if (request.Parent == targetCollection) return;
-    
+
         var oldParent = request.Parent;
-    
-        // Выполняем все операции в UI-потоке
-        Avalonia.Threading.Dispatcher.UIThread.Post(() =>
-        {
-            // Sync VM to MODEL first
-            request.SyncToModel();
         
-            // Remove from old collection
-            oldParent.Collection.Requests.Remove(request.Request);
-            oldParent.Requests.Remove(request);
+        request.SyncToModel();
         
-            // Add to new collection
-            targetCollection.Collection.Requests.Add(request.Request);
-        
-            var movedVm = new RequestItemViewModel(request.Request, targetCollection);
-            targetCollection.Requests.Add(movedVm);
-        
-            // Update filters
-            oldParent.ApplyFilter(oldParent.Parent.SearchText);
-            targetCollection.ApplyFilter(targetCollection.Parent.SearchText);
-        
-            // Expand and select
-            targetCollection.IsExpanded = true;
-            targetCollection.Parent.SelectRequest(movedVm);
-        
-            // Dispose old VM
-            request.Dispose();
-        
-            // Save both collections asynchronously
-            _ = Task.Run(async () =>
-            {
-                try
-                {
-                    await Task.WhenAll(
-                        oldParent.Parent.SaveCollectionCommand.ExecuteAsync(oldParent),
-                        targetCollection.Parent.SaveCollectionCommand.ExecuteAsync(targetCollection)
-                    );
-                    System.Diagnostics.Debug.WriteLine($"✅ Request moved to collection and saved");
-                }
-                catch (Exception ex)
-                {
-                    System.Diagnostics.Debug.WriteLine($"❌ Failed to save after move to collection: {ex.Message}");
-                }
-            });
+        oldParent.RemoveRequestFromSource(request);
+
+        var movedVm = new RequestItemViewModel(request.Request, targetCollection);
+
+        targetCollection.InsertRequest(movedVm, null, true);
+
+        targetCollection.IsExpanded = true;
+        targetCollection.Parent.SelectRequest(movedVm);
+        request.Dispose();
+
+        _ = Task.Run(async () => {
+            await Task.WhenAll(
+                oldParent.Parent.SaveCollectionCommand.ExecuteAsync(oldParent),
+                targetCollection.Parent.SaveCollectionCommand.ExecuteAsync(targetCollection)
+            );
         });
     }
 }
