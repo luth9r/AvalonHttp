@@ -30,18 +30,4 @@ public partial class CollectionsWorkspaceView : UserControl
             vm.RequestViewModel.SelectResponseTabCommand.Execute(tabName);
         }
     }
-    
-    private async void OnSidebarClicked(object? sender, PointerPressedEventArgs e)
-    {
-        // Don't close if clicking directly on a TextBox (to allow editing)
-        if (e.Source is TextBox)
-        {
-            return;
-        }
-
-        if (DataContext is CollectionWorkspaceViewModel vm)
-        {
-            await vm.CollectionsViewModel.CloseAllEditModesCommand.ExecuteAsync(null);
-        }
-    }
 }

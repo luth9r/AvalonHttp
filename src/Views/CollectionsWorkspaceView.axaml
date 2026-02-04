@@ -7,6 +7,9 @@
              x:Class="AvalonHttp.Views.CollectionsWorkspaceView"
              x:DataType="vm:CollectionWorkspaceViewModel">
 
+    <Interaction.Behaviors>
+        <behaviors:ClearFocusOnClickBehavior />
+    </Interaction.Behaviors>
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="280" MinWidth="200" MaxWidth="400" /> <ColumnDefinition Width="5" />
@@ -19,8 +22,7 @@
         <Border Grid.Column="0"
                 Background="{DynamicResource BgSidebarBrush}"
                 BorderBrush="{DynamicResource BorderColor}"
-                BorderThickness="0,0,1,0"
-                PointerPressed="OnSidebarClicked">
+                BorderThickness="0,0,1,0">
 
             <DockPanel>
                 <!-- Collections Header -->
@@ -319,6 +321,13 @@
                                                                             <lucide:Lucide Icon="Copy" Width="14" />
                                                                         </MenuItem.Icon>
                                                                     </MenuItem>
+                                                                    <MenuItem Header="Revert"
+                                                                              Command="{Binding $parent[UserControl].((vm:CollectionWorkspaceViewModel)DataContext).RequestViewModel.RevertChangesCommand}"
+                                                                              IsVisible="{Binding $parent[UserControl].((vm:CollectionWorkspaceViewModel)DataContext).RequestViewModel.IsDirty}">
+                                                                        <MenuItem.Icon>
+                                                                            <lucide:Lucide Icon="Undo"></lucide:Lucide>
+                                                                        </MenuItem.Icon>
+                                                                    </MenuItem>
                                                                     <Separator />
                                                                     <MenuItem Header="Delete"
                                                                               Command="{Binding DeleteCommand}">
@@ -379,6 +388,13 @@
                                  Foreground="{DynamicResource TextPrimary}" FontWeight="Medium" FontSize="13"
                                  VerticalAlignment="Center" />
 
+                        <Border Grid.Column="2"
+                                Width="6" Height="6"
+                                CornerRadius="3"
+                                Background="{DynamicResource AccentBrush}"
+                                VerticalAlignment="Center"
+                                IsVisible="{Binding RequestViewModel.IsDirty}"
+                                ToolTip.Tip="Unsaved changes" />
                         <!-- Save Button -->
                         <Button Grid.Column="3"
                                 Classes="SaveButton"

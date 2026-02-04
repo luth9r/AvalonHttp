@@ -15,19 +15,20 @@ namespace AvalonHttp.ViewModels.CollectionAggregate;
 
 public partial class RequestItemViewModel : ObservableObject, IDisposable
 {
-    // ========================================
-    // Fields
-    // ========================================
-    
+    /// <summary>
+    /// Reference to parent view model
+    /// </summary>
     private readonly CollectionItemViewModel _parent;
     
+    /// <summary>
+    /// Reference to source model
+    /// </summary>
     private readonly ApiRequest _originalRequest;
     
+    /// <summary>
+    /// Stores the original name from source model.
+    /// </summary>
     private string _originalName = string.Empty;
-    
-    // ========================================
-    // Properties
-    // ========================================
     
     public ApiRequest Request => _originalRequest;
     
@@ -35,28 +36,42 @@ public partial class RequestItemViewModel : ObservableObject, IDisposable
     
     public Guid Id => _originalRequest.Id;
     
+    /// <summary>
+    /// The name of the request item, used for display and identification.
+    /// </summary>
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(FinishRenameCommand))]
     private string _name = string.Empty;
 
+    /// <summary>
+    /// The URL of the request item.
+    /// </summary>
     [ObservableProperty]
     private string _url = string.Empty;
 
+    /// <summary>
+    /// The HTTP method of the request item.
+    /// </summary>
     [ObservableProperty]
     private string _method = string.Empty;
 
+    /// <summary>
+    /// Indicates whether the request item is currently being edited.
+    /// </summary>
     [ObservableProperty]
     private bool _isEditing;
     
+    /// <summary>
+    /// Indicates whether the request item has been modified since last save.
+    /// </summary>
     [ObservableProperty]
     private bool _isDirty;
 
+    /// <summary>
+    /// Indicates whether the request item is currently selected.
+    /// </summary>
     [ObservableProperty]
     private bool _isSelected;
-
-    // ========================================
-    // Constructor
-    // ========================================
     
     public RequestItemViewModel(ApiRequest request, CollectionItemViewModel parent)
     {
@@ -69,39 +84,30 @@ public partial class RequestItemViewModel : ObservableObject, IDisposable
         LoadFromModel();
     }
 
-    // ========================================
-    // Load from Model
-    // ========================================
-    
+    /// <summary>
+    /// Populates the properties of the view model with values from the associated model.
+    /// This method synchronizes the Name, Url, and HTTP method from the underlying ApiRequest instance,
+    /// ensuring that the view model reflects the current state of the model.
+    /// </summary>
     private void LoadFromModel()
     {
         Name = _originalRequest.Name;
         Url = _originalRequest.Url;
         Method = _originalRequest.MethodString;
     }
-    
-    private void OnModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
-    {
-        if (e.PropertyName == nameof(ApiRequest.Name))
-        {
-            Name = _originalRequest.Name;
-        }
-        else if (e.PropertyName == nameof(ApiRequest.MethodString))
-        {
-            Method = _originalRequest.MethodString;
-        }
-    }
 
-    // ========================================
-    // Commands
-    // ========================================
-    
+    /// <summary>
+    /// Selects the current request item.
+    /// </summary>
     [RelayCommand]
     private void Select()
     {
         _parent.Parent.SelectRequest(this);
     }
 
+    /// <summary>
+    /// Starts the renaming operation for the associated request item.
+    /// </summary>
     [RelayCommand]
     private void StartRename()
     {
@@ -109,6 +115,9 @@ public partial class RequestItemViewModel : ObservableObject, IDisposable
         IsEditing = true;
     }
 
+    /// <summary>
+    /// Completes the renaming process for the associated request item.
+    /// </summary>
     [RelayCommand(CanExecute = nameof(CanFinishRename))]
     private async Task FinishRename()
     {
@@ -118,14 +127,22 @@ public partial class RequestItemViewModel : ObservableObject, IDisposable
             return;
         }
 
+        // Save changes to model
+        ApplyToModel();
         IsEditing = false;
     }
 
+    /// <summary>
+    /// Determines whether the renaming process for the associated request item can be completed.
+    /// </summary>
     private bool CanFinishRename()
     {
         return !string.IsNullOrWhiteSpace(Name);
     }
 
+    /// <summary>
+    /// Cancels the renaming process for the associated request item.
+    /// </summary>
     [RelayCommand]
     private void CancelRename()
     {
@@ -133,13 +150,16 @@ public partial class RequestItemViewModel : ObservableObject, IDisposable
         IsEditing = false;
     }
 
+    /// <summary>
+    /// Deletes the current request item from the parent view model.
+    /// </summary>
     [RelayCommand]
     private void Delete()
     {
         WeakReferenceMessenger.Default.Send(new ConfirmMessage(
-            "Delete Request?",
-            $"Are you sure you want to delete '{Name}'?",
-            async () =>
+            title: "Delete Request?",
+            message: $"Are you sure you want to delete '{Name}'?",
+            onConfirm: async () =>
             {
                 try
                 {
@@ -152,10 +172,15 @@ public partial class RequestItemViewModel : ObservableObject, IDisposable
                         $"An error occurred: {ex.Message}"
                     ));
                 }
-            }
+            },
+            confirmButtonText: "Delete",
+            onCancel: () => Task.CompletedTask
         ));
     }
 
+    /// <summary>
+    /// Duplicates the current request item and adds it to the parent view model.
+    /// </summary>
     [RelayCommand]
     private async Task Duplicate()
     {
@@ -172,6 +197,10 @@ public partial class RequestItemViewModel : ObservableObject, IDisposable
         }
     }
 
+    /// <summary>
+    /// Moves the current request item to the specified collection.
+    /// </summary>
+    /// <param name="targetCollection">The collection to which the request item should be moved.</param>
     [RelayCommand]
     private async Task MoveToCollection(CollectionItemViewModel? targetCollection)
     {
@@ -182,25 +211,31 @@ public partial class RequestItemViewModel : ObservableObject, IDisposable
 
         try
         {
+            // Remove from old parent
             var oldParent = _parent;
             
-            SyncToModel();
+            // Save changes to model
+            ApplyToModel();
             
+            // Move request to new parent
             oldParent.Collection.Requests.Remove(_originalRequest);
             targetCollection.Collection.Requests.Add(_originalRequest);
 
+            // Update view model references
             oldParent.RemoveRequestFromSource(this);
             
+            // Create new view model
             var movedVm = new RequestItemViewModel(_originalRequest, targetCollection);
             targetCollection.AddRequestToSource(movedVm);
 
+            // Select new request
             targetCollection.Parent.SelectRequest(movedVm);
             
             await Task.WhenAll(
                 oldParent.Parent.SaveCollectionCommand.ExecuteAsync(oldParent),
                 targetCollection.Parent.SaveCollectionCommand.ExecuteAsync(targetCollection)
             );
-
+            
             Dispose();
         }
         catch (Exception ex)
@@ -209,14 +244,13 @@ public partial class RequestItemViewModel : ObservableObject, IDisposable
         }
     }
 
-    // ========================================
-    // Model Synchronization
-    // ========================================
-    
     /// <summary>
-    /// Sync ViewModel properties to Model
+    /// Updates the associated model with the current state of the view model.
+    /// This method ensures that the model's properties, such as name, URL,
+    /// HTTP method, and updated timestamp, are synchronized with the corresponding
+    /// properties of the view model.
     /// </summary>
-    public void SyncToModel()
+    public void ApplyToModel()
     {
         _originalRequest.Name = Name;
         _originalRequest.Url = Url;
@@ -230,7 +264,7 @@ public partial class RequestItemViewModel : ObservableObject, IDisposable
     public ApiRequest CreateDeepCopy()
     {
         // Sync current VM state to model first
-        SyncToModel();
+        ApplyToModel();
         
         return new ApiRequest
         {
@@ -291,6 +325,7 @@ public partial class RequestItemViewModel : ObservableObject, IDisposable
     /// <summary>
     /// Update ViewModel from Model (when model changes externally)
     /// </summary>
+    /// <remarks>Used to synchronize sidebar with changes made to the model.</remarks>
     public void UpdateFromModel(ApiRequest request)
     {
         if (request == null || request.Id != Id)
@@ -301,11 +336,24 @@ public partial class RequestItemViewModel : ObservableObject, IDisposable
         LoadFromModel();
         IsDirty = false;
     }
-    
 
-    // ========================================
-    // Dispose
-    // ========================================
+    /// <summary>
+    /// Handles property change notifications from the underlying model and updates
+    /// the corresponding properties in the view model to reflect the changes in real time.
+    /// </summary>
+    /// <param name="sender">The source object that raised the PropertyChanged event.</param>
+    /// <param name="e">Provides data about the property that changed, including its name.</param>
+    private void OnModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(ApiRequest.Name))
+        {
+            Name = _originalRequest.Name;
+        }
+        else if (e.PropertyName == nameof(ApiRequest.MethodString))
+        {
+            Method = _originalRequest.MethodString;
+        }
+    }
     
     public void Dispose()
     {

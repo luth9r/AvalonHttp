@@ -308,7 +308,7 @@ private Point _startPoint;
         var oldParent = source.Parent;
         var newParent = target.Parent;
         
-        source.SyncToModel();
+        source.ApplyToModel();
 
         oldParent.RemoveRequestFromSource(source);
 
@@ -337,7 +337,7 @@ private Point _startPoint;
 
         var oldParent = request.Parent;
         
-        request.SyncToModel();
+        request.ApplyToModel();
         
         oldParent.RemoveRequestFromSource(request);
 

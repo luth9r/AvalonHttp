@@ -116,6 +116,7 @@ public partial class RequestViewModel : ViewModelBase, IDisposable
 
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(SaveCurrentRequestCommand))]
+    [NotifyCanExecuteChangedFor(nameof(RevertChangesCommand))]
     private bool _isDirty;
 
     [ObservableProperty]
@@ -396,6 +397,51 @@ public partial class RequestViewModel : ViewModelBase, IDisposable
     }
 
     private bool CanSaveRequest() => IsDirty && _activeRequest != null;
+    
+    [RelayCommand(CanExecute = nameof(CanRevert))]
+    private void RevertChanges()
+    {
+        if (_activeRequest == null || string.IsNullOrEmpty(_requestSnapshot))
+        {
+            return;
+        }
+
+        try
+        {
+            _isLoadingData = true;
+            
+            var originalState = JsonSerializer.Deserialize<ApiRequest>(_requestSnapshot);
+
+            if (originalState != null)
+            {
+                Name = originalState.Name;
+                RequestUrl = originalState.Url;
+                SelectedMethod = originalState.MethodString;
+                RequestBody = originalState.Body ?? string.Empty;
+                
+                LoadCollection(HeadersViewModel.Headers, originalState.Headers);
+                LoadCollection(CookiesViewModel.Cookies, originalState.Cookies);
+                
+                QueryParamsViewModel.LoadFromUrl(originalState.Url);
+                
+                AuthViewModel.LoadFromAuthData(originalState.AuthData);
+                
+                SyncToActiveRequest();
+                
+                IsDirty = false;
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Failed to revert changes: {ex.Message}");
+        }
+        finally
+        {
+            _isLoadingData = false;
+        }
+    }
+
+    private bool CanRevert() => IsDirty && _activeRequest != null;
 
     // ========================================
     // HTTP Request Methods
