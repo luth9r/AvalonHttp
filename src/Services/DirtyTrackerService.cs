@@ -14,15 +14,15 @@ public class DirtyTrackerService : IDirtyTrackerService
         ReferenceHandler = ReferenceHandler.IgnoreCycles
     };
 
-    public string TakeSnapshot(ApiRequest request)
+    public string TakeSnapshot<T>(T obj)
     {
-        return JsonSerializer.Serialize(request, _options);
+        return JsonSerializer.Serialize(obj, _options);
     }
 
-    public bool IsDirty(ApiRequest request, string snapshot)
+    public bool IsDirty<T>(T obj, string snapshot)
     {
         if (string.IsNullOrEmpty(snapshot)) return false;
-        var current = JsonSerializer.Serialize(request, _options);
+        var current = JsonSerializer.Serialize(obj, _options);
         return current != snapshot;
     }
 }

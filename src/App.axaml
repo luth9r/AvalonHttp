@@ -696,6 +696,20 @@
             <Setter Property="Background" Value="{StaticResource BgMain}"/>
         </Style>
         
+        <Style Selector="Border.DragTop">
+            <Setter Property="BoxShadow" Value="inset 0 2 4 0 #3B82F6, 0 -1 8 0 #3B82F6" />
+            <Setter Property="Background" Value="#253B82F6" />
+            <Setter Property="BorderBrush" Value="#3B82F6" />
+            <Setter Property="BorderThickness" Value="1,2,1,1" />
+        </Style>
+
+        <Style Selector="Border.DragBottom">
+            <Setter Property="BoxShadow" Value="inset 0 -2 4 0 #3B82F6, 0 1 8 0 #3B82F6" />
+            <Setter Property="Background" Value="#253B82F6" />
+            <Setter Property="BorderBrush" Value="#3B82F6" />
+            <Setter Property="BorderThickness" Value="1,1,1,2" />
+        </Style>
+        
     </Application.Styles>
     
 </Application>

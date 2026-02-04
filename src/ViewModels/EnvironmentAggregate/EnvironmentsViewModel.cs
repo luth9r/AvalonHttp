@@ -14,7 +14,7 @@ namespace AvalonHttp.ViewModels.EnvironmentAggregate;
 public partial class EnvironmentsViewModel : ViewModelBase
 {
     private readonly IEnvironmentRepository _environmentRepository;
-
+    private readonly IDirtyTrackerService _dirtyTracker;
     // ========================================
     // Observable Collections
     // ========================================
@@ -57,10 +57,11 @@ public partial class EnvironmentsViewModel : ViewModelBase
     // Constructor
     // ========================================
     
-    public EnvironmentsViewModel(IEnvironmentRepository environmentRepository)
+    public EnvironmentsViewModel(IEnvironmentRepository environmentRepository, IDirtyTrackerService dirtyTracker)
     {
         _environmentRepository =
             environmentRepository ?? throw new ArgumentNullException(nameof(environmentRepository));
+        _dirtyTracker = dirtyTracker ?? throw new ArgumentNullException(nameof(dirtyTracker));
     }
 
     // ========================================
@@ -87,16 +88,7 @@ public partial class EnvironmentsViewModel : ViewModelBase
             Environments.Clear();
             foreach (var env in environments)
             {
-                var itemVm = new EnvironmentItemViewModel(env, this);
-                
-                // Subscribe to property changes to refresh HasUnsavedChanges
-                itemVm.PropertyChanged += (s, e) =>
-                {
-                    if (e.PropertyName == nameof(EnvironmentItemViewModel.IsDirty))
-                    {
-                        OnPropertyChanged(nameof(HasUnsavedChanges));
-                    }
-                };
+                var itemVm = new EnvironmentItemViewModel(env, this, _dirtyTracker);
                 
                 Environments.Add(itemVm);
             }
@@ -208,7 +200,7 @@ public partial class EnvironmentsViewModel : ViewModelBase
 
             await _environmentRepository.SaveAsync(environment);
 
-            var viewModel = new EnvironmentItemViewModel(environment, this);
+            var viewModel = new EnvironmentItemViewModel(environment, this, _dirtyTracker);
             Environments.Add(viewModel);
 
             // Select and start rename
@@ -263,7 +255,7 @@ public partial class EnvironmentsViewModel : ViewModelBase
 
             await _environmentRepository.SaveAsync(newEnv);
 
-            var viewModel = new EnvironmentItemViewModel(newEnv, this);
+            var viewModel = new EnvironmentItemViewModel(newEnv, this, _dirtyTracker);
             Environments.Add(viewModel);
 
             // Select duplicated environment
@@ -425,4 +417,67 @@ public partial class EnvironmentsViewModel : ViewModelBase
             };
         });
     }
+
+    public async Task SaveAllAsync()
+    {
+        var errors = new List<string>();
+
+        foreach (var environment in Environments)
+        {
+            // Optimization: Skip environments that haven't changed
+            if (!environment.IsDirty) continue;
+
+            try
+            {
+                if (!environment.IsJsonValid)
+                {
+                    errors.Add($"{environment.Name}: Invalid JSON variables");
+                    continue;
+                }
+                
+                environment.ApplyToModel();
+                await _environmentRepository.SaveAsync(environment.Environment);
+                
+                System.Diagnostics.Debug.WriteLine($"Saved '{environment.Name}' via Save All");
+            }
+            catch (Exception ex)
+            {
+                errors.Add($"{environment.Name}: {ex.Message}");
+            }
+        }
+
+        if (errors.Any())
+        {
+            System.Diagnostics.Debug.WriteLine($"Save All finished with errors: {string.Join(", ", errors)}");
+        }
+    }
+    
+    partial void OnSelectedEnvironmentChanging(EnvironmentItemViewModel? value)
+    {
+        if (SelectedEnvironment != null)
+        {
+            SelectedEnvironment.PropertyChanged -= OnEnvironmentPropertyChanged;
+        }
+    }
+    
+    partial void OnSelectedEnvironmentChanged(EnvironmentItemViewModel? value)
+    {
+        if (SelectedEnvironment != null)
+        {
+            SelectedEnvironment.PropertyChanged += OnEnvironmentPropertyChanged;
+        }
+
+        SaveEnvironmentCommand.NotifyCanExecuteChanged();
+    }
+    
+    private void OnEnvironmentPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(EnvironmentItemViewModel.IsDirty))
+        {
+            SaveEnvironmentCommand.NotifyCanExecuteChanged();
+            
+            OnPropertyChanged(nameof(HasUnsavedChanges));
+        }
+    }
 }
+

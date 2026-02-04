@@ -4,6 +4,6 @@ namespace AvalonHttp.Services.Interfaces;
 
 public interface IDirtyTrackerService
 {
-    string TakeSnapshot(ApiRequest request);
-    bool IsDirty(ApiRequest request, string snapshot);
+    string TakeSnapshot<T>(T obj);
+    bool IsDirty<T>(T obj, string snapshot);
 }

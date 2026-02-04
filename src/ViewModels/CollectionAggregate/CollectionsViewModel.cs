@@ -20,7 +20,7 @@ using ApiRequest = AvalonHttp.Models.CollectionAggregate.ApiRequest;
 
 namespace AvalonHttp.ViewModels.CollectionAggregate;
 
-public partial class CollectionsViewModel : ViewModelBase
+public partial class CollectionsViewModel : ViewModelBase, IDisposable
 {
     private readonly ICollectionRepository _collectionService;
     private readonly ISessionService _sessionRepo;
@@ -431,6 +431,35 @@ public partial class CollectionsViewModel : ViewModelBase
             list.Insert(targetIndex, source);
         });
         
+    }
+
+    [RelayCommand]
+    public async Task SaveAllCollections()
+    {
+        var errors = new List<string>();
+    
+        foreach (var collection in Collections)
+        {
+            try
+            {
+                // Update properties before saving
+                collection.Collection.Name = collection.Name;
+                collection.Collection.Description = collection.Description;
+                collection.Collection.UpdatedAt = DateTime.Now;
+            
+                // Save the original collection
+                await _collectionService.SaveAsync(collection.Collection);
+            }
+            catch (Exception ex)
+            {
+                errors.Add($"{collection.Name}: {ex.Message}");
+            }
+        }
+
+        if (errors.Any())
+        {
+            System.Diagnostics.Debug.WriteLine($"Save errors: {string.Join(", ", errors)}");
+        }
     }
     
     public void Dispose()

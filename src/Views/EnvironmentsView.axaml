@@ -269,14 +269,14 @@
                     <StackPanel Grid.Column="1"
                                 Orientation="Horizontal"
                                 Spacing="8">
-                        <Button Classes="ActionButton"
+                        <Button Classes="SaveButton"
                                 Command="{Binding SaveEnvironmentCommand}"
                                 ToolTip.Tip="Save (Ctrl+S)"
-                                IsVisible="{Binding HasUnsavedChanges}"
+                                IsVisible="{Binding }"
                                 Width="80">
                             <StackPanel Orientation="Horizontal" Spacing="6">
                                 <lucide:Lucide Icon="Save"
-                                               StrokeBrush="{DynamicResource TextSecondary}"
+                                               StrokeBrush="White"
                                                Width="14" Height="14" />
                                 <TextBlock Text="Save" VerticalAlignment="Center" />
                             </StackPanel>

@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
+using AvalonHttp.Services.Interfaces;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Environment = AvalonHttp.Models.EnvironmentAggregate.Environment;
@@ -12,13 +13,14 @@ public partial class EnvironmentItemViewModel : ViewModelBase
 {
     private readonly EnvironmentsViewModel _parent;
     private readonly Environment _environment;
+    private readonly IDirtyTrackerService _dirtyTracker;
     
     // ========================================
     // Original values for cancel operations
     // ========================================
     
     private string _originalName = string.Empty;
-    private string _originalJson = string.Empty;
+    private string _snapshot = string.Empty;
 
     // ========================================
     // Properties (single source of truth)
@@ -30,14 +32,12 @@ public partial class EnvironmentItemViewModel : ViewModelBase
 
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(FinishRenameCommand))]
-    [NotifyPropertyChangedFor(nameof(IsDirty))]
     private string _name;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsJsonValid))]
     [NotifyPropertyChangedFor(nameof(JsonErrorMessage))]
     [NotifyPropertyChangedFor(nameof(VariablesCount))]
-    [NotifyPropertyChangedFor(nameof(IsDirty))]
     private string _variablesJson;
 
     [ObservableProperty]
@@ -74,24 +74,19 @@ public partial class EnvironmentItemViewModel : ViewModelBase
         }
     }
 
-    public bool IsDirty
-    {
-        get
-        {
-            if (_environment.Name != Name) return true;
-            if (_environment.VariablesJson != VariablesJson) return true;
-            return false;
-        }
-    }
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(SaveJsonCommand))]
+    private bool _isDirty;
 
     // ========================================
     // Constructor
     // ========================================
     
-    public EnvironmentItemViewModel(Environment environment, EnvironmentsViewModel parent)
+    public EnvironmentItemViewModel(Environment environment, EnvironmentsViewModel parent, IDirtyTrackerService dirtyTracker)
     {
         _environment = environment ?? throw new ArgumentNullException(nameof(environment));
         _parent = parent ?? throw new ArgumentNullException(nameof(parent));
+        _dirtyTracker = dirtyTracker ?? throw new ArgumentNullException(nameof(dirtyTracker));
 
         // Initialize from model (single direction)
         LoadFromModel();
@@ -106,25 +101,41 @@ public partial class EnvironmentItemViewModel : ViewModelBase
         _name = _environment.Name;
         _variablesJson = _environment.VariablesJson;
         _originalName = _name;
-        _originalJson = _variablesJson;
+        
+        UpdateSnapshot();
+    }
+    
+    public void UpdateSnapshot()
+    {
+        ApplyToModel(); 
+        _snapshot = _dirtyTracker.TakeSnapshot(_environment);
+        IsDirty = false;
     }
 
     public void ApplyToModel()
     {
         _environment.Name = Name;
         _environment.VariablesJson = VariablesJson;
-        
-        // Reset dirty state
-        _originalName = Name;
-        _originalJson = VariablesJson;
-        OnPropertyChanged(nameof(IsDirty));
     }
 
     public void RevertChanges()
     {
-        Name = _originalName;
-        VariablesJson = _originalJson;
-        OnPropertyChanged(nameof(IsDirty));
+        try 
+        {
+            var original = JsonSerializer.Deserialize<Environment>(_snapshot);
+            if (original != null)
+            {
+                Name = original.Name;
+                VariablesJson = original.VariablesJson;
+
+                ApplyToModel();
+                IsDirty = false;
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Failed to revert: {ex.Message}");
+        }
     }
 
     // ========================================
@@ -180,12 +191,6 @@ public partial class EnvironmentItemViewModel : ViewModelBase
     }
 
     private bool CanSaveJson() => IsJsonValid;
-
-    [RelayCommand]
-    private void RevertJson()
-    {
-        VariablesJson = _originalJson;
-    }
 
     [RelayCommand]
     private void FormatJson()
@@ -254,6 +259,8 @@ public partial class EnvironmentItemViewModel : ViewModelBase
         
         // Delegate save to parent
         await _parent.SaveEnvironmentAsync(this);
+        
+        UpdateSnapshot();
     }
 
     // ========================================
@@ -273,5 +280,15 @@ public partial class EnvironmentItemViewModel : ViewModelBase
         {
             return false;
         }
+    }
+    
+    partial void OnNameChanged(string value) => CheckDirty();
+    partial void OnVariablesJsonChanged(string value) => CheckDirty();
+    
+    private void CheckDirty()
+    {
+        ApplyToModel();
+        
+        IsDirty = _dirtyTracker.IsDirty(_environment, _snapshot);
     }
 }

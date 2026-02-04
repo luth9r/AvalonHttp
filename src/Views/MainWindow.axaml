@@ -38,7 +38,7 @@
                 </Interaction.Behaviors>
             </Border>
 
-            <Border Width="400" MinHeight="150"
+            <Border Width="450" MinHeight="150"
                     Background="{DynamicResource BgElevated}"
                     BorderBrush="{DynamicResource BorderColor}"
                     BorderThickness="1"
@@ -50,16 +50,37 @@
                 
                 <StackPanel Spacing="16">
                     <StackPanel Orientation="Horizontal" Spacing="12">
-                        <lucide:Lucide Icon="OctagonAlert" StrokeBrush="#EF4444" Width="24" Height="24" />
+                        <lucide:Lucide Icon="MessageCircleQuestion" StrokeBrush="{DynamicResource TextPrimary}" Width="24" Height="24" />
                         <TextBlock Text="{Binding DialogTitle}" FontSize="18" FontWeight="SemiBold" VerticalAlignment="Center" />
                     </StackPanel>
 
-                    <TextBlock Text="{Binding DialogMessage}" Foreground="{DynamicResource TextSecondary}" TextWrapping="Wrap" LineHeight="20" />
+                    <TextBlock Text="{Binding DialogMessage}" 
+                               Foreground="{DynamicResource TextSecondary}" 
+                               TextWrapping="Wrap" 
+                               LineHeight="20" />
 
-                    <StackPanel Orientation="Horizontal" Spacing="12" HorizontalAlignment="Right" Margin="0,8,0,0">
-                        <Button Content="Cancel" Command="{Binding CancelConfirmCommand}" Classes="SecondaryButton"/>
-                        <Button Content="{Binding ConfirmButtonText}" Command="{Binding ExecuteConfirmCommand}" Background="#EF4444" Foreground="White"/>
-                    </StackPanel>
+                    <Grid Margin="0,8,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" /> <ColumnDefinition Width="*" />    <ColumnDefinition Width="Auto" /> </Grid.ColumnDefinitions>
+
+                        <Button Grid.Column="0"
+                                Content="{Binding AlternateButtonText}" 
+                                Command="{Binding ExecuteAlternateCommand}" 
+                                IsVisible="{Binding IsAlternateButtonVisible}"
+                                BorderBrush="#EF4444"
+                                Foreground="#EF4444"/>
+
+                        <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="12">
+                    
+                            <Button Content="{Binding CancelButtonText}" 
+                                    Command="{Binding CancelConfirmCommand}"/>
+
+                            <Button Content="{Binding ConfirmButtonText}" 
+                                                                             Command="{Binding ExecuteConfirmCommand}" 
+                                                                             Background="{DynamicResource AccentBrush}" 
+                                                                             Foreground="White"/>
+                        </StackPanel>
+                    </Grid>
                 </StackPanel>
             </Border>
         </Grid>
