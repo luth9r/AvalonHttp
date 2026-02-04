@@ -93,8 +93,10 @@ public partial class CollectionItemViewModel : ObservableObject, IDisposable
                             hasMatches;
 
                 if (!string.IsNullOrWhiteSpace(query) && hasMatches)
+                {
                     IsExpanded = true;
-                
+                }
+
                 MoveRequestUpCommand.NotifyCanExecuteChanged();
                 MoveRequestDownCommand.NotifyCanExecuteChanged();
             })
@@ -105,7 +107,10 @@ public partial class CollectionItemViewModel : ObservableObject, IDisposable
     
     private Func<RequestItemViewModel, bool> CreateFilter(string query)
     {
-        if (string.IsNullOrWhiteSpace(query)) return x => true;
+        if (string.IsNullOrWhiteSpace(query))
+        {
+            return x => true;
+        }
 
         var lowerQuery = query.ToLower();
 
@@ -190,7 +195,10 @@ public partial class CollectionItemViewModel : ObservableObject, IDisposable
     [RelayCommand]
     private async Task DeleteRequest(RequestItemViewModel? request)
     {
-        if (request == null) return;
+        if (request == null)
+        {
+            return;
+        }
 
         try
         {
@@ -222,10 +230,16 @@ public partial class CollectionItemViewModel : ObservableObject, IDisposable
     [RelayCommand]
     private async Task DuplicateRequest(RequestItemViewModel? request)
     {
-        if (request == null) return;
+        if (request == null)
+        {
+            return;
+        }
 
         var index = _requestsSource.Items.ToList().IndexOf(request);
-        if (index == -1) return;
+        if (index == -1)
+        {
+            return;
+        }
 
         var newRequest = request.CreateDeepCopy();
         newRequest.Name = _collection.GenerateUniqueRequestName($"{request.Name} (Copy)");
@@ -246,15 +260,28 @@ public partial class CollectionItemViewModel : ObservableObject, IDisposable
         var oldIndex = items.IndexOf(request);
         var targetIndex = items.IndexOf(target);
 
-        if (oldIndex < 0 || targetIndex < 0) return;
+        if (oldIndex < 0 || targetIndex < 0)
+        {
+            return;
+        }
 
         // Calculate target position
-        if (insertAfter) targetIndex++;
-        if (oldIndex < targetIndex) targetIndex--;
+        if (insertAfter)
+        {
+            targetIndex++;
+        }
+
+        if (oldIndex < targetIndex)
+        {
+            targetIndex--;
+        }
 
         targetIndex = Math.Clamp(targetIndex, 0, items.Count - 1);
 
-        if (oldIndex == targetIndex) return;
+        if (oldIndex == targetIndex)
+        {
+            return;
+        }
 
         // ✅ Update both in sync using Edit batch
         _requestsSource.Edit(innerList =>
@@ -314,9 +341,16 @@ public partial class CollectionItemViewModel : ObservableObject, IDisposable
     [RelayCommand(CanExecute = nameof(CanMoveRequestUp))]
     private async Task MoveRequestUp(RequestItemViewModel? request)
     {
-        if (request == null) return;
+        if (request == null)
+        {
+            return;
+        }
+
         var index = _requestsSource.Items.ToList().IndexOf(request);
-        if (index <= 0) return;
+        if (index <= 0)
+        {
+            return;
+        }
 
         _requestsSource.Move(index, index - 1);
         _collection.Requests.Move(index, index - 1);
@@ -326,7 +360,11 @@ public partial class CollectionItemViewModel : ObservableObject, IDisposable
 
     private bool CanMoveRequestUp(RequestItemViewModel? request)
     {
-        if (request == null) return false;
+        if (request == null)
+        {
+            return false;
+        }
+
         var items = _requestsSource.Items;
         return items.Contains(request) && items.IndexOf(request) > 0;
     }
@@ -334,10 +372,17 @@ public partial class CollectionItemViewModel : ObservableObject, IDisposable
     [RelayCommand(CanExecute = nameof(CanMoveRequestDown))]
     private async Task MoveRequestDown(RequestItemViewModel? request)
     {
-        if (request == null) return;
+        if (request == null)
+        {
+            return;
+        }
+
         var items = _requestsSource.Items.ToList();
         var index = items.IndexOf(request);
-        if (index < 0 || index >= items.Count - 1) return;
+        if (index < 0 || index >= items.Count - 1)
+        {
+            return;
+        }
 
         _requestsSource.Move(index, index + 1);
         _collection.Requests.Move(index, index + 1);
@@ -347,7 +392,11 @@ public partial class CollectionItemViewModel : ObservableObject, IDisposable
 
     private bool CanMoveRequestDown(RequestItemViewModel? request)
     {
-        if (request == null) return false;
+        if (request == null)
+        {
+            return false;
+        }
+
         var items = _requestsSource.Items;
         var index = items.IndexOf(request);
         return index >= 0 && index < items.Count() - 1;

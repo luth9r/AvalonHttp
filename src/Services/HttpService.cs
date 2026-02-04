@@ -50,8 +50,10 @@ public class HttpService : IHttpService, IDisposable
         foreach (var header in headers)
         {
             if (header.Key.Equals("Connection", StringComparison.OrdinalIgnoreCase))
+            {
                 continue;
-            
+            }
+
             request.Headers.TryAddWithoutValidation(header.Key, header.Value);
         }
 

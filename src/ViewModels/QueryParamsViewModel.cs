@@ -70,7 +70,9 @@ public partial class QueryParamsViewModel : ViewModelBase, IDisposable
     public void LoadFromUrl(string url)
     {
         if (_isUpdating || string.IsNullOrWhiteSpace(url))
+        {
             return;
+        }
 
         try
         {
@@ -103,7 +105,9 @@ public partial class QueryParamsViewModel : ViewModelBase, IDisposable
     public void LoadParameters(IEnumerable<KeyValueItemModel>? parameters)
     {
         if (_isUpdating)
+        {
             return;
+        }
 
         try
         {
@@ -147,7 +151,9 @@ public partial class QueryParamsViewModel : ViewModelBase, IDisposable
     public string BuildUrl(string baseUrl, Func<string, string>? resolver = null)
     {
         if (string.IsNullOrWhiteSpace(baseUrl))
+        {
             return string.Empty;
+        }
 
         try
         {
@@ -181,7 +187,9 @@ public partial class QueryParamsViewModel : ViewModelBase, IDisposable
         foreach (var param in Parameters)
         {
             if (!param.IsEnabled || string.IsNullOrWhiteSpace(param.Key))
+            {
                 continue;
+            }
 
             // Resolve variables if resolver provided
             var key = resolver?.Invoke(param.Key.Trim()) ?? param.Key.Trim();
@@ -312,7 +320,9 @@ public partial class QueryParamsViewModel : ViewModelBase, IDisposable
     private void NotifyUrlChanged()
     {
         if (_isUpdating)
+        {
             return;
+        }
 
         UrlChanged?.Invoke(this, string.Empty);
     }

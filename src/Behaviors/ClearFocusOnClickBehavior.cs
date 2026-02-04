@@ -32,13 +32,22 @@ public class ClearFocusOnClickBehavior : Behavior<Control>
 
     private void OnPointerPressed(object? sender, PointerPressedEventArgs e)
     {
-        if (e.Handled) return;
-        
-        if (IsInteractiveControl(e.Source as Visual)) return;
+        if (e.Handled)
+        {
+            return;
+        }
+
+        if (IsInteractiveControl(e.Source as Visual))
+        {
+            return;
+        }
 
         var topLevel = TopLevel.GetTopLevel(AssociatedObject);
-        if (topLevel == null) return;
-        
+        if (topLevel == null)
+        {
+            return;
+        }
+
         topLevel.FocusManager?.ClearFocus();
 
         var context = AssociatedObject.DataContext;
@@ -50,23 +59,29 @@ public class ClearFocusOnClickBehavior : Behavior<Control>
         }
         else if (context is EnvironmentsViewModel envVm)
         {
-            envVm.CloseAllEditModesCommand.Execute(null);
+            envVm.CancelAllRenamesEditModesCommand.Execute(null);
         }
     }
 
     private bool IsInteractiveControl(Visual? element)
     {
         if (element == null)
+        {
             return false;
+        }
 
         var current = element;
         while (current != null)
         {
             if (current is TextBox or ComboBox or AutoCompleteBox or DatePicker or Button or ToggleButton)
+            {
                 return true;
+            }
 
-            if (current.GetType().Name == "TextPresenter") 
+            if (current.GetType().Name == "TextPresenter")
+            {
                 return true;
+            }
 
             current = current.GetVisualParent();
         }

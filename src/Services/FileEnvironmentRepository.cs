@@ -42,7 +42,9 @@ public class FileEnvironmentRepository : IEnvironmentRepository
         try
         {
             if (!Directory.Exists(_environmentsDirectory))
+            {
                 return environments;
+            }
 
             var files = Directory.GetFiles(_environmentsDirectory, "*.json");
 
@@ -75,7 +77,10 @@ public class FileEnvironmentRepository : IEnvironmentRepository
         var json = await File.ReadAllTextAsync(filePath);
         var env = JsonSerializer.Deserialize<Environment>(json, _jsonOptions);
 
-        if (env == null) return null;
+        if (env == null)
+        {
+            return null;
+        }
 
         // Initialize empty JSON if needed
         if (string.IsNullOrWhiteSpace(env.VariablesJson))
@@ -194,7 +199,9 @@ public class FileEnvironmentRepository : IEnvironmentRepository
         var activeId = await GetActiveEnvironmentIdAsync();
 
         if (activeId == null)
+        {
             return null;
+        }
 
         var environments = await LoadAllAsync();
         return environments.FirstOrDefault(e => e.Id == activeId);
@@ -221,7 +228,9 @@ public class FileEnvironmentRepository : IEnvironmentRepository
         try
         {
             if (!File.Exists(_activeEnvironmentFile))
+            {
                 return null;
+            }
 
             var json = await File.ReadAllTextAsync(_activeEnvironmentFile);
             var data = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(json, _jsonOptions);

@@ -122,7 +122,11 @@ public partial class JsonBodyEditor : UserControl
 
     private void SetupEditorDefaults()
     {
-        if (_editor == null) return;
+        if (_editor == null)
+        {
+            return;
+        }
+
         _editor.Background = new SolidColorBrush(Color.Parse("#1E1E1E"));
         _editor.Foreground = new SolidColorBrush(Color.Parse("#D4D4D4"));
         _editor.Document = new TextDocument();
@@ -144,8 +148,11 @@ public partial class JsonBodyEditor : UserControl
 
     private void SetupTextMate()
     {
-        if (_editor == null) return;
-        
+        if (_editor == null)
+        {
+            return;
+        }
+
         _registryOptions = new RegistryOptions(ThemeName.DarkPlus);
         _textMateInstallation = _editor.InstallTextMate(_registryOptions);
         
@@ -154,7 +161,10 @@ public partial class JsonBodyEditor : UserControl
 
     private void OnTextEntering(object? sender, TextInputEventArgs e)
     {
-        if (_editor == null || e.Text == null || e.Text.Length == 0) return;
+        if (_editor == null || e.Text == null || e.Text.Length == 0)
+        {
+            return;
+        }
 
         char nextChar = GetNextChar();
         
@@ -173,7 +183,10 @@ public partial class JsonBodyEditor : UserControl
 
     private void OnTextEntered(object? sender, TextInputEventArgs e)
     {
-        if (_editor == null || e.Text == null || e.Text.Length == 0) return;
+        if (_editor == null || e.Text == null || e.Text.Length == 0)
+        {
+            return;
+        }
 
         var caret = _editor.TextArea.Caret;
         var document = _editor.Document;
@@ -224,8 +237,11 @@ public partial class JsonBodyEditor : UserControl
     /// <returns>The character at the current caret position, or '\0' if no character is available or the editor is uninitialized.</returns>
     private char GetNextChar()
     {
-        if (_editor == null) return '\0';
-        
+        if (_editor == null)
+        {
+            return '\0';
+        }
+
         int offset = _editor.TextArea.Caret.Offset;
         if (offset < _editor.Document.TextLength)
         {
@@ -236,7 +252,10 @@ public partial class JsonBodyEditor : UserControl
     
     private void OnEditorLoaded(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
-        if (_editor?.TextArea == null) return;
+        if (_editor?.TextArea == null)
+        {
+            return;
+        }
 
         foreach (var margin in _editor.TextArea.LeftMargins)
         {
@@ -258,7 +277,10 @@ public partial class JsonBodyEditor : UserControl
     
     private void UpdateLanguage()
     {
-        if (_editor == null || _textMateInstallation == null) return;
+        if (_editor == null || _textMateInstallation == null)
+        {
+            return;
+        }
 
         try
         {
@@ -270,9 +292,13 @@ public partial class JsonBodyEditor : UserControl
             };
             
             if (ext == ".xml" || ext == ".html")
+            {
                 _currentFoldingStrategy = new XmlFoldingStrategy();
+            }
             else
+            {
                 _currentFoldingStrategy = new BraceFoldingStrategy();
+            }
 
             var language = _registryOptions.GetLanguageByExtension(ext);
             if (language != null)
@@ -289,12 +315,19 @@ public partial class JsonBodyEditor : UserControl
     
     private void UpdateFoldings()
     {
-        if (_foldingManager == null || _editor?.Document == null || _currentFoldingStrategy == null) return;
+        if (_foldingManager == null || _editor?.Document == null || _currentFoldingStrategy == null)
+        {
+            return;
+        }
 
         if (_currentFoldingStrategy is BraceFoldingStrategy bfs)
+        {
             bfs.UpdateFoldings(_foldingManager, _editor.Document);
+        }
         else if (_currentFoldingStrategy is XmlFoldingStrategy xfs)
+        {
             xfs.UpdateFoldings(_foldingManager, _editor.Document);
+        }
     }
     
     protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)

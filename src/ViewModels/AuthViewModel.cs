@@ -101,7 +101,9 @@ public partial class AuthViewModel : ViewModelBase
         var password = Resolve(BasicPassword, resolver);
         
         if (string.IsNullOrWhiteSpace(username) && string.IsNullOrWhiteSpace(password))
+        {
             return;
+        }
 
         var credentials = Convert.ToBase64String(
             Encoding.UTF8.GetBytes($"{username}:{password}"));
@@ -114,7 +116,9 @@ public partial class AuthViewModel : ViewModelBase
         var token = Resolve(BearerToken, resolver);
         
         if (string.IsNullOrWhiteSpace(token))
+        {
             return;
+        }
 
         headers["Authorization"] = $"Bearer {token}";
     }
@@ -125,7 +129,9 @@ public partial class AuthViewModel : ViewModelBase
         var keyValue = Resolve(ApiKeyValue, resolver);
         
         if (string.IsNullOrWhiteSpace(keyName) || string.IsNullOrWhiteSpace(keyValue))
+        {
             return;
+        }
 
         headers[keyName] = keyValue;
     }

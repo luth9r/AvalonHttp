@@ -54,8 +54,10 @@ private Point _startPoint;
         if (properties.IsLeftButtonPressed)
         {
             if (e.Source is Control c && (c is TextBox || c is Button))
+            {
                 return;
-                
+            }
+
             _startPoint = e.GetPosition(AssociatedObject);
             _isDragStart = true;
         }
@@ -68,7 +70,10 @@ private Point _startPoint;
 
     private async void OnPointerMoved(object? sender, PointerEventArgs e)
     {
-        if (!_isDragStart || AssociatedObject == null) return;
+        if (!_isDragStart || AssociatedObject == null)
+        {
+            return;
+        }
 
         var point = e.GetCurrentPoint(AssociatedObject);
         if (!point.Properties.IsLeftButtonPressed)
@@ -88,12 +93,18 @@ private Point _startPoint;
     private async Task StartDrag(PointerEventArgs e)
     {
         var context = AssociatedObject?.DataContext;
-        if (context == null) return;
+        if (context == null)
+        {
+            return;
+        }
 
         var dragData = new DataObject();
         dragData.Set("Context", context);
 
-        if (AssociatedObject != null) AssociatedObject.Opacity = 0.5;
+        if (AssociatedObject != null)
+        {
+            AssociatedObject.Opacity = 0.5;
+        }
 
         try
         {
@@ -105,7 +116,11 @@ private Point _startPoint;
         }
         finally
         {
-            if (AssociatedObject != null) AssociatedObject.Opacity = 1.0;
+            if (AssociatedObject != null)
+            {
+                AssociatedObject.Opacity = 1.0;
+            }
+
             _insertAfterState = null;
         }
     }
@@ -140,9 +155,21 @@ private Point _startPoint;
 
     private bool IsValidDropTarget(object source, object target)
     {
-        if (source is CollectionItemViewModel && target is CollectionItemViewModel) return true;
-        if (source is RequestItemViewModel && target is RequestItemViewModel) return true;
-        if (source is RequestItemViewModel && target is CollectionItemViewModel) return true;
+        if (source is CollectionItemViewModel && target is CollectionItemViewModel)
+        {
+            return true;
+        }
+
+        if (source is RequestItemViewModel && target is RequestItemViewModel)
+        {
+            return true;
+        }
+
+        if (source is RequestItemViewModel && target is CollectionItemViewModel)
+        {
+            return true;
+        }
+
         return false;
     }
 
@@ -158,7 +185,10 @@ private Point _startPoint;
         var source = e.Data.Get("Context");
         var target = AssociatedObject?.DataContext;
 
-        if (source == null || target == null || source == target) return;
+        if (source == null || target == null || source == target)
+        {
+            return;
+        }
 
         bool insertAfter = _insertAfterState ?? (e.GetPosition(AssociatedObject).Y > AssociatedObject!.Bounds.Height / 2);
 
@@ -195,11 +225,15 @@ private Point _startPoint;
     private void UpdateInsertState(Point p)
     {
         if (AssociatedObject == null)
+        {
             return;
+        }
 
         double height = AssociatedObject.Bounds.Height;
         if (height <= 0)
+        {
             return;
+        }
 
         double yRel = p.Y / height;
 
@@ -221,7 +255,9 @@ private Point _startPoint;
     private void UpdateVisuals()
     {
         if (AssociatedObject == null || _insertAfterState == null)
+        {
             return;
+        }
 
         bool bottom = _insertAfterState.Value;
 
@@ -233,8 +269,10 @@ private Point _startPoint;
     private void ClearVisuals()
     {
         if (AssociatedObject == null)
+        {
             return;
-            
+        }
+
         AssociatedObject.Classes.Remove("DragTop");
         AssociatedObject.Classes.Remove("DragBottom");
     }
@@ -249,8 +287,6 @@ private Point _startPoint;
 
         parent.MoveCollection(source, target, insertAfter);
         
-        // Save
-        _ = Task.Run(async () => await parent.SaveAllAsync());
     }
 
     private void MoveRequest(RequestItemViewModel source, RequestItemViewModel target, bool insertAfter)
@@ -294,7 +330,10 @@ private Point _startPoint;
 
     private void MoveRequestToCollection(RequestItemViewModel request, CollectionItemViewModel targetCollection)
     {
-        if (request.Parent == targetCollection) return;
+        if (request.Parent == targetCollection)
+        {
+            return;
+        }
 
         var oldParent = request.Parent;
         

@@ -116,7 +116,9 @@ public class SessionService : ISessionService, IDisposable
     private async Task<AppState> LoadStateInternalAsync()
     {
         if (!File.Exists(_filePath))
+        {
             return new AppState();
+        }
 
         try
         {

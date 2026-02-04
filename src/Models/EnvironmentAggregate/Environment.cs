@@ -101,7 +101,9 @@ public partial class Environment : ObservableObject
         try
         {
             if (string.IsNullOrWhiteSpace(VariablesJson))
+            {
                 return true;
+            }
 
             // Properly dispose JsonDocument
             using var jsonDoc = JsonDocument.Parse(VariablesJson);

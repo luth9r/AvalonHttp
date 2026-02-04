@@ -17,7 +17,9 @@ public class ApiCollection
     public string GenerateUniqueRequestName(string baseName)
     {
         if (!Requests.Any(r => r.Name == baseName))
+        {
             return baseName;
+        }
 
         var counter = 1;
         string name;

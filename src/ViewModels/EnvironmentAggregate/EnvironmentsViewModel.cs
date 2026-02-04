@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using AvalonHttp.Common.Constants;
 using AvalonHttp.Messages;
 using AvalonHttp.Services.Interfaces;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -13,50 +14,51 @@ using Environment = AvalonHttp.Models.EnvironmentAggregate.Environment;
 
 namespace AvalonHttp.ViewModels.EnvironmentAggregate;
 
-public partial class EnvironmentsViewModel : ViewModelBase
+public partial class EnvironmentsViewModel : ViewModelBase, IDisposable
 {
+    /// <summary>
+    /// Reference to environment repository
+    /// </summary>
     private readonly IEnvironmentRepository _environmentRepository;
-    // ========================================
-    // Observable Collections
-    // ========================================
-    
+
+    /// <summary>
+    /// Collection of environment items managed within the view model.
+    /// </summary>
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasEnvironments))]
     private ObservableCollection<EnvironmentItemViewModel> _environments = new();
 
+    /// <summary>
+    /// Indicates whether an environment is currently active.
+    /// </summary>
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasActiveEnvironment))]
     private EnvironmentItemViewModel? _activeEnvironment;
 
+    /// <summary>
+    /// Indicates whether an environment is currently selected.
+    /// </summary>
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasSelectedEnvironment))]
     [NotifyPropertyChangedFor(nameof(HasUnsavedChanges))]
     [NotifyCanExecuteChangedFor(nameof(SaveEnvironmentCommand))]
     private EnvironmentItemViewModel? _selectedEnvironment;
-
-    // ========================================
-    // Computed Properties
-    // ========================================
     
     public bool HasEnvironments => Environments.Count > 0;
     public bool HasActiveEnvironment => ActiveEnvironment != null;
     public bool HasSelectedEnvironment => SelectedEnvironment != null;
 
-    public EnvironmentItemViewModel? GlobalEnvironment =>
-        Environments.FirstOrDefault(e => e.IsGlobal);
+    /// <summary>
+    /// Represents the global environment within the view model.
+    /// </summary>
+    [ObservableProperty]
+    private EnvironmentItemViewModel? _globalEnvironment;
 
-    // Use IsDirty from ItemViewModel
+    /// <summary>
+    /// Indicates whether there are unsaved changes in any of the environments.
+    /// Returns true if at least one environment is marked as dirty; otherwise, false.
+    /// </summary>
     public bool HasUnsavedChanges => Environments.Any(e => e.IsDirty);
-
-    // ========================================
-    // Events
-    // ========================================
-    
-    public event EventHandler<Environment?>? ActiveEnvironmentChanged;
-
-    // ========================================
-    // Constructor
-    // ========================================
     
     public EnvironmentsViewModel(IEnvironmentRepository environmentRepository)
     {
@@ -64,10 +66,9 @@ public partial class EnvironmentsViewModel : ViewModelBase
             environmentRepository ?? throw new ArgumentNullException(nameof(environmentRepository));
     }
 
-    // ========================================
-    // Initialization
-    // ========================================
-    
+    /// <summary>
+    /// Initializes the environments view model by loading environments and selecting the active or first environment.
+    /// </summary>
     public async Task InitializeAsync()
     {
         await LoadEnvironmentsAsync();
@@ -79,17 +80,39 @@ public partial class EnvironmentsViewModel : ViewModelBase
         }
     }
 
+    /// <summary>
+    /// Asynchronously loads all available environments, resets the current environment view models,
+    /// and sets the active or first non-global environment.
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
     private async Task LoadEnvironmentsAsync()
     {
         try
         {
+            // Load environments from disk
             var environments = await _environmentRepository.EnsureDefaultEnvironmentsAsync();
 
+            // Reset view models
+            foreach (var oldVm in Environments)
+            {
+                oldVm.PropertyChanged -= OnEnvironmentItemPropertyChanged;
+                oldVm.Dispose();
+            }
+
             Environments.Clear();
+            
+            GlobalEnvironment = null;
+            
+            // Create view models from environments
             foreach (var env in environments)
             {
                 var itemVm = CreateEnvironmentViewModel(env); 
                 Environments.Add(itemVm);
+                
+                if (itemVm.IsGlobal)
+                {
+                    GlobalEnvironment = itemVm;
+                }
             }
 
             // Load and set active environment
@@ -110,23 +133,34 @@ public partial class EnvironmentsViewModel : ViewModelBase
         }
         catch (Exception ex)
         {
+            WeakReferenceMessenger.Default.Send(new ErrorMessage(
+                "Failed to Load Environments", 
+                $"Could not load environments from disk. Message: {ex.Message}"
+            ));
             System.Diagnostics.Debug.WriteLine($"Failed to load environments: {ex.Message}");
         }
     }
 
-    // ========================================
-    // Selection Logic
-    // ========================================
-    
+    /// <summary>
+    /// Selects the specified environment, updating the application state to reflect the new selection.
+    /// </summary>
+    /// <param name="environment">The environment to be selected. Pass null to clear the current selection.</param>
     [RelayCommand]
     public void Select(EnvironmentItemViewModel? environment)
     {
         SelectEnvironment(environment);
     }
 
+    /// <summary>
+    /// Selects the specified environment, updating the application state to reflect the new selection.
+    /// </summary>
+    /// <param name="environment">The environment to be selected.</param>
     public void SelectEnvironment(EnvironmentItemViewModel? environment)
     {
-        if (SelectedEnvironment == environment) return;
+        if (SelectedEnvironment == environment)
+        {
+            return;
+        }
 
         if (SelectedEnvironment != null)
         {
@@ -141,20 +175,30 @@ public partial class EnvironmentsViewModel : ViewModelBase
         }
     }
 
-    // ========================================
-    // Save Logic
-    // ========================================
-    
+    /// <summary>
+    /// Saves the currently selected environment if it has unsaved changes.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous save operation.</returns>
+    /// <remarks>This method is bound to the Save Environment command and being used only bu UI.</remarks>
     [RelayCommand(CanExecute = nameof(CanSaveEnvironment))]
     private async Task SaveEnvironment()
     {
-        if (SelectedEnvironment == null) return;
+        if (SelectedEnvironment == null)
+        {
+            return;
+        }
 
         await SaveEnvironmentAsync(SelectedEnvironment);
     }
 
     private bool CanSaveEnvironment() => SelectedEnvironment?.IsDirty ?? false;
 
+    /// <summary>
+    /// Saves the specified environment to persistent storage after validating its JSON structure and applying all changes made in the ViewModel.
+    /// </summary>
+    /// <param name="environment">The environment to be saved, represented as an instance of <c>EnvironmentItemViewModel</c>.</param>
+    /// <returns>A <c>Task</c> representing the asynchronous save operation.</returns>
+    /// <remarks>This method could be used by other parts of the application to save environments programmatically.</remarks>
     public async Task SaveEnvironmentAsync(EnvironmentItemViewModel environment)
     {
         try
@@ -181,14 +225,17 @@ public partial class EnvironmentsViewModel : ViewModelBase
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"Failed to save environment '{environment.Name}': {ex.Message}");
+            WeakReferenceMessenger.Default.Send(new ErrorMessage(
+                "Save Failure", 
+                $"Failed to save environment. Message: {ex.Message}"
+            ));
+            System.Diagnostics.Debug.WriteLine($"Cannot save '{environment.Name}': Invalid JSON");
         }
     }
 
-    // ========================================
-    // Create/Delete/Duplicate
-    // ========================================
-    
+    /// <summary>
+    /// Creates a new environment and adds it to the collection of environments.
+    /// </summary>
     [RelayCommand]
     private async Task CreateEnvironment()
     {
@@ -213,40 +260,75 @@ public partial class EnvironmentsViewModel : ViewModelBase
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"Failed to create environment: {ex.Message}");
+            WeakReferenceMessenger.Default.Send(new ErrorMessage(
+                "Create Failure", 
+                $"Failed to create new environment. Message: {ex.Message}"
+            ));
+            System.Diagnostics.Debug.WriteLine($"Cannot create new environment: {ex.Message}");
         }
     }
-
+    
+    /// <summary>
+    /// Deletes the specified environment from the collection of environments.
+    /// </summary>
+    /// <param name="environment">The environment to be deleted.</param>
     public async Task DeleteEnvironmentAsync(EnvironmentItemViewModel environment)
     {
         try
         {
             await _environmentRepository.DeleteAsync(environment.Id);
+            
+            // Remove from view model collection
             environment.PropertyChanged -= OnEnvironmentItemPropertyChanged;
+            environment.Dispose();
             
             Environments.Remove(environment);
-
-            // Update active environment if deleted
-            if (ActiveEnvironment == environment)
-            {
-                var newActive = Environments.FirstOrDefault(e => !e.IsGlobal);
-                await SetActiveEnvironmentAsync(newActive);
-            }
-
-            // Update selection if deleted
-            if (SelectedEnvironment == environment)
-            {
-                SelectEnvironment(Environments.FirstOrDefault());
-            }
+            
+            // Update active environment if necessary
+            await UpdateActiveEnvironmentAfterDeletionAsync(environment);
+            UpdateSelectionAfterDeletion(environment);
 
             System.Diagnostics.Debug.WriteLine($"🗑️ Deleted environment '{environment.Name}'");
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"Failed to delete environment: {ex.Message}");
+            WeakReferenceMessenger.Default.Send(new ErrorMessage(
+                "Delete Failure", 
+                $"Failed to delete environment. Message: {ex.Message}"
+            ));
+            System.Diagnostics.Debug.WriteLine($"Cannot delete '{environment.Name}': {ex.Message}");
         }
     }
 
+    /// <summary>
+    /// Updates the active environment after the specified environment has been deleted.
+    /// </summary>
+    /// <param name="deletedEnvironment">The environment that was deleted.</param>
+    private async Task UpdateActiveEnvironmentAfterDeletionAsync(EnvironmentItemViewModel deletedEnvironment)
+    {
+        if (ActiveEnvironment == deletedEnvironment)
+        {
+            var newActive = Environments.FirstOrDefault(e => !e.IsGlobal);
+            await SetActiveEnvironmentAsync(newActive);
+        }
+    }
+
+    /// <summary>
+    /// Updates the selected environment after the specified environment has been deleted.
+    /// </summary>
+    /// <param name="deletedEnvironment">The environment that was deleted.</param>
+    private void UpdateSelectionAfterDeletion(EnvironmentItemViewModel deletedEnvironment)
+    {
+        if (SelectedEnvironment == deletedEnvironment)
+        {
+            SelectEnvironment(Environments.FirstOrDefault());
+        }
+    }
+
+    /// <summary>
+    /// Duplicates the specified environment and adds it to the collection of environments.
+    /// </summary>
+    /// <param name="environment">The environment to be duplicated.</param>
     public async Task DuplicateEnvironmentAsync(EnvironmentItemViewModel environment)
     {
         try
@@ -271,17 +353,24 @@ public partial class EnvironmentsViewModel : ViewModelBase
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"Failed to duplicate environment: {ex.Message}");
+            WeakReferenceMessenger.Default.Send(new ErrorMessage(
+                "Duplicate Failure", 
+                $"Failed to duplicate environment. Message: {ex.Message}"
+            ));
+            System.Diagnostics.Debug.WriteLine($"Cannot duplicate '{environment.Name}': {ex.Message}");
         }
     }
-
-    // ========================================
-    // Active Environment
-    // ========================================
     
+    /// <summary>
+    /// Sets the specified environment as the active environment.
+    /// </summary>
+    /// <param name="environment">The environment to be set as active.</param>
     public async Task SetActiveEnvironmentAsync(EnvironmentItemViewModel? environment)
     {
-        if (ActiveEnvironment == environment) return;
+        if (ActiveEnvironment == environment)
+        {
+            return;
+        }
 
         if (ActiveEnvironment != null)
         {
@@ -299,16 +388,15 @@ public partial class EnvironmentsViewModel : ViewModelBase
         {
             await _environmentRepository.SetActiveEnvironmentAsync(null);
         }
-
-        ActiveEnvironmentChanged?.Invoke(this, environment?.Environment);
         
         System.Diagnostics.Debug.WriteLine($"✅ Active environment: {environment?.Name ?? "None"}");
     }
-
-    // ========================================
-    // Helper Methods
-    // ========================================
     
+    /// <summary>
+    /// Generates a unique name based on the specified base name by appending a number to the end of the base name if it already exists in the collection of environments.
+    /// </summary>
+    /// <param name="baseName">The base name to use as a starting point for generating a unique name.</param>
+    /// <returns>A unique name that is not already in use by any environment in the collection.</returns>
     private string GenerateUniqueName(string baseName)
     {
         var name = baseName;
@@ -322,23 +410,35 @@ public partial class EnvironmentsViewModel : ViewModelBase
         return name;
     }
 
+    /// <summary>
+    /// Exits edit mode for all environments in the collection by executing the command
+    /// to finalize any ongoing renaming process for each environment.
+    /// </summary>
+    /// <remarks>This method <c>Cancels</c> all changes.</remarks>
     [RelayCommand]
-    private void CloseAllEditModes()
+    private void CancelAllRenamesEditModes()
     {
         foreach (var environment in Environments)
         {
             if (environment.IsEditing)
-                environment.FinishRenameCommand.Execute(null);
+            {
+                environment.CancelRenameCommand.Execute(null);
+            }
         }
     }
 
-    // ========================================
-    // Variable Resolution Logic
-    // ========================================
-    
+    /// <summary>
+    /// Resolves variables within a given text by replacing placeholders with corresponding values from active
+    /// and global environments, as well as system-defined variables.
+    /// </summary>
+    /// <param name="text">The input text containing variable placeholders.</param>
+    /// <returns>The resolved text with variable placeholders replaced by their corresponding values.</returns>
     public string ResolveVariables(string text)
     {
-        if (string.IsNullOrEmpty(text)) return text;
+        if (string.IsNullOrEmpty(text))
+        {
+            return text;
+        }
 
         // Get variables from active and global environments
         var activeVars = ActiveEnvironment?.Environment.GetVariables() 
@@ -347,7 +447,7 @@ public partial class EnvironmentsViewModel : ViewModelBase
             ?? new Dictionary<string, string>();
 
         // Merge dictionaries (active overrides global)
-        var mergedVars = new Dictionary<string, string>(globalVars);
+        var mergedVars = new Dictionary<string, string>(globalVars, StringComparer.OrdinalIgnoreCase);
         foreach (var kvp in activeVars)
         {
             mergedVars[kvp.Key] = kvp.Value;
@@ -369,8 +469,20 @@ public partial class EnvironmentsViewModel : ViewModelBase
         return result;
     }
 
-    private string ReplaceVariables(string text, Regex regex, Dictionary<string, string> variables)
+    /// <summary>
+    /// Replaces variables in the given text using the specified regular expression and a dictionary of variables.
+    /// </summary>
+    /// <param name="text">The input text in which placeholders will be replaced with variable values.</param>
+    /// <param name="regex">The regular expression used to identify placeholders within the text.</param>
+    /// <param name="variables">A dictionary containing variable names and their corresponding values. Placeholders matching keys in the dictionary will be replaced with associated values.</param>
+    /// <returns>The processed text with variables replaced, or the original text if no replacements are made.</returns>
+    private static string ReplaceVariables(string text, Regex regex, Dictionary<string, string> variables)
     {
+        if (variables.Count == 0)
+        {
+            return text;
+        }
+
         var result = text;
         var maxIterations = 10; // Prevent infinite loops
         var iteration = 0;
@@ -384,7 +496,10 @@ public partial class EnvironmentsViewModel : ViewModelBase
                 var variableName = match.Groups[1].Value.Trim();
 
                 // Skip system variables
-                if (variableName.StartsWith("$")) return match.Value;
+                if (variableName.StartsWith("$"))
+                {
+                    return match.Value;
+                }
 
                 if (variables.TryGetValue(variableName, out var value))
                 {
@@ -395,14 +510,23 @@ public partial class EnvironmentsViewModel : ViewModelBase
                 return match.Value; // Leave unresolved
             });
 
-            if (!hasReplacement) break;
+            if (!hasReplacement)
+            {
+                break;
+            }
+
             iteration++;
         }
         
         return result;
     }
 
-    private string ResolveSystemVariables(string text)
+    /// <summary>
+    /// Resolves system-defined variables by replacing placeholders with their corresponding values.
+    /// </summary>
+    /// <param name="text">The input text containing system variable placeholders.</param>
+    /// <returns>The processed text with system variables replaced, or the original text if no replacements are made.</returns>
+    private static string ResolveSystemVariables(string text)
     {
         var regex = new Regex(@"\{\{\$([^}]+)\}\}");
 
@@ -412,23 +536,32 @@ public partial class EnvironmentsViewModel : ViewModelBase
 
             return variableName switch
             {
-                "guid" => Guid.NewGuid().ToString(),
-                "timestamp" => DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString(),
-                "isotimestamp" => DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.fffZ"),
-                "randomint" => Random.Shared.Next(0, 1000).ToString(),
-                "date" => DateTime.Now.ToString("yyyy-MM-dd"),
-                "time" => DateTime.Now.ToString("HH:mm:ss"),
-                "datetime" => DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"),
+                SystemVariables.Guid => Guid.NewGuid().ToString(),
+                SystemVariables.Timestamp => DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString(),
+                SystemVariables.IsoTimestamp => DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.fffZ"),
+                SystemVariables.RandomInt => Random.Shared.Next(0, 1000).ToString(),
+                SystemVariables.Date => DateTime.Now.ToString("yyyy-MM-dd"),
+                SystemVariables.Time => DateTime.Now.ToString("HH:mm:ss"),
+                SystemVariables.DateTime => DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"),
                 _ => match.Value
             };
         });
     }
-    
+
+    /// <summary>
+    /// Handles the event when the selected environment changes, updating related commands or properties accordingly.
+    /// </summary>
+    /// <param name="value">The newly selected environment, or null if no environment is selected.</param>
     partial void OnSelectedEnvironmentChanged(EnvironmentItemViewModel? value)
     {
         SaveEnvironmentCommand.NotifyCanExecuteChanged();
     }
     
+    /// <summary>
+    /// Handles the event when any environment property changes, updating related commands or properties accordingly.
+    /// </summary>
+    /// <param name="sender"></param>
+    /// <param name="e"></param>
     private void OnEnvironmentItemPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
     {
         if (e.PropertyName == nameof(EnvironmentItemViewModel.IsDirty))
@@ -441,12 +574,33 @@ public partial class EnvironmentsViewModel : ViewModelBase
             }
         }
     }
-    
+
+    /// <summary>
+    /// Creates a new instance of <see cref="EnvironmentItemViewModel"/> for a given <see cref="Environment"/> and links it to the current environment view model.
+    /// </summary>
+    /// <param name="env">The environment data used to initialize the view model.</param>
+    /// <returns>A view model representing the given environment.</returns>
     private EnvironmentItemViewModel CreateEnvironmentViewModel(Environment env)
     {
         var vm = new EnvironmentItemViewModel(env, this);
         vm.PropertyChanged += OnEnvironmentItemPropertyChanged; 
         return vm;
+    }
+
+    /// <summary>
+    /// Releases all resources used by the EnvironmentsViewModel instance.
+    /// This includes unsubscribing from property changed events and disposing
+    /// of all associated EnvironmentItemViewModel objects in the Environments collection.
+    /// </summary>
+    public void Dispose()
+    {
+        foreach (var env in Environments)
+        {
+            env.PropertyChanged -= OnEnvironmentItemPropertyChanged;
+            env.Dispose();
+        }
+    
+        Environments.Clear();
     }
 }
 

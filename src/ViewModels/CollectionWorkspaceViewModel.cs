@@ -55,7 +55,9 @@ public partial class CollectionWorkspaceViewModel : ViewModelBase, IDisposable
         RequestViewModel.PropertyChanged += (_, e) => 
         {
             if (e.PropertyName == nameof(RequestViewModel.IsDirty))
+            {
                 CollectionsViewModel.UpdateSelectedRequestDirtyState(RequestViewModel.IsDirty);
+            }
         };
     }
     

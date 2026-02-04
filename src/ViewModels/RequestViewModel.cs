@@ -282,7 +282,10 @@ public partial class RequestViewModel : ViewModelBase, IDisposable
 
     private void OnQueryParamsUrlChanged(object? sender, string? e)
     {
-        if (_isLoadingData || _isSyncingUrl) return;
+        if (_isLoadingData || _isSyncingUrl)
+        {
+            return;
+        }
 
         _isSyncingUrl = true;
 
@@ -307,7 +310,10 @@ public partial class RequestViewModel : ViewModelBase, IDisposable
 
     partial void OnRequestUrlChanged(string value)
     {
-        if (_isSyncingUrl || _isLoadingData) return;
+        if (_isSyncingUrl || _isLoadingData)
+        {
+            return;
+        }
 
         QueryParamsViewModel.LoadFromUrl(value);
         ClearResponseData();
@@ -327,7 +333,10 @@ public partial class RequestViewModel : ViewModelBase, IDisposable
     [RelayCommand]
     private async Task SendRequest()
     {
-        if (!ValidateRequest()) return;
+        if (!ValidateRequest())
+        {
+            return;
+        }
 
         try
         {
@@ -374,8 +383,11 @@ public partial class RequestViewModel : ViewModelBase, IDisposable
     [RelayCommand(CanExecute = nameof(CanSaveRequest))]
     private void SaveCurrentRequest()
     {
-        if (_activeRequest == null) return;
-        
+        if (_activeRequest == null)
+        {
+            return;
+        }
+
         SaveRequestData();
         _requestSnapshot = _dirtyTracker.TakeSnapshot(_activeRequest);
         IsDirty = false;
@@ -716,7 +728,10 @@ public partial class RequestViewModel : ViewModelBase, IDisposable
 
     private void SaveRequestData()
     {
-        if (_activeRequest == null) return;
+        if (_activeRequest == null)
+        {
+            return;
+        }
 
         System.Diagnostics.Debug.WriteLine($"🟢 SaveRequestData START:");
         System.Diagnostics.Debug.WriteLine($"   Request ID: {_activeRequest.Id}");
@@ -765,7 +780,10 @@ public partial class RequestViewModel : ViewModelBase, IDisposable
             if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
             {
                 var mainWindow = desktop.MainWindow;
-                if (mainWindow?.StorageProvider == null) return;
+                if (mainWindow?.StorageProvider == null)
+                {
+                    return;
+                }
 
                 var fileTypeFilter = new Avalonia.Platform.Storage.FilePickerFileType("JSON File")
                 {
@@ -828,10 +846,21 @@ public partial class RequestViewModel : ViewModelBase, IDisposable
         var contentType = ResponseHeaders.FirstOrDefault(h => 
             h.Name.Equals("Content-Type", StringComparison.OrdinalIgnoreCase))?.Value ?? "";
 
-        if (contentType.Contains("application/json", StringComparison.OrdinalIgnoreCase)) return "json";
+        if (contentType.Contains("application/json", StringComparison.OrdinalIgnoreCase))
+        {
+            return "json";
+        }
+
         if (contentType.Contains("application/xml", StringComparison.OrdinalIgnoreCase) || 
-            contentType.Contains("text/xml", StringComparison.OrdinalIgnoreCase)) return "xml";
-        if (contentType.Contains("text/html", StringComparison.OrdinalIgnoreCase)) return "html";
+            contentType.Contains("text/xml", StringComparison.OrdinalIgnoreCase))
+        {
+            return "xml";
+        }
+
+        if (contentType.Contains("text/html", StringComparison.OrdinalIgnoreCase))
+        {
+            return "html";
+        }
 
         return "text";
     }
@@ -846,7 +875,10 @@ public partial class RequestViewModel : ViewModelBase, IDisposable
         var currentUrl = RequestUrl ?? string.Empty;
         var baseUrl = currentUrl.Split('?')[0];
 
-        if (string.IsNullOrWhiteSpace(baseUrl)) return;
+        if (string.IsNullOrWhiteSpace(baseUrl))
+        {
+            return;
+        }
 
         var newUrl = QueryParamsViewModel.BuildUrl(baseUrl);
     
@@ -861,7 +893,10 @@ public partial class RequestViewModel : ViewModelBase, IDisposable
 
     private void ClearResponseData()
     {
-        if (!HasResponseData) return;
+        if (!HasResponseData)
+        {
+            return;
+        }
 
         HasResponseData = false;
         ResponseContent = string.Empty;
@@ -931,7 +966,10 @@ public partial class RequestViewModel : ViewModelBase, IDisposable
 
     private static string FormatBytes(long bytes)
     {
-        if (bytes == 0) return "0 B";
+        if (bytes == 0)
+        {
+            return "0 B";
+        }
 
         string[] sizes = { "B", "KB", "MB", "GB", "TB" };
         int order = (int)Math.Floor(Math.Log(bytes, 1024));
@@ -992,8 +1030,11 @@ public partial class RequestViewModel : ViewModelBase, IDisposable
 
     private void MarkAsDirty()
     {
-        if (_isLoadingData || _activeRequest == null || _requestSnapshot == null) return;
-        
+        if (_isLoadingData || _activeRequest == null || _requestSnapshot == null)
+        {
+            return;
+        }
+
         SyncToActiveRequest(); 
         
         IsDirty = _dirtyTracker.IsDirty(_activeRequest, _requestSnapshot);
@@ -1001,8 +1042,11 @@ public partial class RequestViewModel : ViewModelBase, IDisposable
 
     private void SyncToActiveRequest()
     {
-        if (_activeRequest == null) return;
-        
+        if (_activeRequest == null)
+        {
+            return;
+        }
+
         _activeRequest.Name = Name;
         _activeRequest.Url = RequestUrl;
         _activeRequest.MethodString = SelectedMethod;

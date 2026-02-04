@@ -144,8 +144,11 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
     [RelayCommand]
     private async Task ShowCollections()
     {
-        if (CurrentView == "Collections") return;
-        
+        if (CurrentView == "Collections")
+        {
+            return;
+        }
+
         await CloseAllEdits();
         CurrentView = "Collections";
     }
@@ -153,8 +156,11 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
     [RelayCommand]
     private async Task ShowEnvironments()
     {
-        if (CurrentView == "Environments") return;
-        
+        if (CurrentView == "Environments")
+        {
+            return;
+        }
+
         await CloseAllEdits();
         CurrentView = "Environments";
     }

@@ -136,7 +136,9 @@ public partial class HeadersViewModel : ViewModelBase, IDisposable
         foreach (var header in Headers)
         {
             if (!header.IsEnabled || string.IsNullOrWhiteSpace(header.Key))
+            {
                 continue;
+            }
 
             // Resolve variables if resolver provided
             var key = resolver?.Invoke(header.Key.Trim()) ?? header.Key.Trim();
@@ -157,7 +159,10 @@ public partial class HeadersViewModel : ViewModelBase, IDisposable
     {
         Clear();
 
-        if (headers == null) return;
+        if (headers == null)
+        {
+            return;
+        }
 
         try
         {
@@ -186,7 +191,10 @@ public partial class HeadersViewModel : ViewModelBase, IDisposable
     {
         Clear();
 
-        if (headerPairs == null) return;
+        if (headerPairs == null)
+        {
+            return;
+        }
 
         try
         {
@@ -238,14 +246,19 @@ public partial class HeadersViewModel : ViewModelBase, IDisposable
     /// </summary>
     public bool HasDuplicateKeys()
     {
-        if (EnabledHeadersCount < 2) return false;
+        if (EnabledHeadersCount < 2)
+        {
+            return false;
+        }
 
         var seenKeys = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
         foreach (var header in Headers)
         {
             if (!header.IsEnabled || string.IsNullOrWhiteSpace(header.Key))
+            {
                 continue;
+            }
 
             var key = header.Key.Trim();
             if (!seenKeys.Add(key))
@@ -262,14 +275,19 @@ public partial class HeadersViewModel : ViewModelBase, IDisposable
     /// </summary>
     public List<string> GetDuplicateKeys()
     {
-        if (EnabledHeadersCount < 2) return new List<string>();
+        if (EnabledHeadersCount < 2)
+        {
+            return new List<string>();
+        }
 
         var keyGroups = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
 
         foreach (var header in Headers)
         {
             if (!header.IsEnabled || string.IsNullOrWhiteSpace(header.Key))
+            {
                 continue;
+            }
 
             var key = header.Key.Trim();
             keyGroups[key] = keyGroups.TryGetValue(key, out var count) ? count + 1 : 1;

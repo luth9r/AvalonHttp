@@ -11,8 +11,10 @@ public class FileNameSanitizer : IFileNameSanitizer
     public string Sanitize(string fileName)
     {
         if (string.IsNullOrWhiteSpace(fileName))
+        {
             return "Unnamed";
-        
+        }
+
         var invalid = Path.GetInvalidFileNameChars();
         var sanitized = new string(fileName.Select(c => invalid.Contains(c) ? '_' : c).ToArray());
         

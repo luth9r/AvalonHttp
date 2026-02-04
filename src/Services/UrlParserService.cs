@@ -60,8 +60,10 @@ public class UrlParserService : IUrlParserService
         var result = new List<KeyValueItemModel>();
         
         if (string.IsNullOrWhiteSpace(query))
+        {
             return result;
-        
+        }
+
         var pairs = query.Split('&', StringSplitOptions.RemoveEmptyEntries);
         
         foreach (var pair in pairs)
@@ -83,9 +85,11 @@ public class UrlParserService : IUrlParserService
 
     private string DecodeQueryParam(string param)
     {
-        if (string.IsNullOrEmpty(param)) 
+        if (string.IsNullOrEmpty(param))
+        {
             return string.Empty;
-            
+        }
+
         try
         {
             return Uri.UnescapeDataString(param.Replace("+", " "));
@@ -98,8 +102,10 @@ public class UrlParserService : IUrlParserService
 
     public string BuildUrl(string baseUrl, IEnumerable<KeyValueItemModel> parameters)
     {
-        if (string.IsNullOrWhiteSpace(baseUrl)) 
+        if (string.IsNullOrWhiteSpace(baseUrl))
+        {
             return string.Empty;
+        }
 
         // Filter empty keys
         var enabledParams = parameters
@@ -127,8 +133,10 @@ public class UrlParserService : IUrlParserService
         {
             var p = enabledParams[i];
             
-            if (i > 0) 
+            if (i > 0)
+            {
                 sb.Append('&');
+            }
 
             sb.Append(EncodeQueryParam(p.Key));
             sb.Append('=');
@@ -140,8 +148,10 @@ public class UrlParserService : IUrlParserService
 
     private string EncodeQueryParam(string? param)
     {
-        if (string.IsNullOrEmpty(param)) 
+        if (string.IsNullOrEmpty(param))
+        {
             return string.Empty;
+        }
 
         try
         {

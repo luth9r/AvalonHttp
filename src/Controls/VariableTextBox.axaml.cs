@@ -114,12 +114,18 @@ public class VariableTextBox : TemplatedControl
 
     private void UpdateHighlights()
     {
-        if (_highlightText == null) return;
+        if (_highlightText == null)
+        {
+            return;
+        }
 
         _highlightText.Inlines?.Clear();
 
-        if (string.IsNullOrEmpty(Text)) return;
-        
+        if (string.IsNullOrEmpty(Text))
+        {
+            return;
+        }
+
         var regex = new Regex(@"(\{\{[^}]+\}\})");
         var parts = regex.Split(Text);
 
@@ -127,7 +133,10 @@ public class VariableTextBox : TemplatedControl
         
         foreach (var part in parts)
         {
-            if (string.IsNullOrEmpty(part)) continue;
+            if (string.IsNullOrEmpty(part))
+            {
+                continue;
+            }
 
             if (regex.IsMatch(part))
             {
@@ -158,7 +167,10 @@ public class VariableTextBox : TemplatedControl
 
     private void OnTextBoxPointerMoved(object? sender, PointerEventArgs e)
     {
-        if (_textBox == null || EnvironmentsViewModel == null) return;
+        if (_textBox == null || EnvironmentsViewModel == null)
+        {
+            return;
+        }
 
         var point = e.GetPosition(_textBox);
         var charIndex = GetCharacterIndexFromPoint(point);
@@ -190,7 +202,10 @@ public class VariableTextBox : TemplatedControl
 
     private (string name, int start, int end)? GetVariableAtIndex(int charIndex)
     {
-        if (string.IsNullOrEmpty(Text)) return null;
+        if (string.IsNullOrEmpty(Text))
+        {
+            return null;
+        }
 
         var regex = new Regex(@"\{\{([^}]+)\}\}");
         var matches = regex.Matches(Text);
@@ -207,8 +222,11 @@ public class VariableTextBox : TemplatedControl
     
     private int GetCharacterIndexFromPoint(Point point)
     {
-        if (_textBox == null || string.IsNullOrEmpty(_textBox.Text)) return -1;
-        
+        if (_textBox == null || string.IsNullOrEmpty(_textBox.Text))
+        {
+            return -1;
+        }
+
         double charWidth = 8.0; 
         int index = (int)(point.X / charWidth);
         

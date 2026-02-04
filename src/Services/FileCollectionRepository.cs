@@ -66,7 +66,9 @@ public class FileCollectionRepository : ICollectionRepository
             var filePath = GetFilePath(id);
             
             if (!File.Exists(filePath))
+            {
                 return null;
+            }
 
             return await LoadCollectionFromFileAsync(filePath);
         }
@@ -213,9 +215,9 @@ public class FileCollectionRepository : ICollectionRepository
                     System.Diagnostics.Debug.WriteLine($"    Auth Type: {request.AuthData?.Type ?? "null"}");
                     
                     // ✅ Initialize null collections
-                    request.Headers ??= new System.Collections.ObjectModel.ObservableCollection<AvalonHttp.Models.KeyValueItemModel>();
-                    request.QueryParameters ??= new System.Collections.ObjectModel.ObservableCollection<AvalonHttp.Models.KeyValueItemModel>();
-                    request.Cookies ??= new System.Collections.ObjectModel.ObservableCollection<AvalonHttp.Models.KeyValueItemModel>();
+                    request.Headers ??= new System.Collections.ObjectModel.ObservableCollection<Models.KeyValueItemModel>();
+                    request.QueryParameters ??= new System.Collections.ObjectModel.ObservableCollection<Models.KeyValueItemModel>();
+                    request.Cookies ??= new System.Collections.ObjectModel.ObservableCollection<Models.KeyValueItemModel>();
                     request.AuthData ??= new AuthData();
                 }
             }
@@ -245,8 +247,10 @@ public class FileCollectionRepository : ICollectionRepository
     private string GetFilePath(Guid collectionId)
     {
         if (_filePathCache.TryGetValue(collectionId, out var cached))
+        {
             return cached;
-        
+        }
+
         var files = Directory.GetFiles(_collectionsFolder, $"*_{collectionId}.json");
         return files.FirstOrDefault() ?? Path.Combine(_collectionsFolder, $"{collectionId}.json");
     }

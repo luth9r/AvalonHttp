@@ -135,7 +135,10 @@ public partial class CookiesViewModel : ViewModelBase, IDisposable
     /// </summary>
     public string GetCookieHeaderValue(Func<string, string>? resolver = null)
     {
-        if (EnabledCookiesCount == 0) return string.Empty;
+        if (EnabledCookiesCount == 0)
+        {
+            return string.Empty;
+        }
 
         var sb = new StringBuilder();
         bool first = true;
@@ -143,9 +146,15 @@ public partial class CookiesViewModel : ViewModelBase, IDisposable
         foreach (var cookie in Cookies)
         {
             if (!cookie.IsEnabled || string.IsNullOrWhiteSpace(cookie.Key))
+            {
                 continue;
+            }
 
-            if (!first) sb.Append("; ");
+            if (!first)
+            {
+                sb.Append("; ");
+            }
+
             first = false;
 
             // Resolve variables in both cookie name and value
@@ -166,7 +175,9 @@ public partial class CookiesViewModel : ViewModelBase, IDisposable
         foreach (var cookie in Cookies)
         {
             if (!cookie.IsEnabled || string.IsNullOrWhiteSpace(cookie.Key))
+            {
                 continue;
+            }
 
             yield return new KeyValuePair<string, string>(
                 cookie.Key.Trim(),
@@ -186,7 +197,10 @@ public partial class CookiesViewModel : ViewModelBase, IDisposable
     {
         Clear();
 
-        if (cookies == null) return;
+        if (cookies == null)
+        {
+            return;
+        }
 
         try
         {
@@ -214,7 +228,10 @@ public partial class CookiesViewModel : ViewModelBase, IDisposable
     {
         Clear();
 
-        if (string.IsNullOrWhiteSpace(cookieHeader)) return;
+        if (string.IsNullOrWhiteSpace(cookieHeader))
+        {
+            return;
+        }
 
         try
         {
@@ -247,7 +264,10 @@ public partial class CookiesViewModel : ViewModelBase, IDisposable
     /// </summary>
     public void LoadFromCookieContainer(CookieContainer? cookieContainer, Uri? requestUri)
     {
-        if (cookieContainer == null || requestUri == null) return;
+        if (cookieContainer == null || requestUri == null)
+        {
+            return;
+        }
 
         try
         {

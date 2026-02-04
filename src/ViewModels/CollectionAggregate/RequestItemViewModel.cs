@@ -176,7 +176,9 @@ public partial class RequestItemViewModel : ObservableObject, IDisposable
     private async Task MoveToCollection(CollectionItemViewModel? targetCollection)
     {
         if (targetCollection == null || targetCollection == _parent)
+        {
             return;
+        }
 
         try
         {
@@ -292,7 +294,10 @@ public partial class RequestItemViewModel : ObservableObject, IDisposable
     public void UpdateFromModel(ApiRequest request)
     {
         if (request == null || request.Id != Id)
+        {
             return;
+        }
+
         LoadFromModel();
         IsDirty = false;
     }

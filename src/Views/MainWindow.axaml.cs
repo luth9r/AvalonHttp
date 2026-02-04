@@ -25,7 +25,7 @@ public partial class MainWindow : Window
     {
         if (e.GetCurrentPoint(this).Properties.IsLeftButtonPressed)
         {
-            this.BeginMoveDrag(e);
+            BeginMoveDrag(e);
         }
     }
     

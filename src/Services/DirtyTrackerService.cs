@@ -21,7 +21,11 @@ public class DirtyTrackerService : IDirtyTrackerService
 
     public bool IsDirty<T>(T obj, string snapshot)
     {
-        if (string.IsNullOrEmpty(snapshot)) return false;
+        if (string.IsNullOrEmpty(snapshot))
+        {
+            return false;
+        }
+
         var current = JsonSerializer.Serialize(obj, _options);
         return current != snapshot;
     }

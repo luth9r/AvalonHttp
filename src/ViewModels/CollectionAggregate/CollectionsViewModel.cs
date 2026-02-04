@@ -85,7 +85,11 @@ public partial class CollectionsViewModel : ViewModelBase, IDisposable
     
     private async Task LoadCollectionsAndRestoreStateAsync()
     {
-        if (IsLoading) return;
+        if (IsLoading)
+        {
+            return;
+        }
+
         IsLoading = true;
         
         try
@@ -124,7 +128,10 @@ public partial class CollectionsViewModel : ViewModelBase, IDisposable
         try
         {
             var state = await _sessionRepo.LoadStateAsync();
-            if (state.LastSelectedRequestId == null) return;
+            if (state.LastSelectedRequestId == null)
+            {
+                return;
+            }
 
             // Search through all collections
             foreach (var collection in _collectionsSource.Items)
@@ -181,7 +188,10 @@ public partial class CollectionsViewModel : ViewModelBase, IDisposable
     [RelayCommand]
     private void DeleteCollection(CollectionItemViewModel collection)
     {
-        if (collection == null) return;
+        if (collection == null)
+        {
+            return;
+        }
 
         WeakReferenceMessenger.Default.Send(new ConfirmMessage(
             "Delete Collection?",
@@ -248,7 +258,10 @@ public partial class CollectionsViewModel : ViewModelBase, IDisposable
     [RelayCommand]
     private async Task DuplicateCollection(CollectionItemViewModel collection)
     {
-        if (collection == null) return;
+        if (collection == null)
+        {
+            return;
+        }
 
         try
         {
@@ -290,9 +303,11 @@ public partial class CollectionsViewModel : ViewModelBase, IDisposable
     
     public void SelectRequest(RequestItemViewModel requestVm)
     {
-        if (requestVm == null || SelectedRequest == requestVm) 
+        if (requestVm == null || SelectedRequest == requestVm)
+        {
             return;
-    
+        }
+
         // Deselect previous
         if (SelectedRequest != null)
         {
@@ -354,12 +369,16 @@ public partial class CollectionsViewModel : ViewModelBase, IDisposable
         foreach (var collection in _collectionsSource.Items)
         {
             if (collection.IsEditing)
+            {
                 await collection.FinishRenameCommand.ExecuteAsync(null);
+            }
 
             foreach (var request in collection.AllRequests)
             {
                 if (request.IsEditing)
+                {
                     await request.FinishRenameCommand.ExecuteAsync(null);
+                }
             }
         }
     }
@@ -369,8 +388,10 @@ public partial class CollectionsViewModel : ViewModelBase, IDisposable
         var existingNames = _collectionsSource.Items.Select(c => c.Name).ToHashSet();
     
         if (!existingNames.Contains(baseName))
+        {
             return baseName;
-    
+        }
+
         var counter = 1;
         string name;
     
@@ -389,15 +410,28 @@ public partial class CollectionsViewModel : ViewModelBase, IDisposable
         var oldIndex = items.IndexOf(source);
         var targetIndex = items.IndexOf(target);
 
-        if (oldIndex < 0 || targetIndex < 0) return;
+        if (oldIndex < 0 || targetIndex < 0)
+        {
+            return;
+        }
 
-        if (insertAfter) targetIndex++;
-        if (oldIndex < targetIndex) targetIndex--;
-    
+        if (insertAfter)
+        {
+            targetIndex++;
+        }
+
+        if (oldIndex < targetIndex)
+        {
+            targetIndex--;
+        }
+
         targetIndex = Math.Clamp(targetIndex, 0, items.Count - 1);
 
-        if (oldIndex == targetIndex) return;
-        
+        if (oldIndex == targetIndex)
+        {
+            return;
+        }
+
         _collectionsSource.Edit(list => {
             list.RemoveAt(oldIndex);
             list.Insert(targetIndex, source);

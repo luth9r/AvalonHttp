@@ -99,8 +99,11 @@ public partial class EnvironmentItemViewModel : ViewModelBase, IDisposable
         {
             try
             {
-                if (!IsJsonValid) return 0;
-                
+                if (!IsJsonValid)
+                {
+                    return 0;
+                }
+
                 using var doc = JsonDocument.Parse(VariablesJson);
                 return doc.RootElement.EnumerateObject().Count();
             }
@@ -176,8 +179,11 @@ public partial class EnvironmentItemViewModel : ViewModelBase, IDisposable
     [RelayCommand]
     private void StartRename()
     {
-        if (IsGlobal) return; // Globals can't be renamed
-        
+        if (IsGlobal)
+        {
+            return; // Globals can't be renamed
+        }
+
         // Save current name for potential restoration
         _nameBeforeEdit = Name;
         IsEditing = true;
@@ -204,9 +210,16 @@ public partial class EnvironmentItemViewModel : ViewModelBase, IDisposable
     /// </summary>
     private bool CanFinishRename()
     {
-        if (string.IsNullOrWhiteSpace(Name)) return false;
-        if (Name == _originalName) return true; // No changes
-        
+        if (string.IsNullOrWhiteSpace(Name))
+        {
+            return false;
+        }
+
+        if (Name == _originalName)
+        {
+            return true; // No changes
+        }
+
         // Check if name is unique (optional)
         return true;
     }
@@ -278,8 +291,11 @@ public partial class EnvironmentItemViewModel : ViewModelBase, IDisposable
     [RelayCommand]
     private async Task SetActive()
     {
-        if (IsGlobal) return; // Globals can't be active
-        
+        if (IsGlobal)
+        {
+            return; // Globals can't be active
+        }
+
         await _parent.SetActiveEnvironmentAsync(this);
     }
 
@@ -321,8 +337,11 @@ public partial class EnvironmentItemViewModel : ViewModelBase, IDisposable
     {
         try
         {
-            if (string.IsNullOrWhiteSpace(json)) return true;
-            
+            if (string.IsNullOrWhiteSpace(json))
+            {
+                return true;
+            }
+
             using var doc = JsonDocument.Parse(json);
             return doc.RootElement.ValueKind == JsonValueKind.Object;
         }
