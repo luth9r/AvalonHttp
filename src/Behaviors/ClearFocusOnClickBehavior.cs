@@ -6,6 +6,7 @@ using Avalonia.Interactivity;
 using Avalonia.VisualTree;
 using Avalonia.Xaml.Interactivity;
 using AvalonHttp.ViewModels;
+using AvalonHttp.ViewModels.EnvironmentAggregate;
 
 namespace AvalonHttp.Behaviors;
 
@@ -31,20 +32,25 @@ public class ClearFocusOnClickBehavior : Behavior<Control>
 
     private void OnPointerPressed(object? sender, PointerPressedEventArgs e)
     {
-        if (e.Handled)
-            return;
+        if (e.Handled) return;
         
-        if (IsInteractiveControl(e.Source as Visual))
-            return;
+        if (IsInteractiveControl(e.Source as Visual)) return;
+
+        var topLevel = TopLevel.GetTopLevel(AssociatedObject);
+        if (topLevel == null) return;
         
-        if (AssociatedObject is Window window)
+        topLevel.FocusManager?.ClearFocus();
+
+        var context = AssociatedObject.DataContext;
+
+        System.Diagnostics.Debug.WriteLine($"ClearFocusOnClickBehavior: {context?.GetType().Name ?? "null"}");
+        if (context is MainWindowViewModel mainVm)
         {
-            window.Focus();
-            
-            if (window.DataContext is CollectionWorkspaceViewModel vm)
-            {
-                vm.CollectionsViewModel.CloseAllEditModesCommand.Execute(null);
-            }
+            mainVm.CollectionsWorkspace?.CollectionsViewModel?.CloseAllEditModesCommand.Execute(null);
+        }
+        else if (context is EnvironmentsViewModel envVm)
+        {
+            envVm.CloseAllEditModesCommand.Execute(null);
         }
     }
 

@@ -54,6 +54,9 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
     private string _cancelButtonText = "Cancel";
     
     [ObservableProperty]
+    private bool _isCancelButtonVisible = true;
+    
+    [ObservableProperty]
     private bool _isAlternateButtonVisible;
     
     private Func<Task>? _onConfirmAction;
@@ -75,6 +78,7 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
 
         // Subscribe to global confirm messages
         WeakReferenceMessenger.Default.Register<ConfirmMessage>(this, OnConfirmMessageReceived);
+        WeakReferenceMessenger.Default.Register<ErrorMessage>(this, OnErrorMessageReceived);
     }
 
     private void OnConfirmMessageReceived(object recipient, ConfirmMessage message)
@@ -91,10 +95,31 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
         _onAlternateAction = message.OnAlternate;
 
         IsAlternateButtonVisible = _onAlternateAction != null;
+        IsCancelButtonVisible = true;
         
         IsDialogOpen = true;
     }
 
+    private void OnErrorMessageReceived(object recipient, ErrorMessage message)
+    {
+        DialogTitle = message.Title;
+        DialogMessage = message.Message;
+        
+        ConfirmButtonText = "OK";
+        
+        CancelButtonText = "";
+        IsCancelButtonVisible = false;
+        
+        AlternateButtonText = "";
+        IsAlternateButtonVisible = false;
+
+        _onConfirmAction = () => Task.CompletedTask;
+        _onCancelAction = null;
+        _onAlternateAction = null;
+
+        IsDialogOpen = true;
+    }
+    
     // ========================================
     // Initialization
     // ========================================
@@ -132,30 +157,6 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
         
         await CloseAllEdits();
         CurrentView = "Environments";
-    }
-
-    // ========================================
-    // Dialog Handling
-    // ========================================
-    
-    public void Receive(ConfirmMessage message)
-    {
-        DialogTitle = message.Title;
-        DialogMessage = message.Message;
-        
-        // Setup Buttons Text
-        ConfirmButtonText = message.ConfirmButtonText;
-        CancelButtonText = message.CancelButtonText;
-        AlternateButtonText = message.AlternateButtonText ?? "";
-
-        // Setup Actions
-        _onConfirmAction = message.OnConfirm;
-        _onCancelAction = message.OnCancel;
-        _onAlternateAction = message.OnAlternate;
-
-        // Visibility
-        IsAlternateButtonVisible = _onAlternateAction != null;
-        IsDialogOpen = true;
     }
 
     [RelayCommand]
@@ -259,17 +260,8 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
                 title: "Unsaved Changes",
                 message: message,
 
-                confirmButtonText: "Save & Exit",
-                onConfirm: async () => 
-                {
-                    await CollectionsWorkspace.CollectionsViewModel.SaveAllAsync();
-                    await EnvironmentsViewModel.SaveAllAsync(); 
-
-                    onConfirmed?.Invoke();
-                },
-  
-                cancelButtonText: "Cancel",
-                onCancel: () => Task.CompletedTask,
+                confirmButtonText: "Cancel",
+                onConfirm: () => Task.CompletedTask,
                 
                 alternateButtonText: "Exit Without Saving",
                 onAlternate: () => 
@@ -292,18 +284,18 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
         
         if (requestDirty && envDirty)
         {
-            return "You have unsaved changes in requests and environments. Do you want to save them before exiting?";
+            return "You have unsaved changes in requests and environments.";
         }
         else if (requestDirty)
         {
-            return "You have unsaved changes in the current request. Do you want to save them before exiting?";
+            return "You have unsaved changes in the current request.";
         }
         else if (envDirty)
         {
-            return "You have unsaved changes in environments. Do you want to save them before exiting?";
+            return "You have unsaved changes in environments.";
         }
         
-        return "You have unsaved changes. Do you want to save them before exiting?";
+        return "You have unsaved changes.";
     }
 
     // ========================================

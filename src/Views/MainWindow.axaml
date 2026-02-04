@@ -50,7 +50,7 @@
                 
                 <StackPanel Spacing="16">
                     <StackPanel Orientation="Horizontal" Spacing="12">
-                        <lucide:Lucide Icon="MessageCircleQuestion" StrokeBrush="{DynamicResource TextPrimary}" Width="24" Height="24" />
+                        <lucide:Lucide Icon="OctagonAlert" StrokeBrush="{DynamicResource Warning}" Width="24" Height="24" />
                         <TextBlock Text="{Binding DialogTitle}" FontSize="18" FontWeight="SemiBold" VerticalAlignment="Center" />
                     </StackPanel>
 
@@ -71,9 +71,6 @@
                                 Foreground="#EF4444"/>
 
                         <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="12">
-                    
-                            <Button Content="{Binding CancelButtonText}" 
-                                    Command="{Binding CancelConfirmCommand}"/>
 
                             <Button Content="{Binding ConfirmButtonText}" 
                                                                              Command="{Binding ExecuteConfirmCommand}" 

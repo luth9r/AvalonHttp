@@ -119,13 +119,6 @@ public partial class RequestItemViewModel : ObservableObject, IDisposable
         }
 
         IsEditing = false;
-        
-        // Only save if name changed
-        if (Name == _originalName)
-            return;
-        
-        SyncToModel();
-        await _parent.Parent.SaveCollectionCommand.ExecuteAsync(_parent);
     }
 
     private bool CanFinishRename()

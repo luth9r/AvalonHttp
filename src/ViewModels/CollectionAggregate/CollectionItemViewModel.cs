@@ -151,8 +151,6 @@ public partial class CollectionItemViewModel : ObservableObject, IDisposable
         }
 
         IsEditing = false;
-
-        await SaveCollection();
     }
 
 

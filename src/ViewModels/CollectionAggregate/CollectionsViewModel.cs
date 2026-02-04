@@ -325,34 +325,6 @@ public partial class CollectionsViewModel : ViewModelBase, IDisposable
     {
         RequestSelected?.Invoke(this, request);
     }
-
-    public async Task SaveAllAsync()
-    {
-        var errors = new List<string>();
-    
-        foreach (var collection in Collections)
-        {
-            try
-            {
-                // Update properties before saving
-                collection.Collection.Name = collection.Name;
-                collection.Collection.Description = collection.Description;
-                collection.Collection.UpdatedAt = DateTime.Now;
-            
-                // Save the original collection
-                await _collectionService.SaveAsync(collection.Collection);
-            }
-            catch (Exception ex)
-            {
-                errors.Add($"{collection.Name}: {ex.Message}");
-            }
-        }
-
-        if (errors.Any())
-        {
-            System.Diagnostics.Debug.WriteLine($"Save errors: {string.Join(", ", errors)}");
-        }
-    }
     
     public async Task HandleRequestSavedAsync(ApiRequest request)
     {
@@ -431,35 +403,6 @@ public partial class CollectionsViewModel : ViewModelBase, IDisposable
             list.Insert(targetIndex, source);
         });
         
-    }
-
-    [RelayCommand]
-    public async Task SaveAllCollections()
-    {
-        var errors = new List<string>();
-    
-        foreach (var collection in Collections)
-        {
-            try
-            {
-                // Update properties before saving
-                collection.Collection.Name = collection.Name;
-                collection.Collection.Description = collection.Description;
-                collection.Collection.UpdatedAt = DateTime.Now;
-            
-                // Save the original collection
-                await _collectionService.SaveAsync(collection.Collection);
-            }
-            catch (Exception ex)
-            {
-                errors.Add($"{collection.Name}: {ex.Message}");
-            }
-        }
-
-        if (errors.Any())
-        {
-            System.Diagnostics.Debug.WriteLine($"Save errors: {string.Join(", ", errors)}");
-        }
     }
     
     public void Dispose()
