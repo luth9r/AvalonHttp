@@ -22,31 +22,60 @@ namespace AvalonHttp.ViewModels.CollectionAggregate;
 
 public partial class CollectionsViewModel : ViewModelBase, IDisposable
 {
+    /// <summary>
+    /// Reference to collection repository
+    /// </summary>
     private readonly ICollectionRepository _collectionService;
+    
+    /// <summary>
+    /// Reference to session repository.
+    /// </summary>
     private readonly ISessionService _sessionRepo;
+
+    /// <summary>
+    /// Manages the lifecycle of disposable resources to ensure proper cleanup for the view model.
+    /// </summary>
     private readonly CompositeDisposable _cleanUp = new();
     
-    // Source of truth for collections
+    /// <summary>
+    /// Source of truth for collections.
+    /// </summary>
     private readonly SourceList<CollectionItemViewModel> _collectionsSource = new();
     
-    // UI binding for visible collections
+    /// <summary>
+    /// UI binding for collections.
+    /// </summary>
     private readonly ReadOnlyObservableCollection<CollectionItemViewModel> _collections;
+
+    /// <summary>
+    /// Provides a read-only collection of collection items, representing the collections available in the application.
+    /// </summary>
     public ReadOnlyObservableCollection<CollectionItemViewModel> Collections => _collections;
 
+    /// <summary>
+    /// The currently selected request item.
+    /// </summary>
     [ObservableProperty]
     private RequestItemViewModel? _selectedRequest;
     
+    /// <summary>
+    /// Indicates whether the collections are currently being loaded.
+    /// </summary>
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasSelection))]
-    private bool _isLoading = false;
-    
+    private bool _isLoading;
+
+    /// <summary>
+    /// Represents the search query entered by the user to filter collections.
+    /// </summary>
     [ObservableProperty]
     private string _searchText = string.Empty;
-
-    public bool HasCollections => _collections.Count > 0;
+    
+    /// <summary>
+    /// Indicates whether there is a selection in the collections list.
+    /// </summary>
     public bool HasSelection => SelectedRequest != null;
 
-    public event EventHandler<ApiRequest>? RequestSelected;
 
     public CollectionsViewModel(
         ICollectionRepository collectionService, 
@@ -75,16 +104,21 @@ public partial class CollectionsViewModel : ViewModelBase, IDisposable
             })
             .DisposeWith(_cleanUp);
     }
-    
 
-    //  Call this from View.OnLoaded or App startup, not constructor
+    /// <summary>
+    /// Initializes the view model by loading collections and restoring the state asynchronously.
+    /// </summary>
     public async Task InitializeAsync()
     {
         await LoadCollectionsAndRestoreStateAsync();
     }
     
+    /// <summary>
+    /// Loads all collections from disk and populates the view model.
+    /// </summary>
     private async Task LoadCollectionsAndRestoreStateAsync()
     {
+        // Prevent multiple concurrent loads
         if (IsLoading)
         {
             return;
@@ -123,10 +157,14 @@ public partial class CollectionsViewModel : ViewModelBase, IDisposable
         }
     }
     
+    /// <summary>
+    /// Restores the last selected request from the session state.
+    /// </summary>
     private async Task RestoreLastSelectionAsync()
     {
         try
         {
+            // Load session state
             var state = await _sessionRepo.LoadStateAsync();
             if (state.LastSelectedRequestId == null)
             {
@@ -141,6 +179,7 @@ public partial class CollectionsViewModel : ViewModelBase, IDisposable
                 {
                     collection.IsExpanded = true;
                     
+                    // Select request asynchronously to avoid UI thread deadlock
                     await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() => 
                     {
                         SelectRequest(request);
@@ -156,16 +195,21 @@ public partial class CollectionsViewModel : ViewModelBase, IDisposable
         }
     }
 
+    /// <summary>
+    /// Creates a new collection and adds it to the view model.
+    /// </summary>
     [RelayCommand]
     private async Task CreateCollection()
     {
         try
         {
+            // Create new collection
             var collection = new ApiCollection
             {
                 Name = GenerateUniqueCollectionName("New Collection")
             };
 
+            // Add to view model
             var viewModel = new CollectionItemViewModel(collection, this);
             _collectionsSource.Add(viewModel);
             
@@ -185,6 +229,10 @@ public partial class CollectionsViewModel : ViewModelBase, IDisposable
         }
     }
 
+    /// <summary>
+    /// Deletes the specified collection from the view model.
+    /// </summary>
+    /// <param name="collection">The collection to delete. </param>
     [RelayCommand]
     private void DeleteCollection(CollectionItemViewModel collection)
     {
@@ -201,10 +249,13 @@ public partial class CollectionsViewModel : ViewModelBase, IDisposable
             {
                 try
                 {
+                    // Delete collection from disk
                     await _collectionService.DeleteAsync(collection.Id);
                     
+                    // Remove from view model
                     _collectionsSource.Remove(collection);
                     
+                    // Clear selection if necessary
                     if (SelectedRequest?.Parent == collection)
                     {
                         ClearSelection();
@@ -227,6 +278,10 @@ public partial class CollectionsViewModel : ViewModelBase, IDisposable
         ));
     }
 
+    /// <summary>
+    /// Saves the specified collection to disk.
+    /// </summary>
+    /// <param name="collectionVm">The collection view model to save.</param>
     [RelayCommand]
     private async Task SaveCollection(CollectionItemViewModel collectionVm)
     {
@@ -255,7 +310,10 @@ public partial class CollectionsViewModel : ViewModelBase, IDisposable
         }
     }
 
-
+    /// <summary>
+    /// Duplicates the specified collection and adds it to the view model.
+    /// </summary>
+    /// <param name="collection">The collection to duplicate.</param>
     [RelayCommand]
     private async Task DuplicateCollection(CollectionItemViewModel collection)
     {
@@ -302,6 +360,10 @@ public partial class CollectionsViewModel : ViewModelBase, IDisposable
         }
     }
     
+    /// <summary>
+    /// Selects the specified request item and updates the session state.
+    /// </summary>
+    /// <param name="requestVm">The request item view model to select.</param>
     public void SelectRequest(RequestItemViewModel requestVm)
     {
         if (requestVm == null || SelectedRequest == requestVm)
@@ -320,14 +382,17 @@ public partial class CollectionsViewModel : ViewModelBase, IDisposable
         SelectedRequest.IsSelected = true;
     
         System.Diagnostics.Debug.WriteLine($"=== SELECTING REQUEST: {requestVm.Request.Name} ===");
-    
-        // Notify listeners
-        OnRequestSelected(requestVm.Request);
+        
+        // Notify other views
+        WeakReferenceMessenger.Default.Send(new RequestSelectedMessage(requestVm.Request));
     
         // Save session
         _ = _sessionRepo.SaveLastRequestAsync(requestVm.Id);
     }
 
+    /// <summary>
+    /// Clears the current selection.
+    /// </summary>
     public void ClearSelection()
     {
         if (SelectedRequest != null)
@@ -337,25 +402,34 @@ public partial class CollectionsViewModel : ViewModelBase, IDisposable
         }
     }
 
-    private void OnRequestSelected(ApiRequest request)
-    {
-        RequestSelected?.Invoke(this, request);
-    }
-    
+    /// <summary>
+    /// Updates an existing request within the collections and persists the changes asynchronously.
+    /// If the request is found in any collection, it updates the corresponding request view model
+    /// and saves the collection.
+    /// </summary>
+    /// <param name="request">The updated request model containing the changes to synchronize.</param>
     public async Task HandleRequestSavedAsync(ApiRequest request)
     {
         foreach (var collection in _collectionsSource.Items)
         {
+            // Find corresponding request
             var requestVm = collection.AllRequests.FirstOrDefault(r => r.Id == request.Id);
             if (requestVm != null)
             {
+                // Update VM
                 requestVm.UpdateFromModel(request);
+                
+                // Save collection
                 await SaveCollectionCommand.ExecuteAsync(collection);
                 return;
             }
         }
     }
-    
+
+    /// <summary>
+    /// Updates the dirty state of the currently selected request.
+    /// </summary>
+    /// <param name="isDirty">A boolean value indicating whether the selected request is dirty.</param>
     public void UpdateSelectedRequestDirtyState(bool isDirty)
     {
         if (SelectedRequest != null)
@@ -364,26 +438,34 @@ public partial class CollectionsViewModel : ViewModelBase, IDisposable
         }
     }
     
+    /// <summary>
+    /// Closes all edit modes in all collections.
+    /// </summary>
     [RelayCommand]
-    private async Task CloseAllEditModes()
+    private void CloseAllEditModes()
     {
         foreach (var collection in _collectionsSource.Items)
         {
             if (collection.IsEditing)
             {
-                await collection.FinishRenameCommand.ExecuteAsync(null);
+                collection.CancelRenameCommand.Execute(null);
             }
 
             foreach (var request in collection.AllRequests)
             {
                 if (request.IsEditing)
                 {
-                    await request.FinishRenameCommand.ExecuteAsync(null);
+                    request.CancelRenameCommand.Execute(null);
                 }
             }
         }
     }
 
+    /// <summary>
+    /// Generates a unique collection name based on the specified base name.
+    /// </summary>
+    /// <param name="baseName">The base name for the collection.</param>
+    /// <returns>A unique collection name.</returns>
     private string GenerateUniqueCollectionName(string baseName)
     {
         var existingNames = _collectionsSource.Items.Select(c => c.Name).ToHashSet();
@@ -404,6 +486,12 @@ public partial class CollectionsViewModel : ViewModelBase, IDisposable
         return name;
     }
     
+    /// <summary>
+    /// Moves the specified collection to a new position in the list.
+    /// </summary>
+    /// <param name="source">The collection to move.</param>
+    /// <param name="target">The target collection for the move operation.</param>
+    /// <param name="insertAfter">A boolean indicating whether to insert the source collection after the target collection.</param>
     public void MoveCollection(CollectionItemViewModel source, CollectionItemViewModel target, bool insertAfter)
     {
         var items = _collectionsSource.Items.ToList();
@@ -439,7 +527,10 @@ public partial class CollectionsViewModel : ViewModelBase, IDisposable
         });
         
     }
-    
+
+    /// <summary>
+    /// Releases all resources used by the view model, including disposable objects and subscriptions.
+    /// </summary>
     public void Dispose()
     {
         _cleanUp?.Dispose();

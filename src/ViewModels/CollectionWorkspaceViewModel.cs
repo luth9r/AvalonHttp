@@ -3,6 +3,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
 using System.Threading.Tasks;
+using AvalonHttp.Messages;
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using AvalonHttp.Models.CollectionAggregate;
@@ -10,6 +11,7 @@ using AvalonHttp.ViewModels.CollectionAggregate;
 using AvalonHttp.ViewModels.EnvironmentAggregate;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Messaging;
 
 namespace AvalonHttp.ViewModels;
 
@@ -47,10 +49,18 @@ public partial class CollectionWorkspaceViewModel : ViewModelBase, IDisposable
         RequestViewModel = requestViewModel ?? throw new ArgumentNullException(nameof(requestViewModel));
         EnvironmentsViewModel = environmentsViewModel ?? throw new ArgumentNullException(nameof(environmentsViewModel));
         
-        CollectionsViewModel.RequestSelected += (_, req) => RequestViewModel.LoadRequest(req);
+        WeakReferenceMessenger.Default.Register<RequestSelectedMessage>(this, (recipient, message) =>
+        {
+            System.Diagnostics.Debug.WriteLine($"Request selected: {message.Request.Name}");
+            
+            RequestViewModel.LoadRequest(message.Request);
+        });
         
-        RequestViewModel.RequestSaved += async (_, req) => 
-            await CollectionsViewModel.HandleRequestSavedAsync(req);
+        WeakReferenceMessenger.Default.Register<RequestSavedMessage>(this, async (recipient, message) =>
+        {
+            System.Diagnostics.Debug.WriteLine($"RequestSavedMessage received: {message.Request.Name}");
+            await CollectionsViewModel.HandleRequestSavedAsync(message.Request);
+        });
 
         RequestViewModel.PropertyChanged += (_, e) => 
         {

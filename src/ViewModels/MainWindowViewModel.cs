@@ -164,11 +164,11 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
         {
             return "You have unsaved changes in requests and environments.";
         }
-        else if (requestDirty)
+        if (requestDirty)
         {
             return "You have unsaved changes in the current request.";
         }
-        else if (envDirty)
+        if (envDirty)
         {
             return "You have unsaved changes in environments.";
         }

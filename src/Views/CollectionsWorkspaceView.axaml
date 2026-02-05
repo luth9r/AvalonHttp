@@ -237,6 +237,9 @@
 
                                                     <Interaction.Behaviors>
                                                         <behaviors:DragDropBehavior />
+                                                        <EventTriggerBehavior EventName="Tapped">
+                                                            <InvokeCommandAction Command="{Binding SelectCommand}" />
+                                                        </EventTriggerBehavior>
                                                     </Interaction.Behaviors>
 
                                                     <Grid ColumnDefinitions="Auto,*,Auto">
@@ -284,10 +287,7 @@
                                                                         <InvokeCommandAction
                                                                             Command="{Binding StartRenameCommand}" />
                                                                     </EventTriggerBehavior>
-                                                                    <EventTriggerBehavior EventName="Tapped">
-                                                                        <InvokeCommandAction
-                                                                            Command="{Binding SelectCommand}" />
-                                                                    </EventTriggerBehavior>
+                                                                    
                                                                 </Interaction.Behaviors>
                                                                 <TextBlock Text="{Binding Name}"
                                                                            VerticalAlignment="Center"
@@ -606,8 +606,8 @@
                                 <TextBlock Text="Key Name"
                                            Foreground="{DynamicResource TextSecondary}"
                                            FontSize="12" />
-                                <controls:VariableTextBox Text="{Binding RequestViewModel.AuthViewModel.ApiKeyValue}"
-                                                          Watermark="Enter API key"
+                                <controls:VariableTextBox Text="{Binding RequestViewModel.AuthViewModel.ApiKeyName}"
+                                                          Watermark="Enter API key name"
                                                           Classes="KvInput"
                                                           EnvironmentsViewModel="{Binding EnvironmentsViewModel}" />
 

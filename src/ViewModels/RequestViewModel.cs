@@ -11,6 +11,7 @@ using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Threading.Tasks;
 using System.Web;
+using AvalonHttp.Messages;
 using AvalonHttp.Models;
 using AvalonHttp.Models.CollectionAggregate;
 using AvalonHttp.Services.Interfaces;
@@ -20,6 +21,7 @@ using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Messaging;
 
 namespace AvalonHttp.ViewModels;
 
@@ -157,12 +159,6 @@ public partial class RequestViewModel : ViewModelBase, IDisposable
     public AuthViewModel AuthViewModel { get; }
     public CookiesViewModel CookiesViewModel { get; }
     public EnvironmentsViewModel EnvironmentsViewModel { get; }
-
-    // ========================================
-    // Events
-    // ========================================
-    
-    public event EventHandler<ApiRequest>? RequestSaved;
 
     // ========================================
     // Constructor
@@ -393,7 +389,7 @@ public partial class RequestViewModel : ViewModelBase, IDisposable
         _requestSnapshot = _dirtyTracker.TakeSnapshot(_activeRequest);
         IsDirty = false;
         
-        RequestSaved?.Invoke(this, _activeRequest);
+        WeakReferenceMessenger.Default.Send(new RequestSavedMessage(_activeRequest));
     }
 
     private bool CanSaveRequest() => IsDirty && _activeRequest != null;
