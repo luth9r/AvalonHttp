@@ -1,9 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
 using AvalonHttp.Messages;
-using Avalonia;
-using Avalonia.Controls;
-using Avalonia.Markup.Xaml;
 using Avalonia.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;

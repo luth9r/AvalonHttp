@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Linq;
-using System.Net.Mime;
 using AvalonHttp.Common.FoldingStrategies;
 using Avalonia;
 using Avalonia.Controls;
@@ -11,7 +9,6 @@ using AvaloniaEdit;
 using AvaloniaEdit.Document;
 using AvaloniaEdit.Editing;
 using AvaloniaEdit.Folding;
-using AvaloniaEdit.Indentation;
 using AvaloniaEdit.Indentation.CSharp;
 using AvaloniaEdit.TextMate;
 using TextMateSharp.Grammars;

@@ -2,7 +2,6 @@ using System;
 using AvalonHttp.ViewModels;
 using Avalonia.Controls;
 using Avalonia.Input;
-using Avalonia.Interactivity;
 
 namespace AvalonHttp.Views;
 

@@ -1,6 +1,4 @@
-﻿using AvalonHttp.ViewModels.EnvironmentAggregate;
-using Avalonia.Controls;
-using Avalonia.Input;
+﻿using Avalonia.Controls;
 
 namespace AvalonHttp.Views;
 

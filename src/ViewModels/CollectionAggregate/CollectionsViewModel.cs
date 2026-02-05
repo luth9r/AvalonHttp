@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Reactive.Disposables;
@@ -20,6 +19,9 @@ using ApiRequest = AvalonHttp.Models.CollectionAggregate.ApiRequest;
 
 namespace AvalonHttp.ViewModels.CollectionAggregate;
 
+/// <summary>
+/// Represents the view model for managing and interacting with a collection of items in the application.
+/// </summary>
 public partial class CollectionsViewModel : ViewModelBase, IDisposable
 {
     /// <summary>

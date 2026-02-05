@@ -1,12 +1,6 @@
 ﻿using System;
-using System.Collections.ObjectModel;
-using System.ComponentModel;
-using System.Linq;
 using System.Threading.Tasks;
 using AvalonHttp.Messages;
-using Avalonia;
-using Avalonia.Controls.ApplicationLifetimes;
-using AvalonHttp.Models.CollectionAggregate;
 using AvalonHttp.ViewModels.CollectionAggregate;
 using AvalonHttp.ViewModels.EnvironmentAggregate;
 using CommunityToolkit.Mvvm.ComponentModel;

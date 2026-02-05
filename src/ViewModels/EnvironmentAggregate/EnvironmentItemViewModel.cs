@@ -2,15 +2,17 @@
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
-using AvalonHttp.Messages;
-using AvalonHttp.Services.Interfaces;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using CommunityToolkit.Mvvm.Messaging;
 using Environment = AvalonHttp.Models.EnvironmentAggregate.Environment;
 
 namespace AvalonHttp.ViewModels.EnvironmentAggregate;
 
+/// <summary>
+/// Represents a view model for an environment item, providing a bridge between
+/// the environment model and the view. This view model manages the state
+/// and behavior of a specific environment object and its associated data.
+/// </summary>
 public partial class EnvironmentItemViewModel : ViewModelBase, IDisposable
 {
     /// <summary>

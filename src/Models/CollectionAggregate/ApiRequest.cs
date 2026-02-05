@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.ObjectModel;
 using System.Net.Http;
-using AvalonHttp.Models;
-using AvalonHttp.Models.CollectionAggregate;
 using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace AvalonHttp.Models.CollectionAggregate;

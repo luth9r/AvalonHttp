@@ -14,6 +14,15 @@ using Environment = AvalonHttp.Models.EnvironmentAggregate.Environment;
 
 namespace AvalonHttp.ViewModels.EnvironmentAggregate;
 
+/// <summary>
+/// Represents the view model for managing environments in the application.
+/// </summary>
+/// <remarks>
+/// This class provides functionality to handle operations such as
+/// loading, selecting, saving, deleting, duplicating, and activating environments.
+/// It also provides utilities for resolving variables and tracks states like
+/// whether there are unsaved changes or selected/active environments.
+/// </remarks>
 public partial class EnvironmentsViewModel : ViewModelBase, IDisposable
 {
     /// <summary>

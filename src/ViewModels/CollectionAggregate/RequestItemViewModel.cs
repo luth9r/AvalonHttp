@@ -13,6 +13,16 @@ using ApiRequest = AvalonHttp.Models.CollectionAggregate.ApiRequest;
 
 namespace AvalonHttp.ViewModels.CollectionAggregate;
 
+/// <summary>
+/// Represents the view model for a single API request item.
+/// This view model is responsible for managing the state and behavior
+/// of an API request within the context of its parent collection.
+/// </summary>
+/// <remarks>
+/// This class synchronizes with an underlying <see cref="ApiRequest"/> model
+/// and provides functionality for updating and managing properties such
+/// as request name, URL, HTTP method, and related metadata.
+/// </remarks>
 public partial class RequestItemViewModel : ObservableObject, IDisposable
 {
     /// <summary>

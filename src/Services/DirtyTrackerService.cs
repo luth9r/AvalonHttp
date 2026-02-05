@@ -1,6 +1,5 @@
 ﻿using System.Text.Json;
 using System.Text.Json.Serialization;
-using AvalonHttp.Models.CollectionAggregate;
 using AvalonHttp.Services.Interfaces;
 
 namespace AvalonHttp.Services;

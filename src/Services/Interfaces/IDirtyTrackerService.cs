@@ -1,6 +1,4 @@
-﻿using AvalonHttp.Models.CollectionAggregate;
-
-namespace AvalonHttp.Services.Interfaces;
+﻿namespace AvalonHttp.Services.Interfaces;
 
 public interface IDirtyTrackerService
 {
