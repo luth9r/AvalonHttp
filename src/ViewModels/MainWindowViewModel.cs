@@ -8,32 +8,44 @@ using CommunityToolkit.Mvvm.Messaging;
 
 namespace AvalonHttp.ViewModels;
 
+/// <summary>
+/// Represents the view model for the main window.
+/// </summary>
 public partial class MainWindowViewModel : ViewModelBase, IDisposable
 {
-    // ========================================
-    // Child ViewModels
-    // ========================================
-    
+    /// <summary>
+    /// Child view models for managing collections and environments.
+    /// </summary>
     public CollectionWorkspaceViewModel CollectionsWorkspace { get; }
+    
+    /// <summary>
+    /// View model responsible for managing environments.
+    /// </summary>
     public EnvironmentsViewModel EnvironmentsViewModel { get; }
     
+    /// <summary>
+    /// View model responsible for displaying dialogs.
+    /// </summary>
     public DialogViewModel DialogViewModel { get; }
 
-    // ========================================
-    // Navigation
-    // ========================================
-    
+    /// <summary>
+    /// Indicates the current view.
+    /// </summary>
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsCollectionsView))]
     [NotifyPropertyChangedFor(nameof(IsEnvironmentsView))]
     private string _currentView = "Collections";
     
+    /// <summary>
+    /// Indicates whether the current view is the collections view.
+    /// </summary>
     public bool IsCollectionsView => CurrentView == "Collections";
-    public bool IsEnvironmentsView => CurrentView == "Environments";
-    // ========================================
-    // Constructor
-    // ========================================
     
+    /// <summary>
+    /// Indicates whether the current view is the environments view.
+    /// </summary>
+    public bool IsEnvironmentsView => CurrentView == "Environments";
+
     public MainWindowViewModel(
         CollectionWorkspaceViewModel collectionsWorkspace,
         EnvironmentsViewModel environmentsViewModel,
@@ -47,6 +59,9 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
             throw new ArgumentNullException(nameof(dialogViewModel));
     }
     
+    /// <summary>
+    /// Initializes the view model by loading collections and environments.
+    /// </summary>
     public async Task InitializeAsync()
     {
         try
@@ -60,31 +75,40 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
         }
     }
     
+    /// <summary>
+    /// Switches to the collections view.
+    /// </summary>
     [RelayCommand]
-    private async Task ShowCollections()
+    private void ShowCollections()
     {
         if (CurrentView == "Collections")
         {
             return;
         }
 
-        await CloseAllEdits();
+        CloseAllEdits();
         CurrentView = "Collections";
     }
 
+    /// <summary>
+    /// Switches to the environments view.
+    /// </summary>
     [RelayCommand]
-    private async Task ShowEnvironments()
+    private void ShowEnvironments()
     {
         if (CurrentView == "Environments")
         {
             return;
         }
 
-        await CloseAllEdits();
+        CloseAllEdits();
         CurrentView = "Environments";
     }
     
-    private async Task CloseAllEdits()
+    /// <summary>
+    /// Closes all open edits across collections and environments.
+    /// </summary>
+    private void CloseAllEdits()
     {
         try
         {
@@ -120,10 +144,11 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
         }
     }
 
-    // ========================================
-    // Application Exit
-    // ========================================
-    
+
+    /// <summary>
+    /// Attempts to exit the application with a confirmation dialog.
+    /// </summary>
+    /// <param name="onConfirmed">Action to perform when the user confirms exit.</param>
     public void AttemptExitWithCallback(Action onConfirmed)
     {
         bool hasUnsavedChanges = CollectionsWorkspace.RequestViewModel.IsDirty || 
@@ -155,6 +180,9 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
         }
     }
 
+    /// <summary>
+    /// Returns a message indicating whether the user has unsaved changes.
+    /// </summary>
     private string GetUnsavedChangesMessage()
     {
         bool requestDirty = CollectionsWorkspace.RequestViewModel.IsDirty;
@@ -176,17 +204,16 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
         return "You have unsaved changes.";
     }
 
-    // ========================================
-    // Dispose
-    // ========================================
-    
+    /// <summary>
+    /// Releases all resources used by the MainWindowViewModel instance and its disposable members.
+    /// Unregisters the instance from all message subscriptions and disposes of the associated
+    /// CollectionWorkspaceViewModel and EnvironmentsViewModel instances if they implement IDisposable.
+    /// </summary>
     public void Dispose()
     {
         WeakReferenceMessenger.Default.UnregisterAll(this);
         
         (CollectionsWorkspace as IDisposable)?.Dispose();
         (EnvironmentsViewModel as IDisposable)?.Dispose();
-        
-        GC.SuppressFinalize(this);
     }
 }
