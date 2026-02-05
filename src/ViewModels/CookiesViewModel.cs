@@ -12,49 +12,50 @@ using CommunityToolkit.Mvvm.Input;
 
 namespace AvalonHttp.ViewModels;
 
+/// <summary>
+/// Represents a view model for managing cookies.
+/// </summary>
 public partial class CookiesViewModel : ViewModelBase, IDisposable
 {
-    // ========================================
-    // Observable Properties
-    // ========================================
-    
+    /// <summary>
+    /// Collection of cookie items managed within the view model.
+    /// </summary>
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(EnabledCookiesCount))]
     private ObservableCollection<KeyValueItemModel> _cookies = new();
 
-    // ========================================
-    // Computed Properties
-    // ========================================
-    
-    private int _cachedEnabledCount;
+    /// <summary>
+    /// Indicates whether the cached count of enabled cookies is outdated and needs to be recalculated.
+    /// </summary>
     private bool _isCountDirty = true;
 
+    /// <summary>
+    /// Count of enabled cookies.
+    /// </summary>
     public int EnabledCookiesCount
     {
         get
         {
             if (_isCountDirty)
             {
-                _cachedEnabledCount = Cookies.Count(c => c.IsEnabled && !string.IsNullOrWhiteSpace(c.Key));
+                field = Cookies.Count(c => c.IsEnabled && !string.IsNullOrWhiteSpace(c.Key));
                 _isCountDirty = false;
             }
-            return _cachedEnabledCount;
+            return field;
         }
     }
-
-    // ========================================
-    // Constructor
-    // ========================================
     
     public CookiesViewModel()
     {
         Cookies.CollectionChanged += OnCookiesCollectionChanged;
     }
 
-    // ========================================
-    // Event Handlers
-    // ========================================
-    
+    /// <summary>
+    /// Handles changes in the cookies collection by updating the enablement state and performing
+    /// appropriate subscription or unsubscription from property change events of individual cookie items.
+    /// </summary>
+    /// <param name="sender">The source of the event, typically the cookies collection.</param>
+    /// <param name="e">The event data containing information about the changes in the collection.</param>
     private void OnCookiesCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
         // Invalidate cache
@@ -81,6 +82,11 @@ public partial class CookiesViewModel : ViewModelBase, IDisposable
         OnPropertyChanged(nameof(EnabledCookiesCount));
     }
 
+    /// <summary>
+    /// Handles changes in the enablement state or key of individual cookie items.
+    /// </summary>
+    /// <param name="sender">The source of the event, typically an individual cookie item.</param>
+    /// <param name="e">The event data containing information about the property change.</param>
     private void OnCookieItemPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
         if (e.PropertyName == nameof(KeyValueItemModel.IsEnabled) ||
@@ -91,10 +97,9 @@ public partial class CookiesViewModel : ViewModelBase, IDisposable
         }
     }
 
-    // ========================================
-    // Commands
-    // ========================================
-    
+    /// <summary>
+    /// Add new cookie.
+    /// </summary>
     [RelayCommand]
     private void AddCookie()
     {
@@ -107,6 +112,10 @@ public partial class CookiesViewModel : ViewModelBase, IDisposable
         Cookies.Add(cookie);
     }
 
+    /// <summary>
+    /// Removes a specified cookie from the cookies collection.
+    /// </summary>
+    /// <param name="cookie">The cookie to be removed. If null, the method does nothing.</param>
     [RelayCommand]
     private void RemoveCookie(KeyValueItemModel? cookie)
     {
@@ -116,6 +125,10 @@ public partial class CookiesViewModel : ViewModelBase, IDisposable
         }
     }
 
+    /// <summary>
+    /// Toggles the enablement state of all cookies.
+    /// </summary>
+    /// <param name="isEnabled"></param>
     [RelayCommand]
     private void ToggleAll(bool isEnabled)
     {
@@ -124,10 +137,6 @@ public partial class CookiesViewModel : ViewModelBase, IDisposable
             cookie.IsEnabled = isEnabled;
         }
     }
-
-    // ========================================
-    // Get Cookie Data
-    // ========================================
     
     /// <summary>
     /// Get enabled cookies as Cookie header value.
@@ -185,10 +194,6 @@ public partial class CookiesViewModel : ViewModelBase, IDisposable
             );
         }
     }
-
-    // ========================================
-    // Load Cookie Data
-    // ========================================
     
     /// <summary>
     /// Load cookies from collection.
@@ -302,37 +307,11 @@ public partial class CookiesViewModel : ViewModelBase, IDisposable
             System.Diagnostics.Debug.WriteLine($"Failed to load cookies from container: {ex.Message}");
         }
     }
-
-    // ========================================
-    // Export Cookie Data
-    // ========================================
-    
-    /// <summary>
-    /// Get cookies collection (returns the actual collection, not a copy).
-    /// </summary>
-    public ObservableCollection<KeyValueItemModel> GetCookies() => Cookies;
-
-    /// <summary>
-    /// Export cookies as new collection (creates copies).
-    /// </summary>
-    public List<KeyValueItemModel> ExportCookies()
-    {
-        return Cookies.Select(c => new KeyValueItemModel
-        {
-            IsEnabled = c.IsEnabled,
-            Key = c.Key,
-            Value = c.Value
-        }).ToList();
-    }
-
-    // ========================================
-    // Clear
-    // ========================================
     
     /// <summary>
     /// Clear all cookies with proper cleanup.
     /// </summary>
-    public void Clear()
+    private void Clear()
     {
         // Unsubscribe from all items
         foreach (var cookie in Cookies)
@@ -344,10 +323,11 @@ public partial class CookiesViewModel : ViewModelBase, IDisposable
         _isCountDirty = true;
     }
 
-    // ========================================
-    // Cleanup
-    // ========================================
-    
+    /// <summary>
+    /// Releases all resources used by the CookiesViewModel instance.
+    /// This method unsubscribes from collection change notifications, clears all managed resources,
+    /// and suppresses finalization to optimize garbage collection.
+    /// </summary>
     public void Dispose()
     {
         Cookies.CollectionChanged -= OnCookiesCollectionChanged;
