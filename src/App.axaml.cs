@@ -63,6 +63,7 @@ public partial class App : Application
         services.AddSingleton<QueryParamsViewModel>();
         services.AddSingleton<CookiesViewModel>();
         services.AddSingleton<EnvironmentsViewModel>();
+        services.AddSingleton<DialogViewModel>();
         
         services.AddTransient<RequestViewModel>();
         services.AddTransient<MainWindowViewModel>();

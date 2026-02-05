@@ -133,7 +133,7 @@ public partial class EnvironmentsViewModel : ViewModelBase, IDisposable
         }
         catch (Exception ex)
         {
-            WeakReferenceMessenger.Default.Send(new ErrorMessage(
+            WeakReferenceMessenger.Default.Send(DialogMessage.Error(
                 "Failed to Load Environments", 
                 $"Could not load environments from disk. Message: {ex.Message}"
             ));
@@ -205,7 +205,7 @@ public partial class EnvironmentsViewModel : ViewModelBase, IDisposable
         {
             if (!environment.IsJsonValid)
             {
-                WeakReferenceMessenger.Default.Send(new ErrorMessage(
+                WeakReferenceMessenger.Default.Send(DialogMessage.Error(
                     "Invalid Configuration", 
                     "The environment variables JSON is invalid. Please fix syntax errors before saving."
                 ));
@@ -225,7 +225,7 @@ public partial class EnvironmentsViewModel : ViewModelBase, IDisposable
         }
         catch (Exception ex)
         {
-            WeakReferenceMessenger.Default.Send(new ErrorMessage(
+            WeakReferenceMessenger.Default.Send(DialogMessage.Error(
                 "Save Failure", 
                 $"Failed to save environment. Message: {ex.Message}"
             ));
@@ -260,7 +260,7 @@ public partial class EnvironmentsViewModel : ViewModelBase, IDisposable
         }
         catch (Exception ex)
         {
-            WeakReferenceMessenger.Default.Send(new ErrorMessage(
+            WeakReferenceMessenger.Default.Send(DialogMessage.Error(
                 "Create Failure", 
                 $"Failed to create new environment. Message: {ex.Message}"
             ));
@@ -292,7 +292,7 @@ public partial class EnvironmentsViewModel : ViewModelBase, IDisposable
         }
         catch (Exception ex)
         {
-            WeakReferenceMessenger.Default.Send(new ErrorMessage(
+            WeakReferenceMessenger.Default.Send(DialogMessage.Error(
                 "Delete Failure", 
                 $"Failed to delete environment. Message: {ex.Message}"
             ));
@@ -353,7 +353,7 @@ public partial class EnvironmentsViewModel : ViewModelBase, IDisposable
         }
         catch (Exception ex)
         {
-            WeakReferenceMessenger.Default.Send(new ErrorMessage(
+            WeakReferenceMessenger.Default.Send(DialogMessage.Error(
                 "Duplicate Failure", 
                 $"Failed to duplicate environment. Message: {ex.Message}"
             ));

@@ -156,26 +156,29 @@ public partial class RequestItemViewModel : ObservableObject, IDisposable
     [RelayCommand]
     private void Delete()
     {
-        WeakReferenceMessenger.Default.Send(new ConfirmMessage(
-            title: "Delete Request?",
-            message: $"Are you sure you want to delete '{Name}'?",
-            onConfirm: async () =>
-            {
-                try
+        WeakReferenceMessenger.Default.Send(
+            DialogMessage.Destructive(
+                title: "Delete Request?",
+                message: $"Are you sure you want to delete '{Name}'? This action cannot be undone.",
+                onConfirm: async () =>
                 {
-                    await _parent.DeleteRequestCommand.ExecuteAsync(this);
-                }
-                catch (Exception ex)
-                {
-                    WeakReferenceMessenger.Default.Send(new ErrorMessage(
-                        "Failed to Delete Request",
-                        $"An error occurred: {ex.Message}"
-                    ));
-                }
-            },
-            confirmButtonText: "Delete",
-            onCancel: () => Task.CompletedTask
-        ));
+                    try
+                    {
+                        await _parent.DeleteRequestCommand.ExecuteAsync(this);
+                    }
+                    catch (Exception ex)
+                    {
+                        WeakReferenceMessenger.Default.Send(
+                            DialogMessage.Error(
+                                "Delete Failed",
+                                $"Could not delete '{Name}': {ex.Message}"
+                            )
+                        );
+                    }
+                },
+                confirmText: "Delete"
+            )
+        );
     }
 
     /// <summary>
@@ -190,9 +193,9 @@ public partial class RequestItemViewModel : ObservableObject, IDisposable
         }
         catch (Exception ex)
         {
-            WeakReferenceMessenger.Default.Send(new ErrorMessage(
+            WeakReferenceMessenger.Default.Send(DialogMessage.Error(
                 "Failed to Duplicate Request",
-                $"An error occurred: {ex.Message}"
+                $"Could not duplicate request': {ex.Message}"
             ));
         }
     }
@@ -240,7 +243,10 @@ public partial class RequestItemViewModel : ObservableObject, IDisposable
         }
         catch (Exception ex)
         {
-            WeakReferenceMessenger.Default.Send(new ErrorMessage("Failed to Move Request", ex.Message));
+            WeakReferenceMessenger.Default.Send(DialogMessage.Error(
+                "Failed to Move Request",
+                $"Could not move request: {ex.Message}"
+            ));
         }
     }
 

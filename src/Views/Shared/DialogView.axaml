@@ -1,0 +1,106 @@
+﻿<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:AvalonHttp.ViewModels"
+             xmlns:ic="using:FluentIcons.Avalonia"
+             x:Class="AvalonHttp.Views.Shared.DialogView"
+             xmlns:msg="using:AvalonHttp.Messages"
+             x:DataType="vm:DialogViewModel">
+
+    <Grid IsVisible="{Binding IsDialogOpen}" ZIndex="1000">
+        <!-- Backdrop -->
+        <Border Background="Black" Opacity="0.5" />
+
+        <!-- Dialog Card -->
+        <Border Width="450" 
+                MinHeight="150"
+                Background="{DynamicResource BgElevated}"
+                BorderBrush="{DynamicResource BorderColor}"
+                BorderThickness="1"
+                CornerRadius="8"
+                BoxShadow="0 4 20 0 #40000000"
+                VerticalAlignment="Center"
+                HorizontalAlignment="Center"
+                Padding="24">
+            
+            <StackPanel Spacing="16">
+                <!-- Header with Icon -->
+                <StackPanel Orientation="Horizontal" Spacing="12">
+                    
+                    <!-- Info Icon (Blue) -->
+                    <ic:SymbolIcon Width="24" Height="24"
+                                   Foreground="#3B82F6"
+                                   Symbol="Info"
+                                   IsVisible="{Binding CurrentType, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static msg:DialogType.Info}}" />
+
+                    <!-- Success Icon (Green) -->
+                    <ic:SymbolIcon Width="24" Height="24"
+                                   Foreground="#10B981"
+                                   Symbol="CheckmarkCircle"
+                                   IsVisible="{Binding CurrentType, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static msg:DialogType.Success}}" />
+
+                    <!-- Warning Icon (Yellow) -->
+                    <ic:SymbolIcon Width="24" Height="24"
+                                   Foreground="#F59E0B"
+                                   Symbol="Warning"
+                                   IsVisible="{Binding CurrentType, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static msg:DialogType.Warning}}" />
+
+                    <!-- Error Icon (Red) -->
+                    <ic:SymbolIcon Width="24" Height="24"
+                                   Foreground="#EF4444"
+                                   Symbol="DismissCircle"
+                                   IsVisible="{Binding CurrentType, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static msg:DialogType.Error}}" />
+
+                    <!-- Destructive Icon (Red Trash) -->
+                    <ic:SymbolIcon Width="24" Height="24"
+                                   Foreground="#EF4444"
+                                   Symbol="Delete"
+                                   IsVisible="{Binding CurrentType, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static msg:DialogType.Destructive}}" />
+                    
+                    <TextBlock Text="{Binding DialogTitle}" 
+                                   FontSize="18" 
+                                   FontWeight="SemiBold" 
+                                   VerticalAlignment="Center" />
+                </StackPanel>
+
+                <!-- Message -->
+                <TextBlock Text="{Binding DialogMessage}" 
+                           Foreground="{DynamicResource TextSecondary}" 
+                           TextWrapping="Wrap" 
+                           LineHeight="20" />
+
+                <!-- Buttons -->
+                <Grid Margin="0,8,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <!-- Right Buttons -->
+                    <StackPanel Grid.Column="2" 
+                                Orientation="Horizontal" 
+                                Spacing="12">
+                        
+                        <!-- Cancel Button -->
+                        <Button Content="{Binding CancelButtonText}" 
+                                Command="{Binding ExecuteCancelCommand}"
+                                IsVisible="{Binding IsCancelButtonVisible}"
+                                Background="Transparent"
+                                BorderBrush="{DynamicResource BorderColor}"
+                                Foreground="{DynamicResource TextPrimary}"
+                                Padding="16,8"
+                                CornerRadius="6" />
+                        
+                        <!-- Confirm Button -->
+                        <Button Content="{Binding ConfirmButtonText}" 
+                                Command="{Binding ExecuteConfirmCommand}"
+                                Background="{Binding ConfirmButtonBrush}"
+                                Foreground="White"
+                                Padding="16,8"
+                                CornerRadius="6" />
+                    </StackPanel>
+                </Grid>
+            </StackPanel>
+        </Border>
+    </Grid>
+</UserControl>

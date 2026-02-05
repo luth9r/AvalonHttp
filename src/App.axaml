@@ -37,7 +37,6 @@
         <converters:PercentToPixelConverter x:Key="PercentToPixelConverter"/>
         <converters:BoolToAngleConverter x:Key="BoolToAngleConverter" />
         <converters:MethodToBrushConverter x:Key="MethodToBrushConverter"/>
-        
     </Application.Resources>
 
     <Application.Styles>

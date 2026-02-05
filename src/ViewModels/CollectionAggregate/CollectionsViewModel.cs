@@ -112,9 +112,9 @@ public partial class CollectionsViewModel : ViewModelBase, IDisposable
         catch (Exception ex)
         {
             System.Diagnostics.Debug.WriteLine($"Failed to load collections: {ex.Message}");
-            WeakReferenceMessenger.Default.Send(new ErrorMessage(
-                "Failed to Load Collections", 
-                ex.Message
+            WeakReferenceMessenger.Default.Send(DialogMessage.Error(
+                "Failed to Load Collections",
+                $"Could not load collections from disk: {ex.Message}"
             ));
         }
         finally
@@ -178,9 +178,9 @@ public partial class CollectionsViewModel : ViewModelBase, IDisposable
         {
             System.Diagnostics.Debug.WriteLine($"Failed to create collection: {ex.Message}");
             
-            WeakReferenceMessenger.Default.Send(new ErrorMessage(
+            WeakReferenceMessenger.Default.Send(DialogMessage.Error(
                 "Failed to Create Collection",
-                ex.Message
+                $"Could not create new collection: {ex.Message}"
             ));
         }
     }
@@ -193,33 +193,34 @@ public partial class CollectionsViewModel : ViewModelBase, IDisposable
             return;
         }
 
-        WeakReferenceMessenger.Default.Send(new ConfirmMessage(
+        WeakReferenceMessenger.Default.Send(DialogMessage.Destructive(
             "Delete Collection?",
             $"Are you sure you want to delete '{collection.Name}' and all its requests? This action cannot be undone.",
-            async () => 
+            confirmText: "Delete",
+            onConfirm: async () => 
             {
                 try
                 {
                     await _collectionService.DeleteAsync(collection.Id);
                     
-                    // Remove from source - UI will update automatically
                     _collectionsSource.Remove(collection);
                     
-                    // Clear selection if deleted collection contained selected request
                     if (SelectedRequest?.Parent == collection)
                     {
                         ClearSelection();
                     }
                     
                     collection.Dispose();
+                    
+                    System.Diagnostics.Debug.WriteLine($"✅ Collection '{collection.Name}' deleted");
                 }
                 catch (Exception ex)
                 {
                     System.Diagnostics.Debug.WriteLine($"Failed to delete collection: {ex.Message}");
                     
-                    WeakReferenceMessenger.Default.Send(new ErrorMessage(
+                    WeakReferenceMessenger.Default.Send(DialogMessage.Error(
                         "Failed to Delete Collection",
-                        ex.Message
+                        $"Could not delete collection: {ex.Message}"
                     ));
                 }
             }
@@ -247,7 +248,7 @@ public partial class CollectionsViewModel : ViewModelBase, IDisposable
         catch (Exception ex)
         {
             System.Diagnostics.Debug.WriteLine($"Failed to save collection: {ex.Message}");
-            WeakReferenceMessenger.Default.Send(new ErrorMessage(
+            WeakReferenceMessenger.Default.Send(DialogMessage.Error(
                 "File System Error",
                 $"Could not save collection '{collectionVm.Name}': {ex.Message}"
             ));
@@ -294,9 +295,9 @@ public partial class CollectionsViewModel : ViewModelBase, IDisposable
         {
             System.Diagnostics.Debug.WriteLine($"Failed to duplicate collection: {ex.Message}");
             
-            WeakReferenceMessenger.Default.Send(new ErrorMessage(
+            WeakReferenceMessenger.Default.Send(DialogMessage.Error(
                 "Failed to Duplicate Collection",
-                ex.Message
+                $"Could not duplicate collection: {ex.Message}"
             ));
         }
     }

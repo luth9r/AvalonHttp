@@ -2,8 +2,6 @@
 using System.Threading.Tasks;
 using AvalonHttp.Messages;
 using AvalonHttp.ViewModels.EnvironmentAggregate;
-using Avalonia;
-using Avalonia.Controls.ApplicationLifetimes;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
@@ -18,6 +16,8 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
     
     public CollectionWorkspaceViewModel CollectionsWorkspace { get; }
     public EnvironmentsViewModel EnvironmentsViewModel { get; }
+    
+    public DialogViewModel DialogViewModel { get; }
 
     // ========================================
     // Navigation
@@ -30,99 +30,22 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
     
     public bool IsCollectionsView => CurrentView == "Collections";
     public bool IsEnvironmentsView => CurrentView == "Environments";
-
-    // ========================================
-    // Global Dialog State
-    // ========================================
-    
-    [ObservableProperty] 
-    private bool _isDialogOpen;
-    
-    [ObservableProperty] 
-    private string _dialogTitle = string.Empty;
-    
-    [ObservableProperty] 
-    private string _dialogMessage = string.Empty;
-    
-    [ObservableProperty] 
-    private string _confirmButtonText = "Confirm";
-    
-    [ObservableProperty]
-    private string _alternateButtonText = string.Empty;
-    
-    [ObservableProperty] 
-    private string _cancelButtonText = "Cancel";
-    
-    [ObservableProperty]
-    private bool _isCancelButtonVisible = true;
-    
-    [ObservableProperty]
-    private bool _isAlternateButtonVisible;
-    
-    private Func<Task>? _onConfirmAction;
-    private Func<Task>? _onAlternateAction;
-    private Func<Task>? _onCancelAction;
-    
     // ========================================
     // Constructor
     // ========================================
     
     public MainWindowViewModel(
         CollectionWorkspaceViewModel collectionsWorkspace,
-        EnvironmentsViewModel environmentsViewModel)
+        EnvironmentsViewModel environmentsViewModel,
+        DialogViewModel dialogViewModel)
     {
         CollectionsWorkspace = collectionsWorkspace ?? 
             throw new ArgumentNullException(nameof(collectionsWorkspace));
         EnvironmentsViewModel = environmentsViewModel ?? 
             throw new ArgumentNullException(nameof(environmentsViewModel));
-
-        // Subscribe to global confirm messages
-        WeakReferenceMessenger.Default.Register<ConfirmMessage>(this, OnConfirmMessageReceived);
-        WeakReferenceMessenger.Default.Register<ErrorMessage>(this, OnErrorMessageReceived);
+        DialogViewModel = dialogViewModel ?? 
+            throw new ArgumentNullException(nameof(dialogViewModel));
     }
-
-    private void OnConfirmMessageReceived(object recipient, ConfirmMessage message)
-    {
-        DialogTitle = message.Title;
-        DialogMessage = message.Message;
-
-        ConfirmButtonText = message.ConfirmButtonText;
-        CancelButtonText = message.CancelButtonText;
-        AlternateButtonText = message.AlternateButtonText ?? "";
-
-        _onConfirmAction = message.OnConfirm;
-        _onCancelAction = message.OnCancel;
-        _onAlternateAction = message.OnAlternate;
-
-        IsAlternateButtonVisible = _onAlternateAction != null;
-        IsCancelButtonVisible = true;
-        
-        IsDialogOpen = true;
-    }
-
-    private void OnErrorMessageReceived(object recipient, ErrorMessage message)
-    {
-        DialogTitle = message.Title;
-        DialogMessage = message.Message;
-        
-        ConfirmButtonText = "OK";
-        
-        CancelButtonText = "";
-        IsCancelButtonVisible = false;
-        
-        AlternateButtonText = "";
-        IsAlternateButtonVisible = false;
-
-        _onConfirmAction = () => Task.CompletedTask;
-        _onCancelAction = null;
-        _onAlternateAction = null;
-
-        IsDialogOpen = true;
-    }
-    
-    // ========================================
-    // Initialization
-    // ========================================
     
     public async Task InitializeAsync()
     {
@@ -136,10 +59,6 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
             System.Diagnostics.Debug.WriteLine($"Failed to initialize: {ex.Message}");
         }
     }
-
-    // ========================================
-    // Navigation Commands
-    // ========================================
     
     [RelayCommand]
     private async Task ShowCollections()
@@ -164,54 +83,6 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
         await CloseAllEdits();
         CurrentView = "Environments";
     }
-
-    [RelayCommand]
-    private async Task ExecuteConfirm()
-    {
-        IsDialogOpen = false;
-        if (_onConfirmAction != null)
-        {
-            try 
-            { 
-                await _onConfirmAction.Invoke(); 
-            }
-            catch (Exception ex) 
-            { 
-                System.Diagnostics.Debug.WriteLine($"Confirm action failed: {ex.Message}"); 
-            }
-        }
-    }
-
-    [RelayCommand]
-    private async Task CancelConfirm()
-    {
-        IsDialogOpen = false;
-        if (_onCancelAction != null)
-        {
-            await _onCancelAction.Invoke();
-        }
-    }
-    
-    [RelayCommand]
-    private async Task ExecuteAlternate()
-    {
-        IsDialogOpen = false;
-        if (_onAlternateAction != null)
-        {
-            try
-            {
-                await _onAlternateAction.Invoke();
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"Alternate action failed: {ex.Message}");
-            }
-        }
-    }
-
-    // ========================================
-    // Helper Methods
-    // ========================================
     
     private async Task CloseAllEdits()
     {
@@ -262,20 +133,21 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
         {
             var message = GetUnsavedChangesMessage();
             
-            OnConfirmMessageReceived(this, new ConfirmMessage(
-                title: "Unsaved Changes",
-                message: message,
+            WeakReferenceMessenger.Default.Send(
+                DialogMessage.Destructive(
+                    title: "Unsaved Changes",
+                    message: message,
+                    confirmText: "Cancel",
+                    cancelText: "Exit Without Saving",
+                    onConfirm: () => Task.CompletedTask,
+                    onCancel: () =>
+                    {
+                        onConfirmed?.Invoke();
+                        return Task.CompletedTask;
+                    }
+                )
+            );
 
-                confirmButtonText: "Cancel",
-                onConfirm: () => Task.CompletedTask,
-                
-                alternateButtonText: "Exit Without Saving",
-                onAlternate: () => 
-                {
-                    onConfirmed?.Invoke();
-                    return Task.CompletedTask;
-                }
-            ));
         }
         else
         {
