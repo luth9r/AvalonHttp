@@ -20,7 +20,7 @@
 
     <!-- Request Tabs -->
     <system:String x:Key="TabParams">Параметри</system:String>
-    <system:String x:Key="TabAuth">Авт.</system:String>
+    <system:String x:Key="TabAuth">Авторизація</system:String>
     <system:String x:Key="TabHeaders">Заголовки</system:String>
     <system:String x:Key="TabBody">Тіло</system:String>
     <system:String x:Key="TabCookies">Куки</system:String>
@@ -87,7 +87,10 @@
     <system:String x:Key="SettingsTitle">Налаштування</system:String>
     <system:String x:Key="SettingsSubtitle">Керування налаштуваннями програми</system:String>
     <system:String x:Key="GeneralSection">Загальні</system:String>
+    <system:String x:Key="LanguageLabel">Мова</system:String>
     <system:String x:Key="LanguageSelectionDescription">Виберіть мову інтерфейсу користувача.</system:String>
+    <system:String x:Key="ThemeLabel">Тема</system:String>
+    <system:String x:Key="ThemeSelectionDescription">Оберіть вашу улюблену колірну схему</system:String>
 
     <!-- SideBar -->
     <system:String x:Key="TooltipCollections">Колекції</system:String>

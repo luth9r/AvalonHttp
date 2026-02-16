@@ -91,7 +91,10 @@
     <system:String x:Key="SettingsTitle">Settings</system:String>
     <system:String x:Key="SettingsSubtitle">Manage your application preferences</system:String>
     <system:String x:Key="GeneralSection">General</system:String>
+    <system:String x:Key="LanguageLabel">Language</system:String>
     <system:String x:Key="LanguageSelectionDescription">Select the language for the user interface.</system:String>
+    <system:String x:Key="ThemeLabel">Theme</system:String>
+    <system:String x:Key="ThemeSelectionDescription">Choose your preferred color scheme</system:String>
 
     <!-- SideBar -->
     <system:String x:Key="TooltipCollections">Collections</system:String>

@@ -34,8 +34,10 @@ public partial class App : Application
         
         
         var languageService = Services.GetRequiredService<ILanguageService>();
+        var themeService = Services.GetRequiredService<IThemeService>();
         // Synchronous initialization to prevent UI flicker/empty state
         languageService.Init();
+        themeService.Init();
         
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
@@ -61,6 +63,8 @@ public partial class App : Application
         services.AddSingleton<IHttpService, HttpService>();
         services.AddSingleton<IUrlParserService, UrlParserService>();
         services.AddSingleton<IEnvironmentRepository, FileEnvironmentRepository>();
+        services.AddSingleton<IThemeService, ThemeService>();
+        
         services.AddSingleton<IDirtyTrackerService, DirtyTrackerService>();
         services.AddSingleton<ILanguageService, LanguageService>();
         services.AddSingleton<HeadersViewModel>();

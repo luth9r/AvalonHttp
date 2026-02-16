@@ -9,6 +9,8 @@ public class AppState
     public DateTime? LastUpdated { get; set; }
     public string? Language { get; set; }
     
+    public string Theme { get; set; } = "Dark";
+    
     // Future: Add more session data here
     // public WindowPosition? WindowPosition { get; set; }
     // public Dictionary<string, string>? UserPreferences { get; set; }

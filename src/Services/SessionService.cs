@@ -82,6 +82,22 @@ public class SessionService : ISessionService, IDisposable
         }
     }
 
+    public async Task SaveThemeAsync(string theme)
+    {
+        await _fileLock.WaitAsync();
+        try
+        {
+            var state = await LoadStateInternalAsync();
+            state.Theme = theme;
+            await SaveStateInternalAsync(state);
+            _cachedState = state;
+        }
+        finally
+        {
+            _fileLock.Release();
+        }
+    }
+
     public async Task<AppState> LoadStateAsync()
     {
         await _fileLock.WaitAsync();
