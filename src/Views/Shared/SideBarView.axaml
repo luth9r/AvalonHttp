@@ -15,7 +15,7 @@
                         Command="{Binding ShowSettingsCommand}"
                         Classes.Active="{Binding IsSettingsView}"
                         ToolTip.Tip="{DynamicResource TooltipSettings}">
-                    <lucide:Lucide Icon="Settings" StrokeBrush="White" Width="20" Height="20" />
+                    <lucide:Lucide Icon="Settings" StrokeBrush="{DynamicResource IconPrimary}" Width="20" Height="20" />
                 </Button>
             </StackPanel>
 
@@ -26,14 +26,14 @@
                             Command="{Binding ShowCollectionsCommand}"
                             Classes.Active="{Binding IsCollectionsView}"
                             ToolTip.Tip="{DynamicResource TooltipCollections}">
-                        <lucide:Lucide Icon="FolderOpen" StrokeBrush="White" Width="20" Height="20" />
+                        <lucide:Lucide Icon="FolderOpen" StrokeBrush="{DynamicResource IconPrimary}" Width="20" Height="20" />
                     </Button>
 
                     <Button Classes="NavIcon"
                             Command="{Binding ShowEnvironmentsCommand}"
                             Classes.Active="{Binding IsEnvironmentsView}"
                             ToolTip.Tip="{DynamicResource TooltipEnvironments}">
-                        <lucide:Lucide Icon="Globe" StrokeBrush="White" Width="20" Height="20" />
+                        <lucide:Lucide Icon="Globe" StrokeBrush="{DynamicResource IconPrimary}" Width="20" Height="20" />
                     </Button>
                 </StackPanel>
             </ScrollViewer>

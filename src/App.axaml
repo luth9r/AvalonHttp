@@ -28,20 +28,26 @@
                     <SolidColorBrush x:Key="TextMuted">#6A6A6A</SolidColorBrush>
                     <SolidColorBrush x:Key="GlassBg">#0DFFFFFF</SolidColorBrush>
                     <SolidColorBrush x:Key="GlassBorder">#1AFFFFFF</SolidColorBrush>
+                    <SolidColorBrush x:Key="IconPrimary">#FFFFFF</SolidColorBrush>
+                    <SolidColorBrush x:Key="IconSecondary">#A0A0A0</SolidColorBrush>
+                    <SolidColorBrush x:Key="BgSelected">#1A1F2E</SolidColorBrush>
                 </ResourceDictionary>
 
                 <ResourceDictionary x:Key="Light">
-                    <SolidColorBrush x:Key="BgDark">#F3F3F3</SolidColorBrush>
-                    <SolidColorBrush x:Key="BgSidebarBrush">#EBEBEB</SolidColorBrush>
-                    <SolidColorBrush x:Key="BgMain">#FFFFFF</SolidColorBrush>
-                    <SolidColorBrush x:Key="BgElevated">#F9F9F9</SolidColorBrush>
-                    <SolidColorBrush x:Key="BorderColor">#D1D1D1</SolidColorBrush>
-                    <SolidColorBrush x:Key="BorderBright">#C5C5C5</SolidColorBrush>
-                    <SolidColorBrush x:Key="TextPrimary">#1A1A1A</SolidColorBrush>
-                    <SolidColorBrush x:Key="TextSecondary">#4A4A4A</SolidColorBrush>
-                    <SolidColorBrush x:Key="TextMuted">#8E8E8E</SolidColorBrush>
-                    <SolidColorBrush x:Key="GlassBg">#0D000000</SolidColorBrush>
-                    <SolidColorBrush x:Key="GlassBorder">#1A000000</SolidColorBrush>
+                    <SolidColorBrush x:Key="BgDark">#E8E8E8</SolidColorBrush>
+                    <SolidColorBrush x:Key="BgSidebarBrush">#F5F5F5</SolidColorBrush>
+                    <SolidColorBrush x:Key="BgMain">#FAFAFA</SolidColorBrush>
+                    <SolidColorBrush x:Key="BgElevated">#FFFFFF</SolidColorBrush>
+                    <SolidColorBrush x:Key="BorderColor">#E0E0E0</SolidColorBrush>
+                    <SolidColorBrush x:Key="BorderBright">#D0D0D0</SolidColorBrush>
+                    <SolidColorBrush x:Key="TextPrimary">#1F1F1F</SolidColorBrush>
+                    <SolidColorBrush x:Key="TextSecondary">#5A5A5A</SolidColorBrush>
+                    <SolidColorBrush x:Key="TextMuted">#8A8A8A</SolidColorBrush>
+                    <SolidColorBrush x:Key="GlassBg">#0A000000</SolidColorBrush>
+                    <SolidColorBrush x:Key="GlassBorder">#14000000</SolidColorBrush>
+                    <SolidColorBrush x:Key="IconPrimary">#1F1F1F</SolidColorBrush>
+                    <SolidColorBrush x:Key="IconSecondary">#5A5A5A</SolidColorBrush>
+                    <SolidColorBrush x:Key="BgSelected">#F0F4FF</SolidColorBrush>
                 </ResourceDictionary>
             </ResourceDictionary.ThemeDictionaries>
         </ResourceDictionary>
@@ -168,10 +174,6 @@
             <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
         </Style>
 
-        <Style Selector="ComboBox:pointerover /template/ Border#Background">
-            <Setter Property="BorderBrush" Value="{DynamicResource BorderBright}"/>
-        </Style>
-
         <Style Selector="ComboBox /template/ PathIcon#DropDownGlyph">
             <Setter Property="Foreground" Value="{DynamicResource TextSecondary}"/>
         </Style>
@@ -263,7 +265,7 @@
         <Style Selector="MenuItem > lucide|Lucide">
             <Setter Property="Width" Value="16"/>
             <Setter Property="Height" Value="16"/>
-            <Setter Property="StrokeBrush" Value="{DynamicResource TextSecondary}"/>
+            <Setter Property="StrokeBrush" Value="{DynamicResource IconPrimary}"/>
             <Setter Property="Margin" Value="0,0,8,0"/>
         </Style>
 
@@ -394,13 +396,21 @@
         <!-- Custom Inputs -->
         <Style Selector="ComboBox.MethodDropdown">
             <Setter Property="Background" Value="{DynamicResource AccentBrush}"/>
-            <Setter Property="Foreground" Value="{DynamicResource WhiteBrush}"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimary}"/>
             <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
             <Setter Property="Height" Value="36"/>
             <Setter Property="MinHeight" Value="36"/>
             <Setter Property="VerticalContentAlignment" Value="Center"/>
             <Setter Property="Padding" Value="12,0"/>
+        </Style>
+        
+        <Style Selector="ComboBox.MethodDropdown:pointerover /template/ Border#Background">
+            <Setter Property="Background" Value="{DynamicResource AccentHover}"/>
+        </Style>
+
+        <Style Selector="ComboBox.MethodDropdown:focus /template/ Border#Background">
+            <Setter Property="Background" Value="{DynamicResource AccentBrush}"/>
         </Style>
         
         <Style Selector="TextBox.KvInput">

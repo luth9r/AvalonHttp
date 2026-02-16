@@ -88,20 +88,21 @@
                                     <Border.Styles>
                                         <!-- Active Style (The one used for requests) -->
                                         <Style Selector="Border.active">
-                                            <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+                                            <Setter Property="Background" Value="{DynamicResource BgSelected}" />
+                                            <Setter Property="BorderBrush" Value="{DynamicResource BorderColor}" /> <!-- Keep neutral border -->
                                             <Setter Property="BorderThickness" Value="1" />
-                                            <Setter Property="BoxShadow" Value="0 0 8 0 #204CAF50" /> <!-- Glow effect -->
                                         </Style>
 
                                         <!-- Selected Style (The one being edited) -->
                                         <Style Selector="Border.selected">
-                                            <Setter Property="Background" Value="#1A1F2E" /> 
-                                            <Setter Property="BorderBrush" Value="{DynamicResource BorderColor}" /> <!-- Keep neutral border if not active -->
+                                            <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+                                            <Setter Property="BorderThickness" Value="2" />
+                                            <Setter Property="Background" Value="{DynamicResource BgMain}" />
                                         </Style>
 
                                         <!-- Combined: Active AND Selected -->
                                         <Style Selector="Border.active.selected">
-                                            <Setter Property="Background" Value="#1A1F2E" />
+                                            <Setter Property="Background" Value="{DynamicResource BgSelected}" />
                                             <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
                                             <Setter Property="BorderThickness" Value="2" />
                                         </Style>
@@ -298,7 +299,7 @@
                                 ToolTip.Tip="{DynamicResource SaveTooltip}">
                             <StackPanel Orientation="Horizontal" Spacing="6">
                                 <lucide:Lucide Icon="Save"
-                                               StrokeBrush="White"
+                                               StrokeBrush="{DynamicResource IconPrimary}"
                                                Width="14" Height="14" />
                                 <TextBlock Text="{DynamicResource SaveButton}" VerticalAlignment="Center" />
                             </StackPanel>

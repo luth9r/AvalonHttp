@@ -9,7 +9,9 @@
         <Setter Property="BorderThickness" Value="1" />
         <Setter Property="CornerRadius" Value="8" />
         <Setter Property="Padding" Value="12,8" />
-        <Setter Property="FontFamily" Value="Inter, Segoe UI, Ubuntu, sans-serif" />
+        <Setter Property="FontFamily" Value="{StaticResource JetBrainsMonoFont}" />
+        <Setter Property="HighlightBrush" Value="{DynamicResource Warning}" />
+        <Setter Property="NormalTextBrush" Value="{DynamicResource TextPrimary}" />
         <Setter Property="FontSize" Value="13" />
         <Setter Property="VerticalAlignment" Value="Center" />
         <Setter Property="MinHeight" Value="36" />

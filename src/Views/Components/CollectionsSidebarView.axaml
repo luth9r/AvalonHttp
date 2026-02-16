@@ -30,7 +30,7 @@
                             Command="{Binding CreateCollectionCommand}"
                             ToolTip.Tip="{DynamicResource NewCollectionTooltip}">
                         <lucide:Lucide Icon="Plus"
-                                       StrokeBrush="{DynamicResource TextSecondary}"
+                                       StrokeBrush="{DynamicResource IconPrimary}"
                                        Width="16" Height="16" />
                     </Button>
                 </Grid>
@@ -89,7 +89,7 @@
                                                 Padding="4">
                                             <lucide:Lucide Icon="ChevronDown"
                                                            Width="14" Height="14"
-                                                           StrokeBrush="{DynamicResource TextSecondary}">
+                                                           StrokeBrush="{DynamicResource IconPrimary}">
                                                 <lucide:Lucide.RenderTransform>
                                                     <RotateTransform
                                                         Angle="{Binding IsExpanded, Converter={StaticResource BoolToAngleConverter}}" />
@@ -158,7 +158,7 @@
                                                 Padding="4">
                                             <lucide:Lucide Icon="Menu"
                                                            Width="14" Height="14"
-                                                           StrokeBrush="{DynamicResource TextSecondary}" />
+                                                           StrokeBrush="{DynamicResource IconPrimary}" />
                                             <Button.Flyout>
                                                 <MenuFlyout>
                                                     <MenuItem Header="{DynamicResource RenameMenuItem}"
@@ -288,7 +288,7 @@
 
                                                     <Button Grid.Column="2" Classes="IconButton" Padding="4">
                                                         <lucide:Lucide Icon="Menu" Width="12" Height="12"
-                                                                       StrokeBrush="{DynamicResource TextSecondary}" />
+                                                                       StrokeBrush="{DynamicResource IconPrimary}" />
                                                         <Button.Flyout>
                                                             <MenuFlyout>
                                                                 <MenuItem Header="{DynamicResource RenameMenuItem}"

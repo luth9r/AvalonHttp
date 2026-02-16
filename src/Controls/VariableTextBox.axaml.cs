@@ -31,6 +31,12 @@ public class VariableTextBox : TemplatedControl
     
     public static readonly StyledProperty<bool> AcceptsReturnProperty =
         AvaloniaProperty.Register<VariableTextBox, bool>(nameof(AcceptsReturn), defaultValue: false);
+    
+    public static readonly StyledProperty<IBrush?> HighlightBrushProperty =
+        AvaloniaProperty.Register<VariableTextBox, IBrush?>(nameof(HighlightBrush));
+
+    public static readonly StyledProperty<IBrush?> NormalTextBrushProperty =
+        AvaloniaProperty.Register<VariableTextBox, IBrush?>(nameof(NormalTextBrush));
 
     public bool AcceptsReturn
     {
@@ -49,13 +55,23 @@ public class VariableTextBox : TemplatedControl
         get => GetValue(CornerRadiusProperty);
         set => SetValue(CornerRadiusProperty, value);
     }
+    
+    public IBrush? HighlightBrush
+    {
+        get => GetValue(HighlightBrushProperty);
+        set => SetValue(HighlightBrushProperty, value);
+    }
+
+    public IBrush? NormalTextBrush
+    {
+        get => GetValue(NormalTextBrushProperty);
+        set => SetValue(NormalTextBrushProperty, value);
+    }
 
     private TextBox? _textBox;
     private TextBlock? _highlightText;
     private Button? _revealButton;
     private bool _isPasswordRevealed;
-    private IBrush? _warningBrush;
-    private IBrush? _textPrimaryBrush;
 
     public string Text
     {
@@ -78,9 +94,6 @@ public class VariableTextBox : TemplatedControl
     protected override void OnApplyTemplate(TemplateAppliedEventArgs e)
     {
         base.OnApplyTemplate(e);
-        
-        _warningBrush = Application.Current?.FindResource("Warning") as IBrush;
-        _textPrimaryBrush = Application.Current?.FindResource("TextPrimary") as IBrush;
 
         _textBox = e.NameScope.Find<TextBox>("PART_TextBox");
         _highlightText = e.NameScope.Find<TextBlock>("PART_HighlightText");
@@ -127,6 +140,10 @@ public class VariableTextBox : TemplatedControl
         {
             UpdateRevealState();
         }
+        else if (change.Property == HighlightBrushProperty || change.Property == NormalTextBrushProperty)
+        {
+            UpdateHighlights();
+        }
     }
 
     private void UpdateHighlights()
@@ -156,8 +173,8 @@ public class VariableTextBox : TemplatedControl
             var run = new Run(part)
             {
                 Foreground = regex.IsMatch(part) 
-                    ? (_warningBrush ?? Brushes.Orange)
-                    : (_textPrimaryBrush ?? Brushes.White),
+                    ? (HighlightBrush ?? Brushes.Orange)
+                    : (NormalTextBrush ?? Brushes.Black),
                 FontWeight = regex.IsMatch(part) ? FontWeight.Bold : FontWeight.Normal
             };
             _highlightText.Inlines?.Add(run);
@@ -266,7 +283,7 @@ public class VariableTextBox : TemplatedControl
         {
             _textBox.PasswordChar = isPasswordMode ? PasswordChar : default(char);
             _textBox.Foreground = isPasswordMode 
-                ? (_textPrimaryBrush ?? Brushes.White)
+                ? (NormalTextBrush ?? Brushes.Black)
                 : Brushes.Transparent;
         }
         
