@@ -34,10 +34,8 @@ public partial class App : Application
         
         
         var languageService = Services.GetRequiredService<ILanguageService>();
-        // Fire and forget, or handle properly. 
-        // Since OnFrameworkInitializationCompleted is sync, we can't easily await.
-        // But local file load should be fast.
-        _ = languageService.InitAsync();
+        // Synchronous initialization to prevent UI flicker/empty state
+        languageService.Init();
         
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {

@@ -215,10 +215,10 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
             
             WeakReferenceMessenger.Default.Send(
                 DialogMessage.Destructive(
-                    title: "Unsaved Changes",
+                    title: Loc.Tr("DialogTitleUnsavedChanges"),
                     message: message,
-                    confirmText: "Cancel",
-                    cancelText: "Exit Without Saving",
+                    confirmText: Loc.Tr("BtnCancel"),
+                    cancelText: Loc.Tr("BtnExitWithoutSaving"),
                     onConfirm: () => Task.CompletedTask,
                     onCancel: () =>
                     {
@@ -245,18 +245,18 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
         
         if (requestDirty && envDirty)
         {
-            return "You have unsaved changes in requests and environments.";
+            return Loc.Tr("MsgUnsavedChangesAll");
         }
         if (requestDirty)
         {
-            return "You have unsaved changes in the current request.";
+            return Loc.Tr("MsgUnsavedChangesRequest");
         }
         if (envDirty)
         {
-            return "You have unsaved changes in environments.";
+            return Loc.Tr("MsgUnsavedChangesEnvironment");
         }
         
-        return "You have unsaved changes.";
+        return Loc.Tr("MsgUnsavedChangesGeneric");
     }
 
     /// <summary>

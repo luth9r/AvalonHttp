@@ -106,7 +106,7 @@
                     <Border BorderBrush="{DynamicResource BorderColor}" BorderThickness="0,0,0,1" Padding="24,16">
                         <StackPanel Orientation="Horizontal" Spacing="12">
                             <lucide:Lucide Icon="Info" Width="18" Height="18" StrokeBrush="{DynamicResource TextSecondary}" VerticalAlignment="Center"/>
-                            <TextBlock Text="About" FontWeight="SemiBold" FontSize="14" VerticalAlignment="Center"/>
+                            <TextBlock Text="{DynamicResource SettingsAbout}" FontWeight="SemiBold" FontSize="14" VerticalAlignment="Center"/>
                         </StackPanel>
                     </Border>
                     
@@ -117,7 +117,7 @@
                                  <TextBlock Text="v1.0.0" FontSize="11" Foreground="White" FontWeight="Bold"/>
                              </Border>
                         </StackPanel>
-                        <TextBlock Text="A modern HTTP client built with Avalonia UI." Foreground="{DynamicResource TextSecondary}" FontSize="13"/>
+                        <TextBlock Text="{DynamicResource SettingsDescription}" Foreground="{DynamicResource TextSecondary}" FontSize="13"/>
                     </StackPanel>
                 </StackPanel>
             </Border>

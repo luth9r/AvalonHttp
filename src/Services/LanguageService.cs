@@ -22,17 +22,17 @@ public class LanguageService : ILanguageService
         _sessionService = sessionService;
     }
 
-    public async Task InitAsync()
+    public void Init()
     {
-        var state = await _sessionService.LoadStateAsync();
+        var state = _sessionService.LoadState();
         var lang = state.Language;
-        
+
         if (string.IsNullOrWhiteSpace(lang) || !_availableLanguages.Contains(lang))
         {
             lang = "en";
         }
         
-        SwitchLanguageInternal(lang);
+        SwitchLanguageInternal(lang, immediate: true);
     }
 
     public async Task ChangeLanguageAsync(string cultureCode)
@@ -47,9 +47,9 @@ public class LanguageService : ILanguageService
         await _sessionService.SaveLanguageAsync(cultureCode);
     }
     
-    private void SwitchLanguageInternal(string cultureCode)
+    private void SwitchLanguageInternal(string cultureCode, bool immediate = false)
     {
-        Dispatcher.UIThread.Post(() =>
+        Action switchAction = () =>
         {
             try
             {
@@ -62,21 +62,35 @@ public class LanguageService : ILanguageService
                 var existingDictionary = dictionaries.OfType<ResourceInclude>()
                     .FirstOrDefault(d => d.Source?.AbsolutePath?.Contains("/Assets/Lang/") == true);
 
-                if (existingDictionary != null)
+                if (existingDictionary?.Source?.ToString() == newUri.ToString())
                 {
-                    if (existingDictionary.Source == newUri) return;
-                    dictionaries.Remove(existingDictionary);
+                    CurrentCulture = new CultureInfo(cultureCode);
+                    return;
                 }
                 
                 var newResourceInclude = new ResourceInclude(newUri) { Source = newUri };
-                dictionaries.Add(newResourceInclude);
+                dictionaries.Insert(0, newResourceInclude);
                 
+                if (existingDictionary != null)
+                {
+                    dictionaries.Remove(existingDictionary);
+                }
+
                 CurrentCulture = new CultureInfo(cultureCode);
             }
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"Error switching language: {ex.Message}");
             }
-        });
+        };
+        
+        if (Dispatcher.UIThread.CheckAccess())
+        {
+            switchAction(); // Уже в UI потоке
+        }
+        else
+        {
+            Dispatcher.UIThread.Invoke(switchAction);
+        }
     }
 }

@@ -3,6 +3,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
 using System.Threading.Tasks;
+using AvalonHttp.Helpers;
 using AvalonHttp.Messages;
 using AvalonHttp.Models;
 using AvalonHttp.Models.CollectionAggregate;
@@ -168,8 +169,8 @@ public partial class RequestItemViewModel : ObservableObject, IDisposable
     {
         WeakReferenceMessenger.Default.Send(
             DialogMessage.Destructive(
-                title: "Delete Request?",
-                message: $"Are you sure you want to delete '{Name}'? This action cannot be undone.",
+                title: Loc.Tr("DialogTitleDeleteRequest"),
+                message: Loc.Tr("MsgDeleteRequestConfirm", Name),
                 onConfirm: async () =>
                 {
                     try
@@ -180,13 +181,13 @@ public partial class RequestItemViewModel : ObservableObject, IDisposable
                     {
                         WeakReferenceMessenger.Default.Send(
                             DialogMessage.Error(
-                                "Delete Failed",
-                                $"Could not delete '{Name}': {ex.Message}"
+                                Loc.Tr("MsgDeleteFailed"),
+                                Loc.Tr("MsgDeleteRequestError", Name, ex.Message)
                             )
                         );
                     }
                 },
-                confirmText: "Delete"
+                confirmText: Loc.Tr("BtnDelete")
             )
         );
     }
@@ -204,8 +205,8 @@ public partial class RequestItemViewModel : ObservableObject, IDisposable
         catch (Exception ex)
         {
             WeakReferenceMessenger.Default.Send(DialogMessage.Error(
-                "Failed to Duplicate Request",
-                $"Could not duplicate request': {ex.Message}"
+                Loc.Tr("MsgFailedToDuplicateRequest"),
+                Loc.Tr("MsgFailedToDuplicateRequestDetail", ex.Message)
             ));
         }
     }
@@ -254,8 +255,8 @@ public partial class RequestItemViewModel : ObservableObject, IDisposable
         catch (Exception ex)
         {
             WeakReferenceMessenger.Default.Send(DialogMessage.Error(
-                "Failed to Move Request",
-                $"Could not move request: {ex.Message}"
+                Loc.Tr("MsgFailedToMoveRequest"),
+                Loc.Tr("MsgFailedToMoveRequestDetail", ex.Message)
             ));
         }
     }

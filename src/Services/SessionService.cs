@@ -108,6 +108,30 @@ public class SessionService : ISessionService, IDisposable
             _fileLock.Release();
         }
     }
+    
+    public AppState LoadState()
+    {
+        _fileLock.Wait();
+        try
+        {
+            if (!File.Exists(_filePath)) return new AppState();
+        
+            var json = File.ReadAllText(_filePath);
+            var state = JsonSerializer.Deserialize<AppState>(json, _jsonOptions) ?? new AppState();
+        
+            _cachedState = state;
+            _lastCacheTime = DateTime.UtcNow;
+            return state;
+        }
+        catch
+        {
+            return new AppState();
+        }
+        finally
+        {
+            _fileLock.Release();
+        }
+    }
 
     public async Task ClearStateAsync()
     {

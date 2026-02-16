@@ -6,6 +6,6 @@ namespace AvalonHttp.Services.Interfaces;
 public interface ILanguageService
 {
     Task ChangeLanguageAsync(string cultureCode);
-    Task InitAsync();
+    void Init();
     CultureInfo CurrentCulture { get; }
 }

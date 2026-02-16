@@ -119,4 +119,66 @@
     <!-- Response Timeline Tab -->
     <system:String x:Key="TimelineHeader">Хронологія запиту</system:String>
     <system:String x:Key="TotalDurationLabel">Загальна тривалість: </system:String>
+
+    <!-- Dialogs & Messages -->
+    <system:String x:Key="DialogTitleError">Помилка</system:String>
+    <system:String x:Key="DialogTitleSuccess">Успіх</system:String>
+    <system:String x:Key="DialogTitleWarning">Попередження</system:String>
+    <system:String x:Key="DialogTitleConfirm">Підтвердження</system:String>
+
+    <system:String x:Key="MsgFailedToLoadCollections">Не вдалося завантажити колекції</system:String>
+    <system:String x:Key="MsgFailedToLoadCollectionsDetail">Не вдалося завантажити колекції з диска: {0}</system:String>
+    <system:String x:Key="MsgFailedToCreateCollection">Не вдалося створити колекцію</system:String>
+    <system:String x:Key="MsgFailedToCreateCollectionDetail">Не вдалося створити нову колекцію: {0}</system:String>
+
+    <system:String x:Key="DialogTitleDeleteCollection">Видалити колекцію?</system:String>
+    <system:String x:Key="MsgDeleteCollectionConfirm">Ви впевнені, що хочете видалити '{0}' та всі її запити? Цю дію неможливо скасувати.</system:String>
+    <system:String x:Key="BtnDelete">Видалити</system:String>
+    <system:String x:Key="MsgFailedToDeleteCollection">Не вдалося видалити колекцію</system:String>
+    <system:String x:Key="MsgFailedToDeleteCollectionDetail">Не вдалося видалити колекцію: {0}</system:String>
+
+    <system:String x:Key="DialogTitleFileSystemError">Помилка файлової системи</system:String>
+    <system:String x:Key="MsgSaveCollectionError">Не вдалося зберегти колекцію '{0}': {1}</system:String>
+
+    <system:String x:Key="MsgFailedToDuplicateCollection">Не вдалося дублювати колекцію</system:String>
+    <system:String x:Key="MsgFailedToDuplicateCollectionDetail">Не вдалося дублювати колекцію: {0}</system:String>
+
+    <system:String x:Key="DialogTitleDeleteRequest">Видалити запит?</system:String>
+    <system:String x:Key="MsgDeleteRequestConfirm">Ви впевнені, що хочете видалити '{0}'? Цю дію неможливо скасувати.</system:String>
+    <system:String x:Key="MsgDeleteFailed">Видалення не вдалося</system:String>
+    <system:String x:Key="MsgDeleteRequestError">Не вдалося видалити '{0}': {1}</system:String>
+
+    <system:String x:Key="MsgFailedToDuplicateRequest">Не вдалося дублювати запит</system:String>
+    <system:String x:Key="MsgFailedToDuplicateRequestDetail">Не вдалося дублювати запит: {0}</system:String>
+    <system:String x:Key="MsgFailedToMoveRequest">Не вдалося перемістити запит</system:String>
+    <system:String x:Key="MsgFailedToMoveRequestDetail">Не вдалося перемістити запит: {0}</system:String>
+
+    <system:String x:Key="MsgFailedToLoadEnvironments">Не вдалося завантажити середовища</system:String>
+    <system:String x:Key="MsgFailedToLoadEnvironmentsDetail">Не вдалося завантажити середовища з диска. Повідомлення: {0}</system:String>
+
+    <system:String x:Key="DialogTitleInvalidConfig">Некоректна конфігурація</system:String>
+    <system:String x:Key="MsgInvalidJson">JSON змінних середовища некоректний. Будь ласка, виправте синтаксичні помилки перед збереженням.</system:String>
+
+    <system:String x:Key="DialogTitleSaveFailure">Помилка збереження</system:String>
+    <system:String x:Key="MsgSaveEnvironmentError">Не вдалося зберегти середовище. Повідомлення: {0}</system:String>
+
+    <system:String x:Key="DialogTitleCreateFailure">Помилка створення</system:String>
+    <system:String x:Key="MsgCreateEnvironmentError">Не вдалося створити нове середовище. Повідомлення: {0}</system:String>
+
+    <system:String x:Key="DialogTitleDeleteFailure">Помилка видалення</system:String>
+    <system:String x:Key="MsgDeleteEnvironmentError">Не вдалося видалити середовище. Повідомлення: {0}</system:String>
+
+    <system:String x:Key="DialogTitleDuplicateFailure">Помилка дублювання</system:String>
+    <system:String x:Key="MsgDuplicateEnvironmentError">Не вдалося дублювати середовище. Повідомлення: {0}</system:String>
+
+    <system:String x:Key="DialogTitleUnsavedChanges">Незбережені зміни</system:String>
+    <system:String x:Key="MsgUnsavedChangesAll">У вас є незбережені зміни в запитах та середовищах.</system:String>
+    <system:String x:Key="MsgUnsavedChangesRequest">У вас є незбережені зміни в поточному запиті.</system:String>
+    <system:String x:Key="MsgUnsavedChangesEnvironment">У вас є незбережені зміни в середовищах.</system:String>
+    <system:String x:Key="MsgUnsavedChangesGeneric">У вас є незбережені зміни.</system:String>
+    <system:String x:Key="BtnExitWithoutSaving">Вийти без збереження</system:String>
+    <system:String x:Key="BtnCancel">Скасувати</system:String>
+
+    <system:String x:Key="SettingsAbout">Про програму</system:String>
+    <system:String x:Key="SettingsDescription">Сучасний HTTP-клієнт, створений за допомогою Avalonia UI.</system:String>
 </ResourceDictionary>

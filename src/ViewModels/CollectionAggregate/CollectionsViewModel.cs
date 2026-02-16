@@ -5,6 +5,7 @@ using System.Reactive.Disposables;
 using System.Reactive.Disposables.Fluent;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
+using AvalonHttp.Helpers;
 using AvalonHttp.Messages;
 using AvalonHttp.Models.CollectionAggregate;
 using AvalonHttp.Services.Interfaces;
@@ -149,8 +150,8 @@ public partial class CollectionsViewModel : ViewModelBase, IDisposable
         {
             System.Diagnostics.Debug.WriteLine($"Failed to load collections: {ex.Message}");
             WeakReferenceMessenger.Default.Send(DialogMessage.Error(
-                "Failed to Load Collections",
-                $"Could not load collections from disk: {ex.Message}"
+                Loc.Tr("MsgFailedToLoadCollections"),
+                Loc.Tr("MsgFailedToLoadCollectionsDetail", ex.Message)
             ));
         }
         finally
@@ -225,8 +226,8 @@ public partial class CollectionsViewModel : ViewModelBase, IDisposable
             System.Diagnostics.Debug.WriteLine($"Failed to create collection: {ex.Message}");
             
             WeakReferenceMessenger.Default.Send(DialogMessage.Error(
-                "Failed to Create Collection",
-                $"Could not create new collection: {ex.Message}"
+                Loc.Tr("MsgFailedToCreateCollection"),
+                Loc.Tr("MsgFailedToCreateCollectionDetail", ex.Message)
             ));
         }
     }
@@ -244,9 +245,9 @@ public partial class CollectionsViewModel : ViewModelBase, IDisposable
         }
 
         WeakReferenceMessenger.Default.Send(DialogMessage.Destructive(
-            "Delete Collection?",
-            $"Are you sure you want to delete '{collection.Name}' and all its requests? This action cannot be undone.",
-            confirmText: "Delete",
+            Loc.Tr("DialogTitleDeleteCollection"),
+            Loc.Tr("MsgDeleteCollectionConfirm", collection.Name),
+            confirmText: Loc.Tr("BtnDelete"),
             onConfirm: async () => 
             {
                 try
@@ -272,8 +273,8 @@ public partial class CollectionsViewModel : ViewModelBase, IDisposable
                     System.Diagnostics.Debug.WriteLine($"Failed to delete collection: {ex.Message}");
                     
                     WeakReferenceMessenger.Default.Send(DialogMessage.Error(
-                        "Failed to Delete Collection",
-                        $"Could not delete collection: {ex.Message}"
+                        Loc.Tr("MsgFailedToDeleteCollection"),
+                        Loc.Tr("MsgFailedToDeleteCollectionDetail", ex.Message)
                     ));
                 }
             }
@@ -306,8 +307,8 @@ public partial class CollectionsViewModel : ViewModelBase, IDisposable
         {
             System.Diagnostics.Debug.WriteLine($"Failed to save collection: {ex.Message}");
             WeakReferenceMessenger.Default.Send(DialogMessage.Error(
-                "File System Error",
-                $"Could not save collection '{collectionVm.Name}': {ex.Message}"
+                Loc.Tr("DialogTitleFileSystemError"),
+                Loc.Tr("MsgSaveCollectionError", collectionVm.Name, ex.Message)
             ));
         }
     }
@@ -356,8 +357,8 @@ public partial class CollectionsViewModel : ViewModelBase, IDisposable
             System.Diagnostics.Debug.WriteLine($"Failed to duplicate collection: {ex.Message}");
             
             WeakReferenceMessenger.Default.Send(DialogMessage.Error(
-                "Failed to Duplicate Collection",
-                $"Could not duplicate collection: {ex.Message}"
+                Loc.Tr("MsgFailedToDuplicateCollection"),
+                Loc.Tr("MsgFailedToDuplicateCollectionDetail", ex.Message)
             ));
         }
     }

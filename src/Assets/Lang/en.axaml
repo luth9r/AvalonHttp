@@ -119,4 +119,66 @@
 
     <!-- Response Timeline Tab -->
     <system:String x:Key="TimelineHeader">Request Timeline</system:String>
+
+    <!-- Dialogs & Messages -->
+    <system:String x:Key="DialogTitleError">Error</system:String>
+    <system:String x:Key="DialogTitleSuccess">Success</system:String>
+    <system:String x:Key="DialogTitleWarning">Warning</system:String>
+    <system:String x:Key="DialogTitleConfirm">Confirm</system:String>
+    
+    <system:String x:Key="MsgFailedToLoadCollections">Failed to Load Collections</system:String>
+    <system:String x:Key="MsgFailedToLoadCollectionsDetail">Could not load collections from disk: {0}</system:String>
+    <system:String x:Key="MsgFailedToCreateCollection">Failed to Create Collection</system:String>
+    <system:String x:Key="MsgFailedToCreateCollectionDetail">Could not create new collection: {0}</system:String>
+    
+    <system:String x:Key="DialogTitleDeleteCollection">Delete Collection?</system:String>
+    <system:String x:Key="MsgDeleteCollectionConfirm">Are you sure you want to delete '{0}' and all its requests? This action cannot be undone.</system:String>
+    <system:String x:Key="BtnDelete">Delete</system:String>
+    <system:String x:Key="MsgFailedToDeleteCollection">Failed to Delete Collection</system:String>
+    <system:String x:Key="MsgFailedToDeleteCollectionDetail">Could not delete collection: {0}</system:String>
+    
+    <system:String x:Key="DialogTitleFileSystemError">File System Error</system:String>
+    <system:String x:Key="MsgSaveCollectionError">Could not save collection '{0}': {1}</system:String>
+    
+    <system:String x:Key="MsgFailedToDuplicateCollection">Failed to Duplicate Collection</system:String>
+    <system:String x:Key="MsgFailedToDuplicateCollectionDetail">Could not duplicate collection: {0}</system:String>
+    
+    <system:String x:Key="DialogTitleDeleteRequest">Delete Request?</system:String>
+    <system:String x:Key="MsgDeleteRequestConfirm">Are you sure you want to delete '{0}'? This action cannot be undone.</system:String>
+    <system:String x:Key="MsgDeleteFailed">Delete Failed</system:String>
+    <system:String x:Key="MsgDeleteRequestError">Could not delete '{0}': {1}</system:String>
+    
+    <system:String x:Key="MsgFailedToDuplicateRequest">Failed to Duplicate Request</system:String>
+    <system:String x:Key="MsgFailedToDuplicateRequestDetail">Could not duplicate request: {0}</system:String>
+    <system:String x:Key="MsgFailedToMoveRequest">Failed to Move Request</system:String>
+    <system:String x:Key="MsgFailedToMoveRequestDetail">Could not move request: {0}</system:String>
+    
+    <system:String x:Key="MsgFailedToLoadEnvironments">Failed to Load Environments</system:String>
+    <system:String x:Key="MsgFailedToLoadEnvironmentsDetail">Could not load environments from disk. Message: {0}</system:String>
+    
+    <system:String x:Key="DialogTitleInvalidConfig">Invalid Configuration</system:String>
+    <system:String x:Key="MsgInvalidJson">The environment variables JSON is invalid. Please fix syntax errors before saving.</system:String>
+    
+    <system:String x:Key="DialogTitleSaveFailure">Save Failure</system:String>
+    <system:String x:Key="MsgSaveEnvironmentError">Failed to save environment. Message: {0}</system:String>
+    
+    <system:String x:Key="DialogTitleCreateFailure">Create Failure</system:String>
+    <system:String x:Key="MsgCreateEnvironmentError">Failed to create new environment. Message: {0}</system:String>
+    
+    <system:String x:Key="DialogTitleDeleteFailure">Delete Failure</system:String>
+    <system:String x:Key="MsgDeleteEnvironmentError">Failed to delete environment. Message: {0}</system:String>
+    
+    <system:String x:Key="DialogTitleDuplicateFailure">Duplicate Failure</system:String>
+    <system:String x:Key="MsgDuplicateEnvironmentError">Failed to duplicate environment. Message: {0}</system:String>
+    
+    <system:String x:Key="DialogTitleUnsavedChanges">Unsaved Changes</system:String>
+    <system:String x:Key="MsgUnsavedChangesAll">You have unsaved changes in requests and environments.</system:String>
+    <system:String x:Key="MsgUnsavedChangesRequest">You have unsaved changes in the current request.</system:String>
+    <system:String x:Key="MsgUnsavedChangesEnvironment">You have unsaved changes in environments.</system:String>
+    <system:String x:Key="MsgUnsavedChangesGeneric">You have unsaved changes.</system:String>
+    <system:String x:Key="BtnExitWithoutSaving">Exit Without Saving</system:String>
+    <system:String x:Key="BtnCancel">Cancel</system:String>
+    
+    <system:String x:Key="SettingsAbout">About</system:String>
+    <system:String x:Key="SettingsDescription">A modern HTTP client built with Avalonia UI.</system:String>
 </ResourceDictionary>

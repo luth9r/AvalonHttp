@@ -54,13 +54,12 @@
                         Padding="12,8"
                         HorizontalAlignment="Stretch"
                         Cursor="Hand">
-                    <Grid ColumnDefinitions="Auto,*,Auto">
-                        <TextBlock Grid.Column="0"
-                                   Text="{DynamicResource AddCollectionButton}"
-                                   Foreground="{DynamicResource TextPrimary}"
-                                   VerticalAlignment="Center"
-                                   Margin="0,0,8,0" />
-                    </Grid>
+                    <StackPanel Orientation="Horizontal" 
+                                HorizontalAlignment="Center" 
+                                Spacing="8">
+                        <TextBlock Text="{DynamicResource AddCollectionButton}"
+                                   VerticalAlignment="Center" />
+                    </StackPanel>
                 </Button>
             </Border>
 
@@ -291,7 +290,7 @@
                                                                 Background="{DynamicResource AccentBrush}"
                                                                 VerticalAlignment="Center"
                                                                 IsVisible="{Binding IsDirty}"
-                                                                ToolTip.Tip="Unsaved changes" />
+                                                                ToolTip.Tip="{DynamicResource UnsavedChangesTooltip}" />
                                                     </Grid>
 
                                                     <Button Grid.Column="2" Classes="IconButton" Padding="4">

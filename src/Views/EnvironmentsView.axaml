@@ -60,13 +60,12 @@
                             Padding="12,8"
                             HorizontalAlignment="Stretch"
                             Cursor="Hand">
-                        <Grid ColumnDefinitions="Auto,*,Auto">
-                            <TextBlock Grid.Column="0"
-                                       Text="{DynamicResource AddEnvironmentButton}"
-                                       Foreground="{DynamicResource TextPrimary}"
-                                       VerticalAlignment="Center"
-                                       Margin="0,0,8,0" />
-                        </Grid>
+                        <StackPanel Orientation="Horizontal" 
+                                    HorizontalAlignment="Center" 
+                                    Spacing="8">
+                            <TextBlock Text="{DynamicResource AddEnvironmentButton}"
+                                       VerticalAlignment="Center" />
+                        </StackPanel>
                     </Button>
                 </Border>
 

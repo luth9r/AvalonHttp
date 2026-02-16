@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using AvalonHttp.Common.Constants;
+using AvalonHttp.Helpers;
 using AvalonHttp.Messages;
 using AvalonHttp.Services.Interfaces;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -143,8 +144,8 @@ public partial class EnvironmentsViewModel : ViewModelBase, IDisposable
         catch (Exception ex)
         {
             WeakReferenceMessenger.Default.Send(DialogMessage.Error(
-                "Failed to Load Environments", 
-                $"Could not load environments from disk. Message: {ex.Message}"
+                Loc.Tr("MsgFailedToLoadEnvironments"),
+                Loc.Tr("MsgFailedToLoadEnvironmentsDetail", ex.Message)
             ));
             System.Diagnostics.Debug.WriteLine($"Failed to load environments: {ex.Message}");
         }
@@ -215,8 +216,8 @@ public partial class EnvironmentsViewModel : ViewModelBase, IDisposable
             if (!environment.IsJsonValid)
             {
                 WeakReferenceMessenger.Default.Send(DialogMessage.Error(
-                    "Invalid Configuration", 
-                    "The environment variables JSON is invalid. Please fix syntax errors before saving."
+                    Loc.Tr("DialogTitleInvalidConfig"),
+                    Loc.Tr("MsgInvalidJson")
                 ));
                 System.Diagnostics.Debug.WriteLine($"Cannot save '{environment.Name}': Invalid JSON");
                 return;
@@ -235,8 +236,8 @@ public partial class EnvironmentsViewModel : ViewModelBase, IDisposable
         catch (Exception ex)
         {
             WeakReferenceMessenger.Default.Send(DialogMessage.Error(
-                "Save Failure", 
-                $"Failed to save environment. Message: {ex.Message}"
+                Loc.Tr("DialogTitleSaveFailure"),
+                Loc.Tr("MsgSaveEnvironmentError", ex.Message)
             ));
             System.Diagnostics.Debug.WriteLine($"Cannot save '{environment.Name}': Invalid JSON");
         }
@@ -270,8 +271,8 @@ public partial class EnvironmentsViewModel : ViewModelBase, IDisposable
         catch (Exception ex)
         {
             WeakReferenceMessenger.Default.Send(DialogMessage.Error(
-                "Create Failure", 
-                $"Failed to create new environment. Message: {ex.Message}"
+                Loc.Tr("DialogTitleCreateFailure"),
+                Loc.Tr("MsgCreateEnvironmentError", ex.Message)
             ));
             System.Diagnostics.Debug.WriteLine($"Cannot create new environment: {ex.Message}");
         }
@@ -302,8 +303,8 @@ public partial class EnvironmentsViewModel : ViewModelBase, IDisposable
         catch (Exception ex)
         {
             WeakReferenceMessenger.Default.Send(DialogMessage.Error(
-                "Delete Failure", 
-                $"Failed to delete environment. Message: {ex.Message}"
+                Loc.Tr("DialogTitleDeleteFailure"),
+                Loc.Tr("MsgDeleteEnvironmentError", ex.Message)
             ));
             System.Diagnostics.Debug.WriteLine($"Cannot delete '{environment.Name}': {ex.Message}");
         }
@@ -363,8 +364,8 @@ public partial class EnvironmentsViewModel : ViewModelBase, IDisposable
         catch (Exception ex)
         {
             WeakReferenceMessenger.Default.Send(DialogMessage.Error(
-                "Duplicate Failure", 
-                $"Failed to duplicate environment. Message: {ex.Message}"
+                Loc.Tr("DialogTitleDuplicateFailure"),
+                Loc.Tr("MsgDuplicateEnvironmentError", ex.Message)
             ));
             System.Diagnostics.Debug.WriteLine($"Cannot duplicate '{environment.Name}': {ex.Message}");
         }
