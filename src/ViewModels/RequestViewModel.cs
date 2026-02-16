@@ -1111,6 +1111,10 @@ public partial class RequestViewModel : ViewModelBase, IDisposable
         target.Clear();
         foreach (var item in source)
         {
+            if (string.IsNullOrWhiteSpace(item.Key) ||
+                string.IsNullOrWhiteSpace(item.Value))
+                continue;
+            
             target.Add(new KeyValueItemModel
             {
                 Key = item.Key,

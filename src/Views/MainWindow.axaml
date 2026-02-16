@@ -6,6 +6,7 @@
         xmlns:shared="clr-namespace:AvalonHttp.Views.Shared"
         xmlns:collections="clr-namespace:AvalonHttp.Views"
         xmlns:environments="clr-namespace:AvalonHttp.Views"
+        xmlns:settings="clr-namespace:AvalonHttp.Views"
         
         x:Class="AvalonHttp.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
@@ -60,6 +61,10 @@
                     <environments:EnvironmentsView
                         DataContext="{Binding EnvironmentsViewModel}"
                         IsVisible="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).IsEnvironmentsView}" />
+
+                    <settings:SettingsView
+                        DataContext="{Binding SettingsViewModel}"
+                        IsVisible="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).IsSettingsView}" />
                         
                 </Grid>
             </Grid>

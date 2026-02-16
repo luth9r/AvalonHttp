@@ -2,6 +2,8 @@
 using System.Threading.Tasks;
 using AvalonHttp.Messages;
 using AvalonHttp.ViewModels.EnvironmentAggregate;
+using AvalonHttp.Services.Interfaces;
+using AvalonHttp.Helpers;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
@@ -31,10 +33,7 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
     /// <summary>
     /// Indicates the current view.
     /// </summary>
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(IsCollectionsView))]
-    [NotifyPropertyChangedFor(nameof(IsEnvironmentsView))]
-    private string _currentView = "Collections";
+
     
     /// <summary>
     /// Indicates whether the current view is the collections view.
@@ -45,11 +44,31 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
     /// Indicates whether the current view is the environments view.
     /// </summary>
     public bool IsEnvironmentsView => CurrentView == "Environments";
+    
+    /// <summary>
+    /// Indicates whether the current view is the settings view.
+    /// </summary>
+    public bool IsSettingsView => CurrentView == "Settings";
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsCollectionsView))]
+    [NotifyPropertyChangedFor(nameof(IsEnvironmentsView))]
+    [NotifyPropertyChangedFor(nameof(IsSettingsView))]
+    private string _currentView = "Collections";
+
+    public SettingsViewModel SettingsViewModel { get; }
+    
+    private readonly ILanguageService _languageService;
+
+    [ObservableProperty]
+    private string _welcomeMessage = "Loading...";
 
     public MainWindowViewModel(
         CollectionWorkspaceViewModel collectionsWorkspace,
         EnvironmentsViewModel environmentsViewModel,
-        DialogViewModel dialogViewModel)
+        DialogViewModel dialogViewModel,
+        ILanguageService languageService,
+        SettingsViewModel settingsViewModel)
     {
         CollectionsWorkspace = collectionsWorkspace ?? 
             throw new ArgumentNullException(nameof(collectionsWorkspace));
@@ -57,6 +76,13 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
             throw new ArgumentNullException(nameof(environmentsViewModel));
         DialogViewModel = dialogViewModel ?? 
             throw new ArgumentNullException(nameof(dialogViewModel));
+        _languageService = languageService ??
+                           throw new ArgumentNullException(nameof(languageService));
+        SettingsViewModel = settingsViewModel ??
+                            throw new ArgumentNullException(nameof(settingsViewModel));
+
+        // Initial load
+        UpdateWelcomeMessage();
     }
     
     /// <summary>
@@ -104,7 +130,36 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
         CloseAllEdits();
         CurrentView = "Environments";
     }
+
+    /// <summary>
+    /// Switches to the settings view.
+    /// </summary>
+    [RelayCommand]
+    private void ShowSettings()
+    {
+        if (CurrentView == "Settings")
+        {
+            return;
+        }
+
+        CloseAllEdits();
+        CurrentView = "Settings";
+    }
     
+    
+    [RelayCommand]
+    private async Task ToggleLanguageAsync()
+    {
+        var nextLang = _languageService.CurrentCulture.Name == "en" ? "ua" : "en";
+        await _languageService.ChangeLanguageAsync(nextLang);
+        UpdateWelcomeMessage();
+    }
+
+    private void UpdateWelcomeMessage()
+    {
+        WelcomeMessage = Loc.Tr("WelcomeMessage");
+    }
+
     /// <summary>
     /// Closes all open edits across collections and environments.
     /// </summary>

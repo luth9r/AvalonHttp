@@ -28,7 +28,7 @@
             <DockPanel>
                 <StackPanel DockPanel.Dock="Top" Margin="20,20,20,16" Spacing="12">
                     <Grid ColumnDefinitions="*,Auto">
-                        <TextBlock Text="ENVIRONMENTS"
+                        <TextBlock Text="{DynamicResource EnvironmentsTitle}"
                                    Grid.Column="0"
                                    Foreground="{DynamicResource TextSecondary}"
                                    FontSize="11"
@@ -38,7 +38,7 @@
                         <Button Grid.Column="1"
                                 Classes="IconButton"
                                 Command="{Binding CreateEnvironmentCommand}"
-                                ToolTip.Tip="New Environment (Ctrl+N)">
+                                ToolTip.Tip="{DynamicResource NewEnvironmentTooltip}">
                             <lucide:Lucide Icon="Plus"
                                            StrokeBrush="{DynamicResource TextSecondary}"
                                            Width="16" Height="16" />
@@ -62,7 +62,7 @@
                             Cursor="Hand">
                         <Grid ColumnDefinitions="Auto,*,Auto">
                             <TextBlock Grid.Column="0"
-                                       Text="Add Environment"
+                                       Text="{DynamicResource AddEnvironmentButton}"
                                        Foreground="{DynamicResource TextPrimary}"
                                        VerticalAlignment="Center"
                                        Margin="0,0,8,0" />
@@ -184,7 +184,7 @@
                                                         Background="{DynamicResource AccentBrush}"
                                                         VerticalAlignment="Center"
                                                         IsVisible="{Binding IsDirty}"
-                                                        ToolTip.Tip="Unsaved changes" />
+                                                        ToolTip.Tip="{DynamicResource UnsavedChangesTooltip}" />
                                             </Grid>
 
                                             
@@ -199,7 +199,7 @@
                                                 <Button.Flyout>
                                                     <MenuFlyout>
                                                         
-                                                        <MenuItem Header="Set Active"
+                                                        <MenuItem Header="{DynamicResource SetActiveMenuItem}"
                                                                   Command="{Binding SetActiveCommand}"
                                                                   IsVisible="{Binding !IsActive}">
                                                             <MenuItem.Icon>
@@ -207,21 +207,21 @@
                                                             </MenuItem.Icon>
                                                         </MenuItem>
                                                         
-                                                        <MenuItem Header="Rename"
+                                                        <MenuItem Header="{DynamicResource RenameMenuItem}"
                                                                   Command="{Binding StartRenameCommand}">
                                                             <MenuItem.Icon>
                                                                 <lucide:Lucide Icon="Pencil" Width="14" />
                                                             </MenuItem.Icon>
                                                         </MenuItem>
-
-                                                        <MenuItem Header="Duplicate"
+                                                        
+                                                        <MenuItem Header="{DynamicResource DuplicateMenuItem}"
                                                                   Command="{Binding DuplicateCommand}">
                                                             <MenuItem.Icon>
                                                                 <lucide:Lucide Icon="Copy" Width="14" />
                                                             </MenuItem.Icon>
                                                         </MenuItem>
                                                         
-                                                        <MenuItem Header="Revert"
+                                                        <MenuItem Header="{DynamicResource RevertMenuItem}"
                                                                   Command="{Binding RevertChangesCommand}"
                                                                   IsVisible="{Binding IsDirty}">
                                                             <MenuItem.Icon>
@@ -230,8 +230,8 @@
                                                         </MenuItem>
 
                                                         <Separator />
-
-                                                        <MenuItem Header="Delete"
+                                                        
+                                                        <MenuItem Header="{DynamicResource DeleteMenuItem}"
                                                                   Command="{Binding DeleteCommand}">
                                                             <MenuItem.Icon>
                                                                 <lucide:Lucide Icon="Trash2" Width="14" />
@@ -243,10 +243,13 @@
                                         </Grid>
 
                                         <TextBlock Grid.Row="1"
-                                                   Text="{Binding VariablesCount, StringFormat='{}{0} variables'}"
                                                    Foreground="{DynamicResource TextMuted}"
                                                    FontSize="11"
-                                                   Margin="24,4,0,0" />
+                                                   Margin="24,4,0,0">
+                                            <Run Text="{Binding VariablesCount}" />
+                                            <Run Text=" " />
+                                            <Run Text="{DynamicResource VariablesLabel}" />
+                                        </TextBlock>
                                     </Grid>
                                 </Border>
                             </DataTemplate>
@@ -274,7 +277,7 @@
                                    FontSize="16"
                                    FontWeight="SemiBold"
                                    Foreground="{DynamicResource TextPrimary}" />
-                        <TextBlock Text="Edit environment variables as JSON"
+                        <TextBlock Text="{DynamicResource EditVariablesJsonMessage}"
                                    FontSize="12"
                                    Foreground="{DynamicResource TextSecondary}"
                                    Margin="0,4,0,0" />
@@ -289,17 +292,16 @@
                                 Background="{DynamicResource AccentBrush}"
                                 VerticalAlignment="Center"
                                 IsVisible="{Binding SelectedEnvironment.IsDirty}" 
-                                ToolTip.Tip="Unsaved changes" />
+                                ToolTip.Tip="{DynamicResource UnsavedChangesTooltip}" />
                         
                         <Button Classes="SaveButton"
                                 Command="{Binding SaveEnvironmentCommand}"
-                                ToolTip.Tip="Save (Ctrl+S)"
-                                Width="80">
+                                ToolTip.Tip="{DynamicResource SaveTooltip}">
                             <StackPanel Orientation="Horizontal" Spacing="6">
                                 <lucide:Lucide Icon="Save"
                                                StrokeBrush="White"
                                                Width="14" Height="14" />
-                                <TextBlock Text="Save" VerticalAlignment="Center" />
+                                <TextBlock Text="{DynamicResource SaveButton}" VerticalAlignment="Center" />
                             </StackPanel>
                         </Button>
                     </StackPanel>
@@ -317,12 +319,13 @@
                                        StrokeBrush="{DynamicResource TextMuted}"
                                        Width="48" Height="48"
                                        HorizontalAlignment="Center" />
-                        <TextBlock Text="No Environment Selected"
+                                       
+                        <TextBlock Text="{DynamicResource NoEnvironmentSelectedTitle}"
                                    FontSize="18"
                                    FontWeight="SemiBold"
                                    Foreground="{DynamicResource TextPrimary}"
                                    HorizontalAlignment="Center" />
-                        <TextBlock Text="Select an environment from the list to edit"
+                        <TextBlock Text="{DynamicResource SelectEnvironmentMessage}"
                                    FontSize="13"
                                    Foreground="{DynamicResource TextSecondary}"
                                    HorizontalAlignment="Center" />

@@ -1,0 +1,127 @@
+﻿<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:AvalonHttp.ViewModels"
+             xmlns:lucide="clr-namespace:LucideAvalonia;assembly=LucideAvalonia"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="600"
+             x:Class="AvalonHttp.Views.SettingsView"
+             x:DataType="vm:SettingsViewModel">
+
+    <ScrollViewer>
+        <StackPanel Margin="32" 
+                    Spacing="32" 
+                    Width="800" 
+                    HorizontalAlignment="Center">
+            
+            <StackPanel Spacing="12">
+                <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+                    <Border Background="{DynamicResource BgElevated}" 
+                            BorderBrush="{DynamicResource BorderColor}" 
+                            BorderThickness="1"
+                            CornerRadius="8" 
+                            Width="40" Height="40">
+                        <lucide:Lucide Icon="Settings" 
+                                       Width="20" Height="20" 
+                                       StrokeBrush="{DynamicResource TextPrimary}" 
+                                       HorizontalAlignment="Center" 
+                                       VerticalAlignment="Center"/>
+                    </Border>
+                    <TextBlock Text="{DynamicResource SettingsTitle}" 
+                               FontSize="28" 
+                               FontWeight="Bold" 
+                               VerticalAlignment="Center"
+                               Foreground="{DynamicResource TextPrimary}"/>
+                </StackPanel>
+                <TextBlock Text="{DynamicResource SettingsSubtitle}" 
+                           FontSize="15" 
+                           Foreground="{DynamicResource TextSecondary}" 
+                           Margin="52,0,0,0"/>
+            </StackPanel>
+
+            <Border Background="{DynamicResource BgElevated}" 
+                    CornerRadius="12" 
+                    BorderBrush="{DynamicResource BorderColor}" 
+                    BorderThickness="1">
+                <StackPanel>
+                    <Border BorderBrush="{DynamicResource BorderColor}" 
+                            BorderThickness="0,0,0,1" 
+                            Padding="24,16">
+                        <StackPanel Orientation="Horizontal" Spacing="12">
+                            <lucide:Lucide Icon="Monitor" 
+                                           Width="18" Height="18" 
+                                           StrokeBrush="{DynamicResource AccentBrush}" 
+                                           VerticalAlignment="Center"/>
+                            <TextBlock Text="{DynamicResource GeneralSection}" 
+                                       FontWeight="SemiBold" 
+                                       FontSize="14" 
+                                       VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Border>
+                    
+                    <StackPanel Spacing="24" Margin="24">
+                        <Grid ColumnDefinitions="*, Auto">
+                            <Grid.Styles>
+                                <Style Selector="Grid > StackPanel">
+                                    <Setter Property="VerticalAlignment" Value="Center"/>
+                                </Style>
+                            </Grid.Styles>
+                            
+                            <StackPanel Grid.Column="0" Spacing="4" Margin="0,0,24,0">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <TextBlock Text="{DynamicResource LanguageLabel}" 
+                                               FontSize="14" 
+                                               FontWeight="Medium"/>
+                                    <lucide:Lucide Icon="Languages" Width="14" Height="14" StrokeBrush="{DynamicResource TextSecondary}"/>
+                                </StackPanel>
+                                <TextBlock Text="{DynamicResource LanguageSelectionDescription}" 
+                                           FontSize="13" 
+                                           Foreground="{DynamicResource TextSecondary}"
+                                           TextWrapping="Wrap"/>
+                            </StackPanel>
+                            
+                            <ComboBox Grid.Column="1" 
+                                      ItemsSource="{Binding AvailableLanguages}" 
+                                      SelectedItem="{Binding SelectedLanguage}"
+                                      Width="240"
+                                      Classes="Outline">
+                                <ComboBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Orientation="Horizontal" Spacing="8">
+                                            <TextBlock Text="{Binding Name}" />
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </ComboBox.ItemTemplate>
+                            </ComboBox>
+                        </Grid>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+            
+            <Border Background="{DynamicResource BgElevated}" 
+                    CornerRadius="12" 
+                    BorderBrush="{DynamicResource BorderColor}" 
+                    BorderThickness="1">
+                <StackPanel>
+                    <Border BorderBrush="{DynamicResource BorderColor}" BorderThickness="0,0,0,1" Padding="24,16">
+                        <StackPanel Orientation="Horizontal" Spacing="12">
+                            <lucide:Lucide Icon="Info" Width="18" Height="18" StrokeBrush="{DynamicResource TextSecondary}" VerticalAlignment="Center"/>
+                            <TextBlock Text="About" FontWeight="SemiBold" FontSize="14" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Border>
+                    
+                    <StackPanel Spacing="12" Margin="24">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                             <TextBlock Text="AvalonHttp" FontWeight="Bold" FontSize="16"/>
+                             <Border Background="{DynamicResource AccentBrush}" CornerRadius="4" Padding="6,2">
+                                 <TextBlock Text="v1.0.0" FontSize="11" Foreground="White" FontWeight="Bold"/>
+                             </Border>
+                        </StackPanel>
+                        <TextBlock Text="A modern HTTP client built with Avalonia UI." Foreground="{DynamicResource TextSecondary}" FontSize="13"/>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

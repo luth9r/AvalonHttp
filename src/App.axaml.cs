@@ -32,6 +32,13 @@ public partial class App : Application
         
         Services = collection.BuildServiceProvider();
         
+        
+        var languageService = Services.GetRequiredService<ILanguageService>();
+        // Fire and forget, or handle properly. 
+        // Since OnFrameworkInitializationCompleted is sync, we can't easily await.
+        // But local file load should be fast.
+        _ = languageService.InitAsync();
+        
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
             // Avoid duplicate validations from both Avalonia and the CommunityToolkit. 
@@ -57,6 +64,7 @@ public partial class App : Application
         services.AddSingleton<IUrlParserService, UrlParserService>();
         services.AddSingleton<IEnvironmentRepository, FileEnvironmentRepository>();
         services.AddSingleton<IDirtyTrackerService, DirtyTrackerService>();
+        services.AddSingleton<ILanguageService, LanguageService>();
         services.AddSingleton<HeadersViewModel>();
         services.AddSingleton<AuthViewModel>();
         services.AddSingleton<QueryParamsViewModel>();
@@ -64,6 +72,7 @@ public partial class App : Application
         services.AddSingleton<EnvironmentsViewModel>();
         services.AddSingleton<DialogViewModel>();
         
+        services.AddTransient<SettingsViewModel>();
         services.AddTransient<RequestViewModel>();
         services.AddTransient<MainWindowViewModel>();
         services.AddTransient<CollectionsViewModel>();

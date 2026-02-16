@@ -1,0 +1,122 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:system="clr-namespace:System;assembly=netstandard">
+    <system:String x:Key="WelcomeMessage">Ласкаво просимо до AvalonHttp</system:String>
+    <system:String x:Key="ChangeLanguage">Змінити мову</system:String>
+    
+    <!-- Collections Sidebar -->
+    <system:String x:Key="CollectionsHeader">КОЛЕКЦІЇ</system:String>
+    <system:String x:Key="SearchPlaceholder">Пошук колекцій та запитів...</system:String>
+    <system:String x:Key="NewCollectionTooltip">Нова колекція</system:String>
+    <system:String x:Key="AddCollectionButton">Додати колекцію</system:String>
+    <system:String x:Key="AddRequestMenuItem">Додати запит</system:String>
+    
+    <!-- Request Editor Header -->
+    <system:String x:Key="SaveButton">Зберегти</system:String>
+    <system:String x:Key="SaveTooltip">Зберегти зміни (Ctrl+S)</system:String>
+    <system:String x:Key="SendButton">Надіслати</system:String>
+    <system:String x:Key="UrlPlaceholder">Введіть URL запиту...</system:String>
+    <system:String x:Key="UnsavedChangesTooltip">Незбережені зміни</system:String>
+
+    <!-- Request Tabs -->
+    <system:String x:Key="TabParams">Параметри</system:String>
+    <system:String x:Key="TabAuth">Авт.</system:String>
+    <system:String x:Key="TabHeaders">Заголовки</system:String>
+    <system:String x:Key="TabBody">Тіло</system:String>
+    <system:String x:Key="TabCookies">Куки</system:String>
+    <system:String x:Key="TabTimeline">Час</system:String>
+
+    <!-- Params Tab -->
+    <system:String x:Key="SectionQueryParams">ПАРАМЕТРИ ЗАПИТУ</system:String>
+    <system:String x:Key="ParamNamePlaceholder">Назва параметру</system:String>
+    <system:String x:Key="ValuePlaceholder">Значення</system:String>
+    <system:String x:Key="AddParameterButton">Додати параметр</system:String>
+
+    <!-- Auth Tab -->
+    <system:String x:Key="SectionAuthorization">АВТОРИЗАЦІЯ</system:String>
+    <system:String x:Key="AuthTypeLabel">Тип авт.</system:String>
+    <system:String x:Key="UsernameLabel">Ім'я користувача</system:String>
+    <system:String x:Key="PasswordLabel">Пароль</system:String>
+    <system:String x:Key="PasswordPlaceholder">Введіть пароль</system:String>
+    <system:String x:Key="TokenLabel">Токен</system:String>
+    <system:String x:Key="TokenPlaceholder">Введіть токен доступу</system:String>
+    <system:String x:Key="KeyNameLabel">Назва ключа</system:String>
+    <system:String x:Key="KeyNamePlaceholder">Введіть назву API ключа</system:String>
+    <system:String x:Key="KeyValueLabel">Значення ключа</system:String>
+    <system:String x:Key="KeyValuePlaceholder">Введіть API ключ</system:String>
+    <system:String x:Key="AddToLabel">Додати до</system:String>
+    <system:String x:Key="NoAuthTitle">Без авторизації</system:String>
+    <system:String x:Key="NoAuthMessage">Цей запит буде надіслано без авторизації</system:String>
+
+    <!-- Headers Tab -->
+    <system:String x:Key="SectionRequestHeaders">ЗАГОЛОВКИ ЗАПИТУ</system:String>
+    <system:String x:Key="HeaderNamePlaceholder">Назва заголовка</system:String>
+    <system:String x:Key="AddHeaderButton">Додати заголовок</system:String>
+    
+    <!-- Body Tab -->
+    <system:String x:Key="SectionRequestBody">ТІЛО ЗАПИТУ</system:String>
+
+    <!-- Cookies Tab -->
+    <system:String x:Key="SectionRequestCookies">КУКИ ЗАПИТУ</system:String>
+    <system:String x:Key="CookieNamePlaceholder">Назва куки</system:String>
+    <system:String x:Key="CookieValuePlaceholder">Значення куки</system:String>
+    <system:String x:Key="AddCookieButton">Додати куку</system:String>
+
+    <!-- Response Area -->
+    <system:String x:Key="SaveResponseTooltip">Зберегти відповідь у файл</system:String>
+    <system:String x:Key="ResponseOptionsTooltip">Опції відповіді</system:String>
+    <system:String x:Key="CopyTooltip">Копіювати в буфер обміну</system:String>
+    <system:String x:Key="FormatPretty">Гарний</system:String>
+    <system:String x:Key="FormatRaw">Сирий</system:String>
+
+    <!-- Response Empty States -->
+    <system:String x:Key="NoResponseDataTitle">Немає даних відповіді</system:String>
+    <system:String x:Key="NoResponseDataMessage">Натисніть 'Надіслати', щоб зробити свій перший запит</system:String>
+    
+    <system:String x:Key="NoResponseHeadersTitle">Немає заголовків відповіді</system:String>
+    <system:String x:Key="NoResponseHeadersMessage">Надішліть запит, щоб переглянути заголовки відповіді</system:String>
+    
+    <system:String x:Key="NoResponseCookiesTitle">Немає куків відповіді</system:String>
+    <system:String x:Key="NoResponseCookiesMessage">Надішліть запит, щоб переглянути файли cookie відповіді</system:String>
+
+    <!-- Timeline -->
+    <system:String x:Key="RequestTimelineTitle">Хронологія запиту</system:String>
+    <system:String x:Key="NoTimelineDataMessage">Надішліть запит, щоб побачити детальний розподіл часу</system:String>
+
+    <!-- Settings -->
+    <system:String x:Key="SettingsTitle">Налаштування</system:String>
+    <system:String x:Key="SettingsSubtitle">Керування налаштуваннями програми</system:String>
+    <system:String x:Key="GeneralSection">Загальні</system:String>
+    <system:String x:Key="LanguageSelectionDescription">Виберіть мову інтерфейсу користувача.</system:String>
+
+    <!-- SideBar -->
+    <system:String x:Key="TooltipCollections">Колекції</system:String>
+    <system:String x:Key="TooltipEnvironments">Середовища</system:String>
+    <system:String x:Key="TooltipSettings">Налаштування</system:String>
+
+    <!-- Environments -->
+    <system:String x:Key="EnvironmentsTitle">СЕРЕДОВИЩА</system:String>
+    <system:String x:Key="NewEnvironmentTooltip">Нове середовище (Ctrl+N)</system:String>
+    <system:String x:Key="AddEnvironmentButton">Додати середовище</system:String>
+    <system:String x:Key="SetActiveMenuItem">Зробити активним</system:String>
+    <system:String x:Key="RenameMenuItem">Перейменувати</system:String>
+    <system:String x:Key="DuplicateMenuItem">Дублювати</system:String>
+    <system:String x:Key="RevertMenuItem">Скасувати зміни</system:String>
+    <system:String x:Key="DeleteMenuItem">Видалити</system:String>
+    <system:String x:Key="VariablesLabel">змінних</system:String>
+    <system:String x:Key="NoEnvironmentSelectedTitle">Середовище не вибрано</system:String>
+    <system:String x:Key="SelectEnvironmentMessage">Виберіть середовище зі списку для редагування</system:String>
+    <system:String x:Key="EditVariablesJsonMessage">Редагувати змінні як JSON</system:String>
+
+    <!-- Response Headers Tab -->
+    <system:String x:Key="SectionResponseHeaders">ЗАГОЛОВКИ ВІДПОВІДІ</system:String>
+    <system:String x:Key="ColName">НАЗВА</system:String>
+    <system:String x:Key="ColValue">ЗНАЧЕННЯ</system:String>
+
+    <!-- Response Cookies Tab -->
+    <system:String x:Key="SectionResponseCookies">КУКИ ВІДПОВІДІ</system:String>
+
+    <!-- Response Timeline Tab -->
+    <system:String x:Key="TimelineHeader">Хронологія запиту</system:String>
+    <system:String x:Key="TotalDurationLabel">Загальна тривалість: </system:String>
+</ResourceDictionary>

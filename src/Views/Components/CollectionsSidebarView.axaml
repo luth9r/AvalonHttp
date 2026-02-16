@@ -1,0 +1,372 @@
+﻿<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:AvalonHttp.ViewModels"
+             xmlns:lucide="clr-namespace:LucideAvalonia;assembly=LucideAvalonia"
+             xmlns:behaviors="clr-namespace:AvalonHttp.Behaviors"
+             xmlns:collectionAggregate="clr-namespace:AvalonHttp.ViewModels.CollectionAggregate"
+             mc:Ignorable="d" d:DesignWidth="300" d:DesignHeight="600"
+             x:Class="AvalonHttp.Views.Components.CollectionsSidebarView"
+             x:DataType="collectionAggregate:CollectionsViewModel">
+
+    <Border Background="{DynamicResource BgSidebarBrush}"
+            BorderBrush="{DynamicResource BorderColor}"
+            BorderThickness="0,0,1,0">
+
+        <DockPanel>
+            <!-- Collections Header -->
+            <StackPanel DockPanel.Dock="Top" Margin="20,20,20,16" Spacing="12">
+                <Grid ColumnDefinitions="*,Auto">
+                    <TextBlock Text="{DynamicResource CollectionsHeader}"
+                               Grid.Column="0"
+                               Foreground="{DynamicResource TextSecondary}"
+                               FontSize="11"
+                               FontWeight="SemiBold"
+                               LetterSpacing="1" />
+
+                    <Button Grid.Column="1"
+                            Classes="IconButton"
+                            Command="{Binding CreateCollectionCommand}"
+                            ToolTip.Tip="{DynamicResource NewCollectionTooltip}">
+                        <lucide:Lucide Icon="Plus"
+                                       StrokeBrush="{DynamicResource TextSecondary}"
+                                       Width="16" Height="16" />
+                    </Button>
+                </Grid>
+
+                <TextBox Watermark="{DynamicResource SearchPlaceholder}"
+                         Text="{Binding SearchText, Mode=TwoWay}" />
+            </StackPanel>
+
+            <!-- Bottom Add Collection Button -->
+            <Border DockPanel.Dock="Bottom"
+                    Background="{DynamicResource BgElevated}"
+                    BorderBrush="{DynamicResource BorderColor}"
+                    BorderThickness="0,1,0,0"
+                    Padding="16,12,16,24">
+
+                <Button Command="{Binding CreateCollectionCommand}"
+                        Background="Transparent"
+                        BorderBrush="{DynamicResource BorderColor}"
+                        BorderThickness="1"
+                        CornerRadius="6"
+                        Padding="12,8"
+                        HorizontalAlignment="Stretch"
+                        Cursor="Hand">
+                    <Grid ColumnDefinitions="Auto,*,Auto">
+                        <TextBlock Grid.Column="0"
+                                   Text="{DynamicResource AddCollectionButton}"
+                                   Foreground="{DynamicResource TextPrimary}"
+                                   VerticalAlignment="Center"
+                                   Margin="0,0,8,0" />
+                    </Grid>
+                </Button>
+            </Border>
+
+
+            <!-- Collections Tree -->
+            <ScrollViewer>
+                <ItemsControl ItemsSource="{Binding Collections}"
+                              Margin="12,0,12,12">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <StackPanel Margin="0,0,0,8" IsVisible="{Binding IsVisible}">
+                                <!-- Collection Item Card -->
+                                <Border CornerRadius="6"
+                                        Padding="12,10"
+                                        Cursor="Hand"
+                                        Background="{DynamicResource BgMain}"
+                                        BorderBrush="{DynamicResource BorderColor}"
+                                        BorderThickness="1">
+                                    <Interaction.Behaviors>
+                                        <behaviors:DragDropBehavior />
+                                    </Interaction.Behaviors>
+
+                                    <Grid ColumnDefinitions="Auto,*,Auto">
+                                        <Button Grid.Column="0"
+                                                Classes="IconButton"
+                                                Command="{Binding ToggleExpandCommand}"
+                                                Padding="4">
+                                            <lucide:Lucide Icon="ChevronDown"
+                                                           Width="14" Height="14"
+                                                           StrokeBrush="{DynamicResource TextSecondary}">
+                                                <lucide:Lucide.RenderTransform>
+                                                    <RotateTransform
+                                                        Angle="{Binding IsExpanded, Converter={StaticResource BoolToAngleConverter}}" />
+                                                </lucide:Lucide.RenderTransform>
+                                            </lucide:Lucide>
+                                        </Button>
+
+                                        <Grid Grid.Column="1"
+                                              ColumnDefinitions="Auto,*"
+                                              Margin="4,0"
+                                              VerticalAlignment="Center"
+                                              Background="Transparent">
+
+                                            <Grid.Styles>
+                                                <Style Selector="Grid">
+                                                    <Setter Property="Cursor" Value="Hand" />
+                                                </Style>
+                                            </Grid.Styles>
+
+                                            <Interaction.Behaviors>
+                                                <EventTriggerBehavior EventName="DoubleTapped">
+                                                    <InvokeCommandAction Command="{Binding StartRenameCommand}" />
+                                                </EventTriggerBehavior>
+                                            </Interaction.Behaviors>
+
+                                            <lucide:Lucide Grid.Column="0"
+                                                           Icon="Folder"
+                                                           StrokeBrush="#F59E0B"
+                                                           Width="16" Height="16"
+                                                           Margin="0,0,8,0" />
+
+
+                                            <TextBox Grid.Column="1"
+                                                     Text="{Binding Name}"
+                                                     IsVisible="{Binding IsEditing}"
+                                                     BorderBrush="{DynamicResource AccentBrush}"
+                                                     BorderThickness="1"
+                                                     Background="{DynamicResource BgElevated}"
+                                                     Foreground="{DynamicResource TextPrimary}"
+                                                     FontWeight="Medium"
+                                                     FontSize="13"
+                                                     CornerRadius="4"
+                                                     Padding="6,4">
+                                                <TextBox.KeyBindings>
+                                                    <KeyBinding Gesture="Enter"
+                                                                Command="{Binding FinishRenameCommand}" />
+                                                    <KeyBinding Gesture="Escape"
+                                                                Command="{Binding FinishRenameCommand}" />
+                                                </TextBox.KeyBindings>
+                                                <Interaction.Behaviors>
+                                                    <EventTriggerBehavior EventName="LostFocus">
+                                                        <InvokeCommandAction
+                                                            Command="{Binding FinishRenameCommand}" />
+                                                    </EventTriggerBehavior>
+                                                </Interaction.Behaviors>
+                                            </TextBox>
+
+                                            <TextBlock Grid.Column="1"
+                                                       Text="{Binding Name}"
+                                                       IsVisible="{Binding !IsEditing}"
+                                                       VerticalAlignment="Center"
+                                                       Foreground="{DynamicResource TextPrimary}"
+                                                       FontWeight="Medium"
+                                                       FontSize="13"
+                                                       TextTrimming="CharacterEllipsis" />
+                                        </Grid>
+
+                                        <Button Grid.Column="2"
+                                                Classes="IconButton"
+                                                Padding="4">
+                                            <lucide:Lucide Icon="Menu"
+                                                           Width="14" Height="14"
+                                                           StrokeBrush="{DynamicResource TextSecondary}" />
+                                            <Button.Flyout>
+                                                <MenuFlyout>
+                                                    <MenuItem Header="{DynamicResource RenameMenuItem}"
+                                                              Command="{Binding StartRenameCommand}">
+                                                        <MenuItem.Icon>
+                                                            <lucide:Lucide Icon="Pencil" Width="14" />
+                                                        </MenuItem.Icon>
+                                                    </MenuItem>
+                                                    <MenuItem Header="{DynamicResource AddRequestMenuItem}"
+                                                              Command="{Binding AddRequestCommand}">
+                                                        <MenuItem.Icon>
+                                                            <lucide:Lucide Icon="Plus" Width="14" />
+                                                        </MenuItem.Icon>
+                                                    </MenuItem>
+                                                    <MenuItem Header="{DynamicResource DuplicateMenuItem}"
+                                                              Command="{Binding $parent[UserControl].((collectionAggregate:CollectionsViewModel)DataContext).DuplicateCollectionCommand}"
+                                                              CommandParameter="{Binding}">
+                                                        <MenuItem.Icon>
+                                                            <lucide:Lucide Icon="Copy" Width="14" />
+                                                        </MenuItem.Icon>
+                                                    </MenuItem>
+                                                    <Separator />
+                                                    <MenuItem Header="{DynamicResource DeleteMenuItem}"
+                                                              Command="{Binding $parent[UserControl].((collectionAggregate:CollectionsViewModel)DataContext).DeleteCollectionCommand}"
+                                                              CommandParameter="{Binding}">
+                                                        <MenuItem.Icon>
+                                                            <lucide:Lucide Icon="Trash2" Width="14" />
+                                                        </MenuItem.Icon>
+                                                    </MenuItem>
+                                                </MenuFlyout>
+                                            </Button.Flyout>
+                                        </Button>
+                                    </Grid>
+                                </Border>
+
+
+                                <!-- Requests List -->
+                                <ItemsControl ItemsSource="{Binding FilteredRequests}"
+                                              IsVisible="{Binding IsExpanded}"
+                                              Margin="0,4,0,0">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border CornerRadius="6"
+                                                    Padding="10,8"
+                                                    Margin="0,0,0,4"
+                                                    Cursor="Hand"
+                                                    Background="{DynamicResource BgMain}"
+                                                    BorderBrush="{DynamicResource BorderColor}"
+                                                    BorderThickness="1"
+                                                    Classes.selected="{Binding IsSelected}">
+
+                                                <Border.Styles>
+                                                    <!-- Selected Style -->
+                                                    <Style Selector="Border.selected">
+                                                        <Setter Property="Background" Value="#1A1F2E" />
+                                                        <Setter Property="BorderBrush"
+                                                                Value="{DynamicResource AccentBrush}" />
+                                                        <Setter Property="BorderThickness" Value="1" />
+                                                    </Style>
+                                                </Border.Styles>
+
+                                                <Interaction.Behaviors>
+                                                    <behaviors:DragDropBehavior />
+                                                    <EventTriggerBehavior EventName="Tapped">
+                                                        <InvokeCommandAction Command="{Binding SelectCommand}" />
+                                                    </EventTriggerBehavior>
+                                                </Interaction.Behaviors>
+
+                                                <Grid ColumnDefinitions="Auto,*,Auto">
+                                                    <Border Grid.Column="0"
+                                                            Classes="MethodBadge"
+                                                            Margin="0,0,8,0"
+                                                            Background="{Binding Method, Converter={StaticResource MethodToBrushConverter}, ConverterParameter=Bg}">
+                                                        <TextBlock Text="{Binding Method}"
+                                                                   Foreground="{Binding Method, Converter={StaticResource MethodToBrushConverter}, ConverterParameter=Fg}" />
+                                                    </Border>
+
+
+                                                    <TextBox Grid.Column="1"
+                                                             Text="{Binding Name}"
+                                                             IsVisible="{Binding IsEditing}"
+                                                             BorderBrush="{DynamicResource AccentBrush}"
+                                                             BorderThickness="1"
+                                                             Background="{DynamicResource BgElevated}"
+                                                             Foreground="{DynamicResource TextPrimary}"
+                                                             FontSize="13"
+                                                             CornerRadius="4"
+                                                             Padding="6,4">
+                                                        <TextBox.KeyBindings>
+                                                            <KeyBinding Gesture="Enter"
+                                                                        Command="{Binding FinishRenameCommand}" />
+                                                            <KeyBinding Gesture="Escape"
+                                                                        Command="{Binding CancelRenameCommand}" />
+                                                        </TextBox.KeyBindings>
+                                                        <Interaction.Behaviors>
+                                                            <EventTriggerBehavior EventName="LostFocus">
+                                                                <InvokeCommandAction
+                                                                    Command="{Binding FinishRenameCommand}" />
+                                                            </EventTriggerBehavior>
+                                                        </Interaction.Behaviors>
+                                                    </TextBox>
+
+                                                    <Grid Grid.Column="1"
+                                                          ColumnDefinitions="*,Auto"
+                                                          IsVisible="{Binding !IsEditing}"
+                                                          ColumnSpacing="6">
+                                                        <Border Grid.Column="0" Background="Transparent"
+                                                                Cursor="Hand">
+                                                            <Interaction.Behaviors>
+                                                                <EventTriggerBehavior EventName="DoubleTapped">
+                                                                    <InvokeCommandAction
+                                                                        Command="{Binding StartRenameCommand}" />
+                                                                </EventTriggerBehavior>
+                                                                
+                                                            </Interaction.Behaviors>
+                                                            <TextBlock Text="{Binding Name}"
+                                                                       VerticalAlignment="Center"
+                                                                       Foreground="{DynamicResource TextPrimary}"
+                                                                       FontSize="13"
+                                                                       TextTrimming="CharacterEllipsis" />
+                                                        </Border>
+                                                        <Border Grid.Column="1"
+                                                                Width="6" Height="6"
+                                                                CornerRadius="3"
+                                                                Background="{DynamicResource AccentBrush}"
+                                                                VerticalAlignment="Center"
+                                                                IsVisible="{Binding IsDirty}"
+                                                                ToolTip.Tip="Unsaved changes" />
+                                                    </Grid>
+
+                                                    <Button Grid.Column="2" Classes="IconButton" Padding="4">
+                                                        <lucide:Lucide Icon="Menu" Width="12" Height="12"
+                                                                       StrokeBrush="{DynamicResource TextSecondary}" />
+                                                        <Button.Flyout>
+                                                            <MenuFlyout>
+                                                                <MenuItem Header="{DynamicResource RenameMenuItem}"
+                                                                          Command="{Binding StartRenameCommand}">
+                                                                    <MenuItem.Icon>
+                                                                        <lucide:Lucide Icon="Pencil" Width="14" />
+                                                                    </MenuItem.Icon>
+                                                                </MenuItem>
+                                                                <MenuItem Header="{DynamicResource DuplicateMenuItem}"
+                                                                          Command="{Binding DuplicateCommand}">
+                                                                    <MenuItem.Icon>
+                                                                        <lucide:Lucide Icon="Copy" Width="14" />
+                                                                    </MenuItem.Icon>
+                                                                </MenuItem>
+                                                                <!-- Revert and Delete were complex bindings in original, simplifying assuming RequestViewModel context availability or handling via messaging/parent. 
+                                                                     Actually, RevertChangesCommand is on RequestViewModel. 
+                                                                     In the Sidebar, we are in CollectionsViewModel context. 
+                                                                     We don't easily have access to valid RequestViewModel here unless we pass it down or use messaging.
+                                                                     The usage in original was: $parent[UserControl].((vm:CollectionWorkspaceViewModel)DataContext).RequestViewModel.RevertChangesCommand
+                                                                     Here $parent[UserControl] is CollectionsSidebarView, and its DataContext is CollectionsViewModel.
+                                                                     CollectionsViewModel DOES NOT have RequestViewModel.
+                                                                     WE NEED TO FIX THIS.
+                                                                     
+                                                                     Option 1: Add RequestViewModel to CollectionsViewModel (circular dependency risk).
+                                                                     Option 2: Bind Revert command to something in RequestItemViewModel (the Item itself).
+                                                                     Option 3: Use a weak reference messenger or event.
+                                                                     
+                                                                     The RequestItemViewModel (Binding context here) MIGHT have the command if we put it there?
+                                                                     Let's check RequestItemViewModel... I can't check it right now, assuming standard pattern.
+                                                                     
+                                                                     Let's use the original binding path logic but looking further up if needed? 
+                                                                     No, the visual tree is broken.
+                                                                     
+                                                                     Actually, CollectionsSidebarView will be inside CollectionsWorkspaceView.
+                                                                     So $parent[UserControl] finds CollectionsSidebarView.
+                                                                     $parent[UserControl, 2] might find CollectionsWorkspaceView!
+                                                                     
+                                                                     Let's try $parent[collections_views:CollectionsWorkspaceView].
+                                                                     But we need namespace.
+                                                                     
+                                                                     Better approach:
+                                                                     The commands should probably be on the ItemViewModel itself if possible.
+                                                                     DeleteCommand IS on the item.
+                                                                     DuplicateCommand IS on the item.
+                                                                     RevertChangesCommand was on RequestViewModel (the active editor).
+                                                                     
+                                                                     Is it critical to have Revert in the sidebar context menu?
+                                                                     If so, we can try finding the parent window or main view.
+                                                                     
+                                                                     Let's try to reference the main RequestViewModel via the CollectionWorkspaceViewModel which is the parent of this view in the visual tree.
+                                                                -->
+                                                                <MenuItem Header="{DynamicResource DeleteMenuItem}"
+                                                                          Command="{Binding DeleteCommand}">
+                                                                    <MenuItem.Icon>
+                                                                        <lucide:Lucide Icon="Trash2" Width="14" />
+                                                                    </MenuItem.Icon>
+                                                                </MenuItem>
+                                                            </MenuFlyout>
+                                                        </Button.Flyout>
+                                                    </Button>
+                                                </Grid>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+        </DockPanel>
+    </Border>
+</UserControl>

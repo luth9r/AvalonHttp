@@ -1,0 +1,122 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:system="clr-namespace:System;assembly=netstandard">
+    <system:String x:Key="WelcomeMessage">Welcome to AvalonHttp</system:String>
+    <system:String x:Key="ChangeLanguage">Change Language</system:String>
+    
+    <!-- Collections Sidebar -->
+    <system:String x:Key="CollectionsHeader">COLLECTIONS</system:String>
+    <system:String x:Key="SearchPlaceholder">Search collections and requests...</system:String>
+    <system:String x:Key="NewCollectionTooltip">New Collection</system:String>
+    <system:String x:Key="AddCollectionButton">Add Collection</system:String>
+    <system:String x:Key="RenameMenuItem">Rename</system:String>
+    <system:String x:Key="AddRequestMenuItem">Add Request</system:String>
+    <system:String x:Key="DuplicateMenuItem">Duplicate</system:String>
+    <system:String x:Key="DeleteMenuItem">Delete</system:String>
+    
+    <!-- Request Editor Header -->
+    <system:String x:Key="SaveButton">Save</system:String>
+    <system:String x:Key="SaveTooltip">Save changes (Ctrl+S)</system:String>
+    <system:String x:Key="SendButton">Send</system:String>
+    <system:String x:Key="UrlPlaceholder">Enter request URL...</system:String>
+    <system:String x:Key="UnsavedChangesTooltip">Unsaved changes</system:String>
+
+    <!-- Request Tabs -->
+    <system:String x:Key="TabParams">Params</system:String>
+    <system:String x:Key="TabAuth">Auth</system:String>
+    <system:String x:Key="TabHeaders">Headers</system:String>
+    <system:String x:Key="TabBody">Body</system:String>
+    <system:String x:Key="TabCookies">Cookies</system:String>
+    <system:String x:Key="TabTimeline">Timeline</system:String>
+
+    <!-- Params Tab -->
+    <system:String x:Key="SectionQueryParams">QUERY PARAMETERS</system:String>
+    <system:String x:Key="ParamNamePlaceholder">Param name</system:String>
+    <system:String x:Key="ValuePlaceholder">Value</system:String>
+    <system:String x:Key="AddParameterButton">Add Parameter</system:String>
+
+    <!-- Auth Tab -->
+    <system:String x:Key="SectionAuthorization">AUTHORIZATION</system:String>
+    <system:String x:Key="AuthTypeLabel">Auth Type</system:String>
+    <system:String x:Key="UsernameLabel">Username</system:String>
+    <system:String x:Key="PasswordLabel">Password</system:String>
+    <system:String x:Key="PasswordPlaceholder">Enter password</system:String>
+    <system:String x:Key="TokenLabel">Token</system:String>
+    <system:String x:Key="TokenPlaceholder">Enter bearer token</system:String>
+    <system:String x:Key="KeyNameLabel">Key Name</system:String>
+    <system:String x:Key="KeyNamePlaceholder">Enter API key name</system:String>
+    <system:String x:Key="KeyValueLabel">Key Value</system:String>
+    <system:String x:Key="KeyValuePlaceholder">Enter API key</system:String>
+    <system:String x:Key="AddToLabel">Add To</system:String>
+    <system:String x:Key="NoAuthTitle">No authentication</system:String>
+    <system:String x:Key="NoAuthMessage">This request will be sent without authentication</system:String>
+
+    <!-- Headers Tab -->
+    <system:String x:Key="SectionRequestHeaders">REQUEST HEADERS</system:String>
+    <system:String x:Key="HeaderNamePlaceholder">Header name</system:String>
+    <system:String x:Key="AddHeaderButton">Add Header</system:String>
+    
+    <!-- Body Tab -->
+    <system:String x:Key="SectionRequestBody">REQUEST BODY</system:String>
+
+    <!-- Cookies Tab -->
+    <system:String x:Key="SectionRequestCookies">REQUEST COOKIES</system:String>
+    <system:String x:Key="CookieNamePlaceholder">Cookie name</system:String>
+    <system:String x:Key="CookieValuePlaceholder">Cookie value</system:String>
+    <system:String x:Key="AddCookieButton">Add Cookie</system:String>
+
+    <!-- Response Area -->
+    <system:String x:Key="SaveResponseTooltip">Save Response to File</system:String>
+    <system:String x:Key="ResponseOptionsTooltip">Response Options</system:String>
+    <system:String x:Key="CopyTooltip">Copy to clipboard</system:String>
+    <system:String x:Key="FormatPretty">Pretty</system:String>
+    <system:String x:Key="FormatRaw">Raw</system:String>
+
+    <!-- Response Empty States -->
+    <system:String x:Key="NoResponseDataTitle">No Response Data</system:String>
+    <system:String x:Key="NoResponseDataMessage">Click 'Send' to make your first request</system:String>
+    
+    <system:String x:Key="NoResponseHeadersTitle">No Response Headers</system:String>
+    <system:String x:Key="NoResponseHeadersMessage">Send a request to view response headers</system:String>
+    
+    <system:String x:Key="NoResponseCookiesTitle">No Response Cookies</system:String>
+    <system:String x:Key="NoResponseCookiesMessage">Send a request to view response cookies</system:String>
+
+    <!-- Timeline -->
+    <system:String x:Key="RequestTimelineTitle">Request Timeline</system:String>
+    <system:String x:Key="TotalDurationLabel">Total Duration: </system:String>
+    <system:String x:Key="NoTimelineDataMessage">Send a request to see detailed timing breakdown</system:String>
+
+    <!-- Settings -->
+    <system:String x:Key="SettingsTitle">Settings</system:String>
+    <system:String x:Key="SettingsSubtitle">Manage your application preferences</system:String>
+    <system:String x:Key="GeneralSection">General</system:String>
+    <system:String x:Key="LanguageSelectionDescription">Select the language for the user interface.</system:String>
+
+    <!-- SideBar -->
+    <system:String x:Key="TooltipCollections">Collections</system:String>
+    <system:String x:Key="TooltipEnvironments">Environments</system:String>
+    <system:String x:Key="TooltipSettings">Settings</system:String>
+
+    <!-- Environments -->
+    <system:String x:Key="EnvironmentsTitle">ENVIRONMENTS</system:String>
+    <system:String x:Key="NewEnvironmentTooltip">New Environment (Ctrl+N)</system:String>
+    <system:String x:Key="AddEnvironmentButton">Add Environment</system:String>
+    <system:String x:Key="SetActiveMenuItem">Set Active</system:String>
+    <system:String x:Key="RevertMenuItem">Revert</system:String>
+    <system:String x:Key="VariablesLabel">variables</system:String>
+    <system:String x:Key="NoEnvironmentSelectedTitle">No Environment Selected</system:String>
+    <system:String x:Key="SelectEnvironmentMessage">Select an environment from the list to edit</system:String>
+    <system:String x:Key="EditVariablesJsonMessage">Edit environment variables as JSON</system:String>
+
+    <!-- Response Headers Tab -->
+    <system:String x:Key="SectionResponseHeaders">RESPONSE HEADERS</system:String>
+    <system:String x:Key="ColName">NAME</system:String>
+    <system:String x:Key="ColValue">VALUE</system:String>
+
+    <!-- Response Cookies Tab -->
+    <system:String x:Key="SectionResponseCookies">RESPONSE COOKIES</system:String>
+
+    <!-- Response Timeline Tab -->
+    <system:String x:Key="TimelineHeader">Request Timeline</system:String>
+</ResourceDictionary>

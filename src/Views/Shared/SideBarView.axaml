@@ -11,7 +11,10 @@
 
         <DockPanel>
             <StackPanel DockPanel.Dock="Bottom" Margin="10,0,10,20" Spacing="12">
-                <Button Classes="NavIcon">
+                <Button Classes="NavIcon"
+                        Command="{Binding ShowSettingsCommand}"
+                        Classes.Active="{Binding IsSettingsView}"
+                        ToolTip.Tip="{DynamicResource TooltipSettings}">
                     <lucide:Lucide Icon="Settings" StrokeBrush="White" Width="20" Height="20" />
                 </Button>
             </StackPanel>
@@ -22,14 +25,14 @@
                     <Button Classes="NavIcon"
                             Command="{Binding ShowCollectionsCommand}"
                             Classes.Active="{Binding IsCollectionsView}"
-                            ToolTip.Tip="Collections">
+                            ToolTip.Tip="{DynamicResource TooltipCollections}">
                         <lucide:Lucide Icon="FolderOpen" StrokeBrush="White" Width="20" Height="20" />
                     </Button>
 
                     <Button Classes="NavIcon"
                             Command="{Binding ShowEnvironmentsCommand}"
                             Classes.Active="{Binding IsEnvironmentsView}"
-                            ToolTip.Tip="Environments">
+                            ToolTip.Tip="{DynamicResource TooltipEnvironments}">
                         <lucide:Lucide Icon="Globe" StrokeBrush="White" Width="20" Height="20" />
                     </Button>
                 </StackPanel>

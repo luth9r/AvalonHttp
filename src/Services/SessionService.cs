@@ -66,6 +66,22 @@ public class SessionService : ISessionService, IDisposable
         }
     }
 
+    public async Task SaveLanguageAsync(string languageCode)
+    {
+        await _fileLock.WaitAsync();
+        try
+        {
+            var state = await LoadStateInternalAsync();
+            state.Language = languageCode;
+            await SaveStateInternalAsync(state);
+            _cachedState = state;
+        }
+        finally
+        {
+            _fileLock.Release();
+        }
+    }
+
     public async Task<AppState> LoadStateAsync()
     {
         await _fileLock.WaitAsync();
