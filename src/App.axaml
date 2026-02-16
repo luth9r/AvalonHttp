@@ -57,6 +57,8 @@
         <!-- Button -->
         <Style Selector="Button">
             <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+            <Setter Property="VerticalContentAlignment" Value="Stretch"/>
             <Setter Property="Foreground" Value="{StaticResource TextPrimary}"/>
             <Setter Property="BorderBrush" Value="{StaticResource BorderColor}"/>
             <Setter Property="BorderThickness" Value="1"/>
@@ -70,8 +72,6 @@
                     <BrushTransition Property="BorderBrush" Duration="0:0:0.15"/>
                 </Transitions>
             </Setter>
-            <Setter Property="HorizontalContentAlignment" Value="Center"/>
-            <Setter Property="VerticalContentAlignment" Value="Center"/>
         </Style>
 
         <Style Selector="Button:pointerover /template/ ContentPresenter">
@@ -497,6 +497,7 @@
 
         <!-- Tabs -->
         <Style Selector="Border.Tab">
+            <Setter Property="Background" Value="Transparent"></Setter>
             <Setter Property="Padding" Value="20,14"/>
             <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="BorderThickness" Value="0,0,0,2"/>

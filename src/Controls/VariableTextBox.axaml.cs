@@ -12,6 +12,8 @@ namespace AvalonHttp.Controls;
 
 public class VariableTextBox : TemplatedControl
 {
+    private const string RevealedPseudoClass = ":revealed";
+
     public static readonly StyledProperty<string> TextProperty =
         AvaloniaProperty.Register<VariableTextBox, string>(nameof(Text), defaultValue: string.Empty, defaultBindingMode: Avalonia.Data.BindingMode.TwoWay);
 
@@ -29,8 +31,6 @@ public class VariableTextBox : TemplatedControl
     
     public static readonly StyledProperty<bool> AcceptsReturnProperty =
         AvaloniaProperty.Register<VariableTextBox, bool>(nameof(AcceptsReturn), defaultValue: false);
-    
-    
 
     public bool AcceptsReturn
     {
@@ -52,6 +52,8 @@ public class VariableTextBox : TemplatedControl
 
     private TextBox? _textBox;
     private TextBlock? _highlightText;
+    private Button? _revealButton;
+    private bool _isPasswordRevealed;
 
     public string Text
     {
@@ -77,11 +79,16 @@ public class VariableTextBox : TemplatedControl
 
         _textBox = e.NameScope.Find<TextBox>("PART_TextBox");
         _highlightText = e.NameScope.Find<TextBlock>("PART_HighlightText");
+        
+        _revealButton = e.NameScope.Find<Button>("PART_RevealButton");
+
+        if (_revealButton != null)
+        {
+            _revealButton.Click += (_, __) => TogglePasswordReveal();
+        }
 
         if (_textBox != null)
         {
-            _textBox.Foreground = Brushes.Transparent;
-
             _textBox.PropertyChanged += (s, ev) =>
             {
                 if (ev.Property == TextBox.TextProperty)
@@ -95,6 +102,7 @@ public class VariableTextBox : TemplatedControl
             _textBox.PointerExited += OnTextBoxPointerExited;
         }
         
+        UpdateRevealState();
         UpdateHighlights();
     }
     
@@ -110,11 +118,15 @@ public class VariableTextBox : TemplatedControl
             }
             UpdateHighlights();
         }
+        else if (change.Property == PasswordCharProperty)
+        {
+            UpdateRevealState();
+        }
     }
 
     private void UpdateHighlights()
     {
-        if (_highlightText == null)
+        if (_highlightText == null || !_highlightText.IsVisible)
         {
             return;
         }
@@ -128,8 +140,6 @@ public class VariableTextBox : TemplatedControl
 
         var regex = new Regex(@"(\{\{[^}]+\}\})");
         var parts = regex.Split(Text);
-
-        bool isPassword = PasswordChar != default(char);
         
         foreach (var part in parts)
         {
@@ -138,30 +148,14 @@ public class VariableTextBox : TemplatedControl
                 continue;
             }
 
-            if (regex.IsMatch(part))
+            var run = new Run(part)
             {
-                var run = new Run(part)
-                {
-                    Foreground = new SolidColorBrush(Color.Parse("#F59E0B")),
-                    FontWeight = FontWeight.Bold
-                };
-                _highlightText.Inlines?.Add(run);
-            }
-            else
-            {
-                string displayText = part;
-                
-                if (isPassword)
-                {
-                    displayText = new string(PasswordChar, part.Length);
-                }
-
-                var run = new Run(part)
-                {
-                    Foreground = new SolidColorBrush(Color.Parse("#E0E0E0")) 
-                };
-                _highlightText.Inlines?.Add(run);
-            }
+                Foreground = regex.IsMatch(part) 
+                    ? new SolidColorBrush(Color.Parse("#F59E0B"))
+                    : new SolidColorBrush(Color.Parse("#E0E0E0")),
+                FontWeight = regex.IsMatch(part) ? FontWeight.Bold : FontWeight.Normal
+            };
+            _highlightText.Inlines?.Add(run);
         }
     }
 
@@ -170,6 +164,15 @@ public class VariableTextBox : TemplatedControl
         if (_textBox == null || EnvironmentsViewModel == null)
         {
             return;
+        }
+
+        bool hasPasswordChar = PasswordChar != default(char);
+        bool isPasswordMode = hasPasswordChar && !_isPasswordRevealed;
+
+        if (isPasswordMode)
+        {
+             ToolTip.SetIsOpen(this, false);
+             return;
         }
 
         var point = e.GetPosition(_textBox);
@@ -183,9 +186,9 @@ public class VariableTextBox : TemplatedControl
                 var varName = variableInfo.Value.name;
                 var rawValue = $"{{{{{varName}}}}}";
                 var resolvedValue = EnvironmentsViewModel.ResolveVariables(rawValue);
-                
+            
                 var displayValue = resolvedValue == rawValue ? "Unresolved" : resolvedValue;
-                
+            
                 ToolTip.SetTip(this, $"{varName}: {displayValue}");
                 ToolTip.SetIsOpen(this, true);
                 return;
@@ -231,5 +234,51 @@ public class VariableTextBox : TemplatedControl
         int index = (int)(point.X / charWidth);
         
         return Math.Clamp(index, 0, _textBox.Text.Length - 1);
+    }
+
+    private void TogglePasswordReveal()
+    {
+        _isPasswordRevealed = !_isPasswordRevealed;
+        UpdateRevealState();
+    }
+
+    private void UpdateRevealState()
+    {
+        bool hasPasswordChar = PasswordChar != default(char);
+        bool isPasswordMode = hasPasswordChar && !_isPasswordRevealed;
+        
+        if (_revealButton != null)
+        {
+            _revealButton.IsVisible = hasPasswordChar;
+        }
+
+        if (!hasPasswordChar)
+        {
+            _isPasswordRevealed = false;
+        }
+
+        if (_textBox != null)
+        {
+            _textBox.PasswordChar = isPasswordMode ? PasswordChar : default(char);
+            _textBox.Foreground = isPasswordMode 
+                ? new SolidColorBrush(Color.Parse("#E0E0E0")) 
+                : Brushes.Transparent;
+        }
+        
+        if (_highlightText != null)
+        {
+            _highlightText.IsVisible = !isPasswordMode;
+        }
+        
+        PseudoClasses.Set(RevealedPseudoClass, _isPasswordRevealed);
+
+        if (isPasswordMode)
+        {
+            ToolTip.SetIsOpen(this, false);
+        }
+        else
+        {
+            UpdateHighlights();
+        }
     }
 }
