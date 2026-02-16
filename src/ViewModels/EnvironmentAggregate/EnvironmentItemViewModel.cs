@@ -316,7 +316,7 @@ public partial class EnvironmentItemViewModel : ViewModelBase, IDisposable
     [RelayCommand(CanExecute = nameof(CanDelete))]
     private async Task Delete()
     {
-        await _parent.DeleteEnvironmentAsync(this);
+        _parent.DeleteEnvironmentAsync(this);
     }
     
     private bool CanDelete() => !IsGlobal;

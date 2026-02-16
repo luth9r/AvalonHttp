@@ -171,6 +171,9 @@
     <system:String x:Key="DialogTitleDuplicateFailure">Duplicate Failure</system:String>
     <system:String x:Key="MsgDuplicateEnvironmentError">Failed to duplicate environment. Message: {0}</system:String>
     
+    <system:String x:Key="DialogTitleDeleteEnvironment">Delete Environment?</system:String>
+    <system:String x:Key="MsgDeleteEnvironmentConfirm">Are you sure you want to delete '{0}'? This action cannot be undone.</system:String>
+    
     <system:String x:Key="DialogTitleUnsavedChanges">Unsaved Changes</system:String>
     <system:String x:Key="MsgUnsavedChangesAll">You have unsaved changes in requests and environments.</system:String>
     <system:String x:Key="MsgUnsavedChangesRequest">You have unsaved changes in the current request.</system:String>

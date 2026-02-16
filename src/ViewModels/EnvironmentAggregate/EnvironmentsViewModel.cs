@@ -284,30 +284,45 @@ public partial class EnvironmentsViewModel : ViewModelBase, IDisposable
     /// <param name="environment">The environment to be deleted.</param>
     public async Task DeleteEnvironmentAsync(EnvironmentItemViewModel environment)
     {
-        try
+        if (environment == null)
         {
-            await _environmentRepository.DeleteAsync(environment.Id);
-            
-            // Remove from view model collection
-            environment.PropertyChanged -= OnEnvironmentItemPropertyChanged;
-            environment.Dispose();
-            
-            Environments.Remove(environment);
-            
-            // Update active environment if necessary
-            await UpdateActiveEnvironmentAfterDeletionAsync(environment);
-            UpdateSelectionAfterDeletion(environment);
+            return;
+        }
 
-            System.Diagnostics.Debug.WriteLine($"🗑️ Deleted environment '{environment.Name}'");
-        }
-        catch (Exception ex)
-        {
-            WeakReferenceMessenger.Default.Send(DialogMessage.Error(
-                Loc.Tr("DialogTitleDeleteFailure"),
-                Loc.Tr("MsgDeleteEnvironmentError", ex.Message)
-            ));
-            System.Diagnostics.Debug.WriteLine($"Cannot delete '{environment.Name}': {ex.Message}");
-        }
+        WeakReferenceMessenger.Default.Send(DialogMessage.Destructive(
+            Loc.Tr("DialogTitleDeleteEnvironment"),
+            Loc.Tr("MsgDeleteEnvironmentConfirm", environment.Name),
+            confirmText: Loc.Tr("BtnDelete"),
+            onConfirm: async () => 
+            {
+                try
+                {
+                    // Delete environment from disk
+                    await _environmentRepository.DeleteAsync(environment.Id);
+                
+                    // Remove from view model collection
+                    environment.PropertyChanged -= OnEnvironmentItemPropertyChanged;
+                    environment.Dispose();
+                
+                    Environments.Remove(environment);
+                
+                    // Update active environment if necessary
+                    await UpdateActiveEnvironmentAfterDeletionAsync(environment);
+                    UpdateSelectionAfterDeletion(environment);
+                
+                    System.Diagnostics.Debug.WriteLine($"✅ Environment '{environment.Name}' deleted");
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Failed to delete environment: {ex.Message}");
+                
+                    WeakReferenceMessenger.Default.Send(DialogMessage.Error(
+                        Loc.Tr("DialogTitleDeleteFailure"),
+                        Loc.Tr("MsgDeleteEnvironmentError", ex.Message)
+                    ));
+                }
+            }
+        ));
     }
 
     /// <summary>

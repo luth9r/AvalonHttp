@@ -170,7 +170,10 @@
 
     <system:String x:Key="DialogTitleDuplicateFailure">Помилка дублювання</system:String>
     <system:String x:Key="MsgDuplicateEnvironmentError">Не вдалося дублювати середовище. Повідомлення: {0}</system:String>
-
+    
+    <system:String x:Key="DialogTitleDeleteEnvironment">Видалити середовище?</system:String>
+    <system:String x:Key="MsgDeleteEnvironmentConfirm">Ви впевнені, що хочете видалити '{0}'? Цю дію неможливо скасувати.</system:String>
+    
     <system:String x:Key="DialogTitleUnsavedChanges">Незбережені зміни</system:String>
     <system:String x:Key="MsgUnsavedChangesAll">У вас є незбережені зміни в запитах та середовищах.</system:String>
     <system:String x:Key="MsgUnsavedChangesRequest">У вас є незбережені зміни в поточному запиті.</system:String>

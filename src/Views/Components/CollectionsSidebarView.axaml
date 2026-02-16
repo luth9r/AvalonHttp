@@ -50,7 +50,7 @@
                         Background="Transparent"
                         BorderBrush="{DynamicResource BorderColor}"
                         BorderThickness="1"
-                        CornerRadius="6"
+                        CornerRadius="8"
                         Padding="12,8"
                         HorizontalAlignment="Stretch"
                         Cursor="Hand">
@@ -72,7 +72,7 @@
                         <DataTemplate>
                             <StackPanel Margin="0,0,0,8" IsVisible="{Binding IsVisible}">
                                 <!-- Collection Item Card -->
-                                <Border CornerRadius="6"
+                                <Border CornerRadius="8"
                                         Padding="12,10"
                                         Cursor="Hand"
                                         Background="{DynamicResource BgMain}"
@@ -128,11 +128,7 @@
                                                      BorderBrush="{DynamicResource AccentBrush}"
                                                      BorderThickness="1"
                                                      Background="{DynamicResource BgElevated}"
-                                                     Foreground="{DynamicResource TextPrimary}"
-                                                     FontWeight="Medium"
-                                                     FontSize="13"
-                                                     CornerRadius="4"
-                                                     Padding="6,4">
+                                                     Foreground="{DynamicResource TextPrimary}">
                                                 <TextBox.KeyBindings>
                                                     <KeyBinding Gesture="Enter"
                                                                 Command="{Binding FinishRenameCommand}" />
@@ -205,8 +201,8 @@
                                               Margin="0,4,0,0">
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate>
-                                            <Border CornerRadius="6"
-                                                    Padding="10,8"
+                                            <Border CornerRadius="8"
+                                                    Padding="12,8"
                                                     Margin="0,0,0,4"
                                                     Cursor="Hand"
                                                     Background="{DynamicResource BgMain}"
@@ -247,10 +243,7 @@
                                                              BorderBrush="{DynamicResource AccentBrush}"
                                                              BorderThickness="1"
                                                              Background="{DynamicResource BgElevated}"
-                                                             Foreground="{DynamicResource TextPrimary}"
-                                                             FontSize="13"
-                                                             CornerRadius="4"
-                                                             Padding="6,4">
+                                                             Foreground="{DynamicResource TextPrimary}">
                                                         <TextBox.KeyBindings>
                                                             <KeyBinding Gesture="Enter"
                                                                         Command="{Binding FinishRenameCommand}" />

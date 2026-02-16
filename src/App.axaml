@@ -37,6 +37,9 @@
         <converters:PercentToPixelConverter x:Key="PercentToPixelConverter"/>
         <converters:BoolToAngleConverter x:Key="BoolToAngleConverter" />
         <converters:MethodToBrushConverter x:Key="MethodToBrushConverter"/>
+
+        <FontFamily x:Key="InterFont">avares://AvalonHttp/Assets/Fonts#Inter</FontFamily>
+        <FontFamily x:Key="JetBrainsMonoFont">avares://AvalonHttp/Assets/Fonts#JetBrains Mono</FontFamily>
     </Application.Resources>
 
     <Application.Styles>
@@ -47,7 +50,8 @@
         
         <!-- Global Font -->
         <Style Selector="Window">
-            <Setter Property="FontFamily" Value="Inter, Segoe UI, Ubuntu, sans-serif"/>
+            <Setter Property="FontFamily" Value="{StaticResource InterFont}"/>
+            <Setter Property="FontSize" Value="14"/>
         </Style>
         
         <Style Selector="TextBlock">
@@ -94,7 +98,8 @@
             <Setter Property="BorderBrush" Value="{StaticResource BorderColor}"/>
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="CornerRadius" Value="8"/>
-            <Setter Property="Padding" Value="12,10"/>
+            <Setter Property="MinHeight" Value="36"/> 
+            <Setter Property="Padding" Value="12,8"/>
             <Setter Property="FontSize" Value="13"/>
             <Setter Property="CaretBrush" Value="{StaticResource AccentBrush}"/>
             <Setter Property="SelectionBrush" Value="{StaticResource AccentBrush}"/>
@@ -123,7 +128,8 @@
             <Setter Property="BorderBrush" Value="{StaticResource BorderColor}"/>
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="CornerRadius" Value="8"/>
-            <Setter Property="Padding" Value="12,10"/>
+            <Setter Property="MinHeight" Value="36"/> 
+            <Setter Property="Padding" Value="12,8"/> 
             <Setter Property="FontSize" Value="13"/>
         </Style>
 
@@ -196,7 +202,7 @@
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="Foreground" Value="{StaticResource TextPrimary}"/>
             <Setter Property="Padding" Value="10,8"/>
-            <Setter Property="CornerRadius" Value="6"/>
+            <Setter Property="CornerRadius" Value="8"/>
             <Setter Property="Margin" Value="2"/>
             <Setter Property="FontSize" Value="13"/>
             <Setter Property="Transitions">
@@ -267,6 +273,8 @@
         <Style Selector="Button.NavIcon">
             <Setter Property="Width" Value="40"/>
             <Setter Property="Height" Value="40"/>
+            <Setter Property="MinHeight" Value="36"/> 
+            <Setter Property="Padding" Value="12,8"/>
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="CornerRadius" Value="8"/>
@@ -328,7 +336,7 @@
         </Style>
 
         <Style Selector="Border.MethodBadge TextBlock">
-            <Setter Property="FontFamily" Value="JetBrains Mono, Cascadia Code, Consolas, monospace"/>
+            <Setter Property="FontFamily" Value="{StaticResource JetBrainsMonoFont}"/>
             <Setter Property="FontSize" Value="9"/>
             <Setter Property="FontWeight" Value="Bold"/>
             <Setter Property="VerticalAlignment" Value="Center"/>
@@ -346,7 +354,7 @@
         </Style>
 
         <Style Selector="Border.Badge TextBlock">
-            <Setter Property="FontFamily" Value="JetBrains Mono, Cascadia Code, Consolas, monospace"/>
+            <Setter Property="FontFamily" Value="{StaticResource JetBrainsMonoFont}"/>
             <Setter Property="Foreground" Value="{StaticResource TextSecondary}"/>
             <Setter Property="FontSize" Value="10"/>
             <Setter Property="FontWeight" Value="Medium"/>
@@ -358,10 +366,14 @@
             <Setter Property="Foreground" Value="White"/>
             <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Height" Value="36"/>
+            <Setter Property="MinHeight" Value="36"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="Padding" Value="12,0"/>
         </Style>
         
         <Style Selector="TextBox.KvInput">
-            <Setter Property="FontFamily" Value="JetBrains Mono, Cascadia Code, Consolas, monospace"/>
+            <Setter Property="FontFamily" Value="{StaticResource JetBrainsMonoFont}"/>
             <Setter Property="Padding" Value="12,8"/>
             <Setter Property="VerticalContentAlignment" Value="Center"></Setter>
             <Setter Property="CornerRadius" Value="8"/>
@@ -377,7 +389,9 @@
             <Setter Property="Foreground" Value="White"/>
             <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
-            <Setter Property="Padding" Value="24,10"/>
+            <Setter Property="Height" Value="36"/>
+            <Setter Property="Padding" Value="24,0"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
             <Setter Property="Transitions">
                 <Transitions>
                     <BrushTransition Property="Background" Duration="0:0:0.15"/>
@@ -543,7 +557,7 @@
         </Style>
         
         <Style Selector="Border.StatusBadge TextBlock">
-            <Setter Property="FontFamily" Value="JetBrains Mono, Cascadia Code, Consolas, monospace"/>
+            <Setter Property="FontFamily" Value="{StaticResource JetBrainsMonoFont}"/>
             <Setter Property="FontSize" Value="12"/>
         </Style>
 
@@ -641,13 +655,13 @@
         <Style Selector="DataGrid.ResponseGrid DataGridRow DataGridCell:nth-child(1) TextBlock">
             <Setter Property="Foreground" Value="{DynamicResource AccentBrush}"/>
             <Setter Property="FontWeight" Value="Medium"/>
-            <Setter Property="FontFamily" Value="JetBrains Mono, Cascadia Code, Consolas, monospace"/>
+            <Setter Property="FontFamily" Value="{StaticResource JetBrainsMonoFont}"/>
         </Style>
 
         <!-- Second Column (Value) Styling -->
         <Style Selector="DataGrid.ResponseGrid DataGridRow DataGridCell:nth-child(2) TextBlock">
             <Setter Property="Foreground" Value="{DynamicResource TextSecondary}"/>
-            <Setter Property="FontFamily" Value="JetBrains Mono, Cascadia Code, Consolas, monospace"/>
+            <Setter Property="FontFamily" Value="{StaticResource JetBrainsMonoFont}"/>
         </Style>
 
         <!-- Remove Focus Visual -->
@@ -665,7 +679,7 @@
             <Setter Property="Background" Value="{StaticResource BgMain}"/>
             <Setter Property="Foreground" Value="{StaticResource TextPrimary}"/>
             <Setter Property="LineNumbersForeground" Value="{StaticResource TextMuted}"/>
-            <Setter Property="FontFamily" Value="JetBrains Mono, Cascadia Code, Consolas, monospace"/>
+            <Setter Property="FontFamily" Value="{StaticResource JetBrainsMonoFont}"/>
             <Setter Property="FontSize" Value="13"/>
         </Style>
 
@@ -682,19 +696,7 @@
             <Setter Property="SelectedFoldingMarkerBackgroundBrush" Value="{StaticResource BgElevated}"/>
         </Style>
 
-        <!-- AvaloniaEdit TextEditor -->
-        <Style Selector="avaloniaEdit|TextEditor">
-            <Setter Property="Background" Value="{StaticResource BgMain}"/>
-            <Setter Property="Foreground" Value="{StaticResource TextPrimary}"/>
-            <Setter Property="LineNumbersForeground" Value="{StaticResource TextMuted}"/>
-            <Setter Property="FontFamily" Value="JetBrains Mono, Cascadia Code, Consolas, monospace"/>
-            <Setter Property="FontSize" Value="13"/>
-        </Style>
 
-        <!-- AvaloniaEdit ScrollViewer -->
-        <Style Selector="avaloniaEdit|TextEditor ScrollViewer">
-            <Setter Property="Background" Value="{StaticResource BgMain}"/>
-        </Style>
         
         <Style Selector="Border.DragTop">
             <Setter Property="BoxShadow" Value="inset 0 2 4 0 #3B82F6, 0 -1 8 0 #3B82F6" />

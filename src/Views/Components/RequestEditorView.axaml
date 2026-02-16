@@ -217,6 +217,7 @@
                             Spacing="12">
                             <TextBlock Text="{DynamicResource UsernameLabel}"
                                        Foreground="{DynamicResource TextSecondary}"
+                                       Classes="KvInput"
                                        FontSize="12" />
                             <controls:VariableTextBox Grid.Column="2"
                                                       Text="{Binding RequestViewModel.AuthViewModel.BasicUsername}"
@@ -543,13 +544,13 @@
 
                                     <!-- Text Content -->
                                     <StackPanel Spacing="12" HorizontalAlignment="Center">
-                                        <TextBlock Text="No Response Data"
+                                        <TextBlock Text="{DynamicResource NoResponseDataTitle}"
                                                    Foreground="{DynamicResource TextPrimary}"
                                                    FontSize="18"
                                                    FontWeight="SemiBold"
                                                    HorizontalAlignment="Center" />
 
-                                        <TextBlock Text="Click 'Send' to make your first request"
+                                        <TextBlock Text="{DynamicResource NoResponseDataMessage}"
                                                    Foreground="{DynamicResource TextSecondary}"
                                                    FontSize="14"
                                                    HorizontalAlignment="Center"
@@ -586,13 +587,13 @@
 
                                     <!-- Text Content -->
                                     <StackPanel Spacing="12" HorizontalAlignment="Center">
-                                        <TextBlock Text="No Response Data"
+                                        <TextBlock Text="{DynamicResource NoResponseDataTitle}"
                                                    Foreground="{DynamicResource TextPrimary}"
                                                    FontSize="18"
                                                    FontWeight="SemiBold"
                                                    HorizontalAlignment="Center" />
 
-                                        <TextBlock Text="Click 'Send' to make your first request"
+                                        <TextBlock Text="{DynamicResource NoResponseDataMessage}"
                                                    Foreground="{DynamicResource TextSecondary}"
                                                    FontSize="14"
                                                    HorizontalAlignment="Center"
