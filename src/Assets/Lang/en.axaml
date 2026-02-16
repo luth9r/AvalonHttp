@@ -66,6 +66,14 @@
     <system:String x:Key="AddCookieButton">Add Cookie</system:String>
 
     <!-- Response Area -->
+    <system:String x:Key="Ready">Ready</system:String>
+    <system:String x:Key="Sending">Sending...</system:String>
+    <system:String x:Key="Canceled">Canceled</system:String>
+    <system:String x:Key="RequestCancelled">Request cancelled</system:String>
+    <system:String x:Key="NetworkError">Network error</system:String>
+    <system:String x:Key="Error">Error</system:String>
+    <system:String x:Key="InvalidUrl">Invalid Url</system:String>
+    
     <system:String x:Key="SaveResponseTooltip">Save Response to File</system:String>
     <system:String x:Key="ResponseOptionsTooltip">Response Options</system:String>
     <system:String x:Key="CopyTooltip">Copy to clipboard</system:String>
@@ -184,6 +192,9 @@
     <system:String x:Key="MsgUnsavedChangesGeneric">You have unsaved changes.</system:String>
     <system:String x:Key="BtnExitWithoutSaving">Exit Without Saving</system:String>
     <system:String x:Key="BtnCancel">Cancel</system:String>
+    
+    <system:String x:Key="LightTheme">Light</system:String>
+    <system:String x:Key="DarkTheme">Dark</system:String>
     
     <system:String x:Key="SettingsAbout">About</system:String>
     <system:String x:Key="SettingsDescription">A modern HTTP client built with Avalonia UI.</system:String>

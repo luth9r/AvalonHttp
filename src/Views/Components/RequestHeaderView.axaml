@@ -9,9 +9,6 @@
              x:Class="AvalonHttp.Views.Components.RequestHeaderView"
              x:DataType="viewModels:RequestViewModel">
     <Grid>
-        <!-- ============================= -->
-        <!-- REQUEST HEADER                -->
-        <!-- ============================= -->
         <Border Grid.Row="0"
                 Background="{DynamicResource BgElevated}"
                 BorderBrush="{DynamicResource BorderColor}"

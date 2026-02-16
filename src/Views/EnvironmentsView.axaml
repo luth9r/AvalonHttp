@@ -339,6 +339,7 @@
 
                     <controls:JsonBodyEditor Text="{Binding SelectedEnvironment.VariablesJson, Mode=TwoWay}"
                                              HorizontalAlignment="Stretch"
+                                             CornerRadius="0"
                                              VerticalAlignment="Stretch" />
                 </Border>
             </Grid>

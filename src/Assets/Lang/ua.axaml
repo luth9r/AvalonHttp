@@ -63,6 +63,14 @@
     <system:String x:Key="AddCookieButton">Додати куку</system:String>
 
     <!-- Response Area -->
+    <system:String x:Key="Ready">Готовий</system:String>
+    <system:String x:Key="Sending">Відправка...</system:String>
+    <system:String x:Key="Canceled">Скасовано</system:String>
+    <system:String x:Key="RequestCancelled">Запит скасовано</system:String>
+    <system:String x:Key="NetworkError">Помилка мережі</system:String>
+    <system:String x:Key="Error">Помилка</system:String>
+    <system:String x:Key="InvalidUrl">Невалідний URL</system:String>
+    
     <system:String x:Key="SaveResponseTooltip">Зберегти відповідь у файл</system:String>
     <system:String x:Key="ResponseOptionsTooltip">Опції відповіді</system:String>
     <system:String x:Key="CopyTooltip">Копіювати в буфер обміну</system:String>
@@ -185,6 +193,9 @@
     <system:String x:Key="BtnExitWithoutSaving">Вийти без збереження</system:String>
     <system:String x:Key="BtnCancel">Скасувати</system:String>
 
+    <system:String x:Key="LightTheme">Світла</system:String>
+    <system:String x:Key="DarkTheme">Темна</system:String>
+    
     <system:String x:Key="SettingsAbout">Про програму</system:String>
     <system:String x:Key="SettingsDescription">Сучасний HTTP-клієнт, створений за допомогою Avalonia UI.</system:String>
 </ResourceDictionary>

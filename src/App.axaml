@@ -736,6 +736,56 @@
             <Setter Property="BorderThickness" Value="1,1,1,2" />
         </Style>
         
+        <!-- ComboBox Outline Style -->
+<Style Selector="ComboBox.Outline">
+    <Setter Property="Background" Value="Transparent"/>
+    <Setter Property="Foreground" Value="{DynamicResource TextPrimary}"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource BorderColor}"/>
+    <Setter Property="BorderThickness" Value="1"/>
+    <Setter Property="CornerRadius" Value="8"/>
+    <Setter Property="MinHeight" Value="40"/> 
+    <Setter Property="Padding" Value="14,10"/> 
+    <Setter Property="FontSize" Value="14"/>
+    <Setter Property="Transitions">
+        <Transitions>
+            <BrushTransition Property="BorderBrush" Duration="0:0:0.15"/>
+            <BrushTransition Property="Background" Duration="0:0:0.15"/>
+        </Transitions>
+    </Setter>
+</Style>
+
+<Style Selector="ComboBox.Outline:pointerover /template/ Border#Background">
+    <Setter Property="Background" Value="{DynamicResource GlassBg}"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource BorderBright}"/>
+</Style>
+
+<Style Selector="ComboBox.Outline:focus /template/ Border#Background">
+    <Setter Property="Background" Value="{DynamicResource GlassBg}"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+</Style>
+
+<Style Selector="ComboBox.Outline:disabled /template/ Border#Background">
+    <Setter Property="Opacity" Value="0.4"/>
+</Style>
+
+<!-- ComboBox Outline Dropdown -->
+<Style Selector="ComboBox.Outline /template/ PathIcon#DropDownGlyph">
+    <Setter Property="Foreground" Value="{DynamicResource TextSecondary}"/>
+    <Setter Property="Transitions">
+        <Transitions>
+            <BrushTransition Property="Foreground" Duration="0:0:0.15"/>
+        </Transitions>
+    </Setter>
+</Style>
+
+<Style Selector="ComboBox.Outline:pointerover /template/ PathIcon#DropDownGlyph">
+    <Setter Property="Foreground" Value="{DynamicResource TextPrimary}"/>
+</Style>
+
+<Style Selector="ComboBox.Outline:focus /template/ PathIcon#DropDownGlyph">
+    <Setter Property="Foreground" Value="{DynamicResource AccentBrush}"/>
+</Style>
+        
     </Application.Styles>
     
 </Application>

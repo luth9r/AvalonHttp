@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
+using AvalonHttp.Helpers;
 using AvalonHttp.Services.Interfaces;
 using CommunityToolkit.Mvvm.ComponentModel;
 
@@ -29,13 +30,14 @@ public partial class SettingsViewModel : ViewModelBase
         AvailableLanguages.Add(new LanguageItem("English", "en"));
         AvailableLanguages.Add(new LanguageItem("Українська", "ua"));
 
-        AvailableThemes.Add(new ThemeOption("Light"));
-        AvailableThemes.Add(new ThemeOption("Dark"));
+        AvailableThemes.Add(new ThemeOption("Light", "Light"));
+        AvailableThemes.Add(new ThemeOption("Dark","Dark"));
         
         // Set initial selection
         SelectedLanguage = AvailableLanguages.FirstOrDefault(x => x.Code == _languageService.CurrentCulture.Name) 
                            ?? AvailableLanguages.FirstOrDefault();
-        SelectedTheme = AvailableThemes.FirstOrDefault(t => t.Name == _themeService.CurrentTheme);
+        SelectedTheme = AvailableThemes.FirstOrDefault(t => t.Code == _themeService.CurrentTheme)
+            ?? AvailableThemes.First();
         
     }
 
@@ -57,4 +59,4 @@ public partial class SettingsViewModel : ViewModelBase
 }
 
 public record LanguageItem(string Name, string Code);
-public record ThemeOption(string Name);
+public record ThemeOption(string Name, string Code);

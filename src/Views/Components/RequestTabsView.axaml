@@ -7,9 +7,6 @@
              xmlns:viewModels="clr-namespace:AvalonHttp.ViewModels"
              x:DataType="viewModels:RequestViewModel">
     <Grid>
-        <!-- ============================= -->
-        <!-- REQUEST TABS                  -->
-        <!-- ============================= -->
         <Border Grid.Row="1" Background="{DynamicResource BgElevated}" BorderBrush="{DynamicResource BorderColor}"
                 BorderThickness="0,0,0,1">
             <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">

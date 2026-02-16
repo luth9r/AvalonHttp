@@ -55,40 +55,43 @@
         <!-- Response Tabs -->
         <Border Grid.Row="1" Background="{DynamicResource BgElevated}"
                 BorderBrush="{DynamicResource BorderColor}" BorderThickness="0,0,0,1">
-            <StackPanel Orientation="Horizontal" Margin="20,0" Spacing="4">
-                <Border Classes="Tab"
-                        Classes.Active="{Binding SelectedResponseTab, Converter={x:Static ObjectConverters.Equal}, ConverterParameter=Body}"
-                        PointerPressed="SelectResponseTab" Tag="Body">
-                    <TextBlock Text="{DynamicResource TabBody}" />
-                </Border>
-                <Border Classes="Tab"
-                        Classes.Active="{Binding SelectedResponseTab, Converter={x:Static ObjectConverters.Equal}, ConverterParameter=Headers}"
-                        PointerPressed="SelectResponseTab" Tag="Headers">
-                    <StackPanel Orientation="Horizontal" Spacing="6">
-                        <TextBlock Text="{DynamicResource TabHeaders}" />
-                        <Border Classes="Badge"
-                                IsVisible="{Binding ResponseHeadersCount, Converter={x:Static ObjectConverters.NotEqual}, ConverterParameter=0}">
-                            <TextBlock Text="{Binding ResponseHeadersCount}" />
-                        </Border>
-                    </StackPanel>
-                </Border>
-                <Border Classes="Tab"
-                        Classes.Active="{Binding SelectedResponseTab, Converter={x:Static ObjectConverters.Equal}, ConverterParameter=Cookies}"
-                        PointerPressed="SelectResponseTab" Tag="Cookies">
-                    <StackPanel Orientation="Horizontal" Spacing="6">
-                        <TextBlock Text="{DynamicResource TabCookies}" />
-                        <Border Classes="Badge"
-                                IsVisible="{Binding ResponseCookiesCount, Converter={x:Static ObjectConverters.NotEqual}, ConverterParameter=0}">
-                            <TextBlock Text="{Binding ResponseCookiesCount}" />
-                        </Border>
-                    </StackPanel>
-                </Border>
-                <Border Classes="Tab"
-                        Classes.Active="{Binding SelectedResponseTab, Converter={x:Static ObjectConverters.Equal}, ConverterParameter=Timeline}"
-                        PointerPressed="SelectResponseTab" Tag="Timeline">
-                    <TextBlock Text="{DynamicResource TabTimeline}" />
-                </Border>
-            </StackPanel>
+            <ScrollViewer HorizontalScrollBarVisibility="Auto"
+                          VerticalScrollBarVisibility="Disabled">
+                <StackPanel Orientation="Horizontal" Margin="20,0" Spacing="4">
+                    <Border Classes="Tab"
+                            Classes.Active="{Binding SelectedResponseTab, Converter={x:Static ObjectConverters.Equal}, ConverterParameter=Body}"
+                            PointerPressed="SelectResponseTab" Tag="Body">
+                        <TextBlock Text="{DynamicResource TabBody}" />
+                    </Border>
+                    <Border Classes="Tab"
+                            Classes.Active="{Binding SelectedResponseTab, Converter={x:Static ObjectConverters.Equal}, ConverterParameter=Headers}"
+                            PointerPressed="SelectResponseTab" Tag="Headers">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <TextBlock Text="{DynamicResource TabHeaders}" />
+                            <Border Classes="Badge"
+                                    IsVisible="{Binding ResponseHeadersCount, Converter={x:Static ObjectConverters.NotEqual}, ConverterParameter=0}">
+                                <TextBlock Text="{Binding ResponseHeadersCount}" />
+                            </Border>
+                        </StackPanel>
+                    </Border>
+                    <Border Classes="Tab"
+                            Classes.Active="{Binding SelectedResponseTab, Converter={x:Static ObjectConverters.Equal}, ConverterParameter=Cookies}"
+                            PointerPressed="SelectResponseTab" Tag="Cookies">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <TextBlock Text="{DynamicResource TabCookies}" />
+                            <Border Classes="Badge"
+                                    IsVisible="{Binding ResponseCookiesCount, Converter={x:Static ObjectConverters.NotEqual}, ConverterParameter=0}">
+                                <TextBlock Text="{Binding ResponseCookiesCount}" />
+                            </Border>
+                        </StackPanel>
+                    </Border>
+                    <Border Classes="Tab"
+                            Classes.Active="{Binding SelectedResponseTab, Converter={x:Static ObjectConverters.Equal}, ConverterParameter=Timeline}"
+                            PointerPressed="SelectResponseTab" Tag="Timeline">
+                        <TextBlock Text="{DynamicResource TabTimeline}" />
+                    </Border>
+                </StackPanel>
+            </ScrollViewer>
         </Border>
 
         <!-- Response Content -->
@@ -135,6 +138,7 @@
                                            Foreground="{DynamicResource TextPrimary}"
                                            FontSize="18"
                                            FontWeight="SemiBold"
+                                           TextWrapping="Wrap"
                                            HorizontalAlignment="Center" />
 
                                 <TextBlock Text="{DynamicResource NoResponseDataMessage}"
@@ -202,8 +206,8 @@
                                 MinWidth="0"
                                 Padding="8"
                                 ToolTip.Tip="{DynamicResource ResponseOptionsTooltip}">
-                            <lucide:Lucide Icon="Menu" 
-                                           Width="14" 
+                            <lucide:Lucide Icon="Menu"
+                                           Width="14"
                                            Height="14"
                                            StrokeBrush="{DynamicResource TextPrimary}" />
 
@@ -241,7 +245,7 @@
                                 MinWidth="0"
                                 Padding="8"
                                 ToolTip.Tip="{DynamicResource CopyTooltip}">
-                            <lucide:Lucide Icon="Copy" 
+                            <lucide:Lucide Icon="Copy"
                                            Width="14"
                                            Height="14"
                                            StrokeBrush="{DynamicResource TextPrimary}" />

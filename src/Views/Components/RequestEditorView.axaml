@@ -15,38 +15,36 @@
             <RowDefinition Height="*" MinHeight="200" />
         </Grid.RowDefinitions>
 
+        <!-- HEADER -->
         <components:RequestHeaderView Grid.Row="0"
                                       DataContext="{Binding RequestViewModel}"/>
 
+        <!-- TABS -->
         <components:RequestTabsView Grid.Row="1"
-                                      DataContext="{Binding RequestViewModel}"/>
-
-        <!-- ============================= -->
-        <!-- REQUEST/RESPONSE CONTENT      -->
-        <!-- ============================= -->
+                                    DataContext="{Binding RequestViewModel}"/>
+        
+        <!-- RESPONSIVE CONTENT            -->
         <Grid Grid.Row="2">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*" MinWidth="300" MaxWidth="600" />
+                <ColumnDefinition Width="1*" MinWidth="280" MaxWidth="650"/>
                 <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="*" MinWidth="350" />
+                <ColumnDefinition Width="1.5*" MinWidth="300"/>
             </Grid.ColumnDefinitions>
 
-            <!-- ============================= -->
-            <!-- REQUEST PANEL                 -->
-            <!-- ============================= -->
-            <components:RequestPanelView Grid.Column="0" DataContext="{Binding RequestViewModel}"></components:RequestPanelView>
+            <components:RequestPanelView Grid.Column="0" 
+                                        DataContext="{Binding RequestViewModel}"
+                                        EnvironmentsViewModel="{Binding EnvironmentsViewModel}" />
 
-            <!-- ============================= -->
-            <!-- SPLITTER                      -->
-            <!-- ============================= -->
-            <GridSplitter Grid.Column="1" Width="5" Background="{DynamicResource BorderColor}"
-                          ResizeDirection="Columns" ResizeBehavior="PreviousAndNext" />
+            <GridSplitter Grid.Column="1" 
+                         Width="5" 
+                         Background="{DynamicResource BorderColor}"
+                         ResizeDirection="Columns" 
+                         ResizeBehavior="PreviousAndNext"
+                         MinWidth="5" />
 
-            <!-- ============================= -->
-            <!-- RESPONSE PANEL                -->
-            <!-- ============================= -->
+            <!-- RESPONSE -->
             <components:ResponseViewerView Grid.Column="2" 
-                                      DataContext="{Binding RequestViewModel}" />
+                                          DataContext="{Binding RequestViewModel}" />
         </Grid>
     </Grid>
 </UserControl>

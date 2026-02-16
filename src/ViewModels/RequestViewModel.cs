@@ -10,6 +10,7 @@ using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Threading.Tasks;
 using System.Web;
+using AvalonHttp.Helpers;
 using AvalonHttp.Messages;
 using AvalonHttp.Models;
 using AvalonHttp.Models.CollectionAggregate;
@@ -149,7 +150,7 @@ public partial class RequestViewModel : ViewModelBase, IDisposable
     /// Holds the current status code or state of the HTTP request processing.
     /// </summary>
     [ObservableProperty]
-    private string _statusCode = "Ready";
+    private string _statusCode = Loc.Tr("Ready");
 
     /// <summary>
     /// Represents the duration of the HTTP request execution, measured in milliseconds.
@@ -543,8 +544,8 @@ public partial class RequestViewModel : ViewModelBase, IDisposable
             PrepareForRequest();
             
             var startTime = DateTime.Now;
-            var now = DateTime.Now;
             var response = await ExecuteHttpRequestAsync();
+            var now = DateTime.Now;
             var duration = (now - startTime).TotalMilliseconds;
 
             await ProcessResponseAsync(response, duration);
@@ -691,7 +692,7 @@ public partial class RequestViewModel : ViewModelBase, IDisposable
     {
         if (string.IsNullOrWhiteSpace(RequestUrl))
         {
-            StatusCode = "Error: URL is empty";
+            StatusCode = Loc.Tr("InvalidUrl");
             StatusBrush = StatusColors.Error;
             return false;
         }
@@ -710,7 +711,8 @@ public partial class RequestViewModel : ViewModelBase, IDisposable
         HasResponseData = false;
         ClearResponseCollections();
         
-        StatusCode = "Sending...";
+        StatusCode = Loc.Tr("Sending");
+        StatusCode = Loc.Tr("Sending");
         StatusBrush = StatusColors.Warning;
     }
 
@@ -976,8 +978,9 @@ public partial class RequestViewModel : ViewModelBase, IDisposable
     /// </summary>
     private void HandleRequestCancelled()
     {
-        StatusCode = "Cancelled";
-        RawResponseContent = "Request was cancelled";
+        // TODO: implement canceling operation
+        StatusCode = Loc.Tr("Cancelled");
+        RawResponseContent = Loc.Tr("RequestCancelled");
         ResponseContent = RawResponseContent;
         StatusBrush = StatusColors.Warning;
         HasResponseData = false;
@@ -990,7 +993,7 @@ public partial class RequestViewModel : ViewModelBase, IDisposable
     /// <param name="ex">The <see cref="HttpRequestException"/> instance representing the network error that occurred.</param>
     private void HandleNetworkError(HttpRequestException ex)
     {
-        StatusCode = "Network Error";
+        StatusCode = Loc.Tr("NetworkError");
         RawResponseContent = $"Network error: {ex.Message}";
         ResponseContent = RawResponseContent;
         StatusBrush = StatusColors.Error;
@@ -1005,7 +1008,7 @@ public partial class RequestViewModel : ViewModelBase, IDisposable
     /// <param name="ex">The exception that represents the encountered error, including its message and details.</param>
     private void HandleGeneralError(Exception ex)
     {
-        StatusCode = "Error";
+        StatusCode = Loc.Tr("Error");
         RawResponseContent = $"Error: {ex.Message}";
         ResponseContent = RawResponseContent;
         StatusBrush = StatusColors.Error;
@@ -1347,11 +1350,16 @@ public partial class RequestViewModel : ViewModelBase, IDisposable
         HasResponseData = false;
         ResponseContent = string.Empty;
         RawResponseContent = string.Empty;
+        
         ResponseHeaders.Clear();
+        OnPropertyChanged(nameof(ResponseHeadersCount));
+        
         ResponseCookies.Clear();
+        OnPropertyChanged(nameof(ResponseCookiesCount));
+        
         TimelineStages.Clear();
         TotalRequestTime = 0;
-        StatusCode = "Ready";
+        StatusCode = Loc.Tr("Ready");
         ResponseTime = "--";
         ResponseSize = "--";
         StatusBrush = StatusColors.Ready;
