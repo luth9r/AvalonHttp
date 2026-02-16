@@ -1,0 +1,65 @@
+﻿<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="AvalonHttp.Views.Components.RequestTabsView"
+             xmlns:viewModels="clr-namespace:AvalonHttp.ViewModels"
+             x:DataType="viewModels:RequestViewModel">
+    <Grid>
+        <!-- ============================= -->
+        <!-- REQUEST TABS                  -->
+        <!-- ============================= -->
+        <Border Grid.Row="1" Background="{DynamicResource BgElevated}" BorderBrush="{DynamicResource BorderColor}"
+                BorderThickness="0,0,0,1">
+            <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
+                <StackPanel Orientation="Horizontal" Margin="20,0" Spacing="4">
+                    <Border Classes="Tab"
+                            Classes.Active="{Binding SelectedRequestTab, Converter={x:Static ObjectConverters.Equal}, ConverterParameter=Params}"
+                            PointerPressed="SelectRequestTab" Tag="Params">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <TextBlock Text="{DynamicResource TabParams}" />
+                            <Border Classes="Badge"
+                                    IsVisible="{Binding QueryParamsViewModel.EnabledParametersCount, Converter={x:Static ObjectConverters.NotEqual}, ConverterParameter=0}">
+                                <TextBlock
+                                    Text="{Binding QueryParamsViewModel.EnabledParametersCount}" />
+                            </Border>
+                        </StackPanel>
+                    </Border>
+                    <Border Classes="Tab"
+                            Classes.Active="{Binding SelectedRequestTab, Converter={x:Static ObjectConverters.Equal}, ConverterParameter=Auth}"
+                            PointerPressed="SelectRequestTab" Tag="Auth">
+                        <TextBlock Text="{DynamicResource TabAuth}" />
+                    </Border>
+                    <Border Classes="Tab"
+                            Classes.Active="{Binding SelectedRequestTab, Converter={x:Static ObjectConverters.Equal}, ConverterParameter=Headers}"
+                            PointerPressed="SelectRequestTab" Tag="Headers">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <TextBlock Text="{DynamicResource TabHeaders}" />
+                            <Border Classes="Badge"
+                                    IsVisible="{Binding HeadersViewModel.EnabledHeadersCount, Converter={x:Static ObjectConverters.NotEqual}, ConverterParameter=0}">
+                                <TextBlock Text="{Binding HeadersViewModel.EnabledHeadersCount}" />
+                            </Border>
+                        </StackPanel>
+                    </Border>
+                    <Border Classes="Tab"
+                            Classes.Active="{Binding SelectedRequestTab, Converter={x:Static ObjectConverters.Equal}, ConverterParameter=Body}"
+                            PointerPressed="SelectRequestTab" Tag="Body">
+                        <TextBlock Text="{DynamicResource TabBody}" />
+                    </Border>
+                    <Border Classes="Tab"
+                            Classes.Active="{Binding SelectedRequestTab, Converter={x:Static ObjectConverters.Equal}, ConverterParameter=Cookies}"
+                            PointerPressed="SelectRequestTab" Tag="Cookies">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <TextBlock Text="{DynamicResource TabCookies}" />
+                            <Border Classes="Badge"
+                                    IsVisible="{Binding CookiesViewModel.EnabledCookiesCount, Converter={x:Static ObjectConverters.NotEqual}, ConverterParameter=0}">
+                                <TextBlock Text="{Binding CookiesViewModel.EnabledCookiesCount}" />
+                            </Border>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </ScrollViewer>
+        </Border>
+    </Grid>
+</UserControl>

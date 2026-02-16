@@ -9,26 +9,4 @@ public partial class RequestEditorView : UserControl
     {
         InitializeComponent();
     }
-    
-    private void SelectRequestTab(object? sender, PointerPressedEventArgs e)
-    {
-        if (sender is Control control && control.Tag is string tab)
-        {
-            if (DataContext is ViewModels.CollectionWorkspaceViewModel vm)
-            {
-                vm.RequestViewModel.SelectedRequestTab = tab;
-            }
-        }
-    }
-
-    private void SelectResponseTab(object? sender, PointerPressedEventArgs e)
-    {
-        if (sender is Control control && control.Tag is string tab)
-        {
-            if (DataContext is ViewModels.CollectionWorkspaceViewModel vm)
-            {
-                vm.RequestViewModel.SelectedResponseTab = tab;
-            }
-        }
-    }
 }

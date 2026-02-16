@@ -1,0 +1,279 @@
+﻿<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             xmlns:viewModels="clr-namespace:AvalonHttp.ViewModels"
+             xmlns:controls="clr-namespace:AvalonHttp.Controls"
+             xmlns:lucide="clr-namespace:LucideAvalonia;assembly=LucideAvalonia"
+             x:Class="AvalonHttp.Views.Components.RequestPanelView"
+             x:DataType="viewModels:RequestViewModel"
+             x:Name="Root">
+    <Grid>
+        <ScrollViewer Grid.Column="0" Background="{DynamicResource BgMain}">
+                <StackPanel Margin="20" Spacing="24">
+                    <!-- PARAMS TAB -->
+                    <StackPanel
+                        IsVisible="{Binding SelectedRequestTab, Converter={x:Static ObjectConverters.Equal}, ConverterParameter=Params}">
+                        <TextBlock Text="{DynamicResource SectionQueryParams}" Classes="SectionTitle" />
+                        <ItemsControl ItemsSource="{Binding QueryParamsViewModel.Parameters}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid ColumnSpacing="12" Margin="0,6">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="40" />
+                                            <ColumnDefinition Width="*" MinWidth="60" />
+                                            <ColumnDefinition Width="*" MinWidth="60" />
+                                            <ColumnDefinition Width="40" />
+                                        </Grid.ColumnDefinitions>
+                                        <CheckBox Grid.Column="0" IsChecked="{Binding IsEnabled}" />
+                                        <controls:VariableTextBox Grid.Column="1"
+                                                                  Text="{Binding Key}"
+                                                                  Watermark="{DynamicResource ParamNamePlaceholder}"
+                                                                  Classes="KvInput"
+                                                                  EnvironmentsViewModel="{Binding #Root.EnvironmentsViewModel}" />
+                                        <controls:VariableTextBox Grid.Column="2"
+                                                                  Text="{Binding Value}"
+                                                                  Classes="KvInput"
+                                                                  Watermark="{DynamicResource ValuePlaceholder}"
+                                                                  EnvironmentsViewModel="{Binding #Root.EnvironmentsViewModel}" />
+                                        <Button Grid.Column="3" Classes="IconButton"
+                                                Command="{Binding $parent[UserControl].((viewModels:RequestViewModel)DataContext).QueryParamsViewModel.RemoveParameterCommand}"
+                                                CommandParameter="{Binding}">
+                                            <lucide:Lucide Icon="Trash2" StrokeBrush="{DynamicResource TextMuted}"
+                                                           Width="16" Height="16" />
+                                        </Button>
+                                    </Grid>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                        <Button Classes="AddRowButton" Margin="0,12,0,0"
+                                Command="{Binding QueryParamsViewModel.AddParameterCommand}">
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <lucide:Lucide Icon="Plus" StrokeBrush="{DynamicResource TextSecondary}" Width="14"
+                                               Height="14" />
+                                <TextBlock Text="{DynamicResource AddParameterButton}" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+
+                    <!-- AUTH TAB -->
+                    <StackPanel
+                        IsVisible="{Binding SelectedRequestTab, Converter={x:Static ObjectConverters.Equal}, ConverterParameter=Auth}">
+                        <TextBlock Text="{DynamicResource SectionAuthorization}" Classes="SectionTitle" Margin="0,0,0,12" />
+
+                        <!-- Auth Type Selector -->
+                        <TextBlock Text="{DynamicResource AuthTypeLabel}"
+                                   Foreground="{DynamicResource TextSecondary}"
+                                   FontSize="12"
+                                   Margin="0,0,0,6" />
+                        <ComboBox
+                            SelectedItem="{Binding AuthViewModel.SelectedAuthType}"
+                            ItemsSource="{Binding AuthViewModel.AuthTypes}"
+                            MinWidth="200"
+                            Margin="0,0,0,20" />
+
+                        <!-- Basic Auth -->
+                        <StackPanel
+                            IsVisible="{Binding AuthViewModel.SelectedAuthType, Converter={x:Static ObjectConverters.Equal}, ConverterParameter='Basic Auth'}"
+                            Spacing="12">
+                            <TextBlock Text="{DynamicResource UsernameLabel}"
+                                       Foreground="{DynamicResource TextSecondary}"
+                                       Classes="KvInput"
+                                       FontSize="12" />
+                            <controls:VariableTextBox Grid.Column="2"
+                                                      Text="{Binding AuthViewModel.BasicUsername}"
+                                                      Watermark="{DynamicResource ValuePlaceholder}"
+                                                      Classes="KvInput"
+                                                      EnvironmentsViewModel="{Binding #Root.EnvironmentsViewModel}" />
+
+                            <TextBlock Text="{DynamicResource PasswordLabel}"
+                                       Foreground="{DynamicResource TextSecondary}"
+                                       FontSize="12" />
+                            <controls:VariableTextBox Text="{Binding AuthViewModel.BasicPassword}"
+                                                      Watermark="{DynamicResource PasswordPlaceholder}"
+                                                      PasswordChar="•"
+                                                      Classes="KvInput"
+                                                      EnvironmentsViewModel="{Binding #Root.EnvironmentsViewModel}" />
+                        </StackPanel>
+
+                        <!-- Bearer Token -->
+                        <StackPanel
+                            IsVisible="{Binding AuthViewModel.SelectedAuthType, Converter={x:Static ObjectConverters.Equal}, ConverterParameter='Bearer Token'}"
+                            Spacing="12">
+                            <TextBlock Text="{DynamicResource TokenLabel}"
+                                       Foreground="{DynamicResource TextSecondary}"
+                                       FontSize="12" />
+                            <controls:VariableTextBox Text="{Binding AuthViewModel.BearerToken}"
+                                                      Watermark="{DynamicResource TokenPlaceholder}"
+                                                      PasswordChar="•"
+                                                      Classes="KvInput"
+                                                      EnvironmentsViewModel="{Binding #Root.EnvironmentsViewModel}" />
+                        </StackPanel>
+
+                        <!-- API Key -->
+                        <StackPanel
+                            IsVisible="{Binding AuthViewModel.SelectedAuthType, Converter={x:Static ObjectConverters.Equal}, ConverterParameter='API Key'}"
+                            Spacing="12">
+                            <TextBlock Text="{DynamicResource KeyNameLabel}"
+                                       Foreground="{DynamicResource TextSecondary}"
+                                       FontSize="12" />
+                            <controls:VariableTextBox Text="{Binding AuthViewModel.ApiKeyName}"
+                                                      Watermark="{DynamicResource KeyNamePlaceholder}"
+                                                      PasswordChar="•"
+                                                      Classes="KvInput"
+                                                      EnvironmentsViewModel="{Binding #Root.EnvironmentsViewModel}" />
+
+                            <TextBlock Text="{DynamicResource KeyValueLabel}"
+                                       Foreground="{DynamicResource TextSecondary}"
+                                       FontSize="12" />
+                            <controls:VariableTextBox Text="{Binding AuthViewModel.ApiKeyValue}"
+                                                      Watermark="{DynamicResource KeyValuePlaceholder}"
+                                                      PasswordChar="•"
+                                                      Classes="KvInput"
+                                                      EnvironmentsViewModel="{Binding #Root.EnvironmentsViewModel}" />
+
+                            <TextBlock Text="{DynamicResource AddToLabel}"
+                                       Foreground="{DynamicResource TextSecondary}"
+                                       FontSize="12" />
+                            <ComboBox
+                                SelectedItem="{Binding AuthViewModel.ApiKeyLocation}"
+                                ItemsSource="{Binding AuthViewModel.ApiKeyLocations}"
+                                MinWidth="200" />
+                        </StackPanel>
+
+                        <!-- None Message -->
+                        <StackPanel
+                            IsVisible="{Binding AuthViewModel.SelectedAuthType, Converter={x:Static ObjectConverters.Equal}, ConverterParameter=None}"
+                            Spacing="8">
+                            <Border Background="{DynamicResource BgElevated}"
+                                    BorderBrush="{DynamicResource BorderColor}"
+                                    BorderThickness="1"
+                                    CornerRadius="6"
+                                    Padding="16">
+                                <StackPanel Spacing="8">
+                                    <lucide:Lucide Icon="ShieldOff"
+                                                   StrokeBrush="{DynamicResource TextMuted}"
+                                                   Width="32"
+                                                   Height="32"
+                                                   HorizontalAlignment="Center" />
+                                    <TextBlock Text="{DynamicResource NoAuthTitle}"
+                                               Foreground="{DynamicResource TextPrimary}"
+                                               FontSize="14"
+                                               FontWeight="Medium"
+                                               HorizontalAlignment="Center" />
+                                    <TextBlock
+                                        Text="{DynamicResource NoAuthMessage}"
+                                        Foreground="{DynamicResource TextMuted}"
+                                        FontSize="12"
+                                        TextWrapping="Wrap"
+                                        HorizontalAlignment="Center" />
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </StackPanel>
+
+                    <!-- HEADERS TAB -->
+                    <StackPanel
+                        IsVisible="{Binding SelectedRequestTab, Converter={x:Static ObjectConverters.Equal}, ConverterParameter=Headers}">
+                        <TextBlock Text="{DynamicResource SectionRequestHeaders}" Classes="SectionTitle" />
+                        <ItemsControl ItemsSource="{Binding HeadersViewModel.Headers}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid ColumnSpacing="12" Margin="0,6">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="40" />
+                                            <ColumnDefinition Width="*" MinWidth="80" />
+                                            <ColumnDefinition Width="*" MinWidth="80" />
+                                            <ColumnDefinition Width="40" />
+                                        </Grid.ColumnDefinitions>
+                                        <CheckBox Grid.Column="0" IsChecked="{Binding IsEnabled}" />
+                                        <controls:VariableTextBox Grid.Column="1"
+                                                                  Text="{Binding Key}"
+                                                                  Watermark="{DynamicResource HeaderNamePlaceholder}"
+                                                                  Classes="KvInput"
+                                                                  EnvironmentsViewModel="{Binding #Root.EnvironmentsViewModel}" />
+                                        <controls:VariableTextBox Grid.Column="2"
+                                                                  Text="{Binding Value}"
+                                                                  Watermark="{DynamicResource ValuePlaceholder}"
+                                                                  Classes="KvInput"
+                                                                  EnvironmentsViewModel="{Binding #Root.EnvironmentsViewModel}" />
+                                        <Button Grid.Column="3" Classes="IconButton"
+                                                Command="{Binding $parent[UserControl].((viewModels:RequestViewModel)DataContext).HeadersViewModel.RemoveHeaderCommand}"
+                                                CommandParameter="{Binding}">
+                                            <lucide:Lucide Icon="Trash2" StrokeBrush="{DynamicResource TextMuted}"
+                                                           Width="16" Height="16" />
+                                        </Button>
+                                    </Grid>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                        <Button Classes="AddRowButton" Margin="0,12,0,0"
+                                Command="{Binding HeadersViewModel.AddHeaderCommand}">
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <lucide:Lucide Icon="Plus" StrokeBrush="{DynamicResource TextSecondary}" Width="14"
+                                               Height="14" />
+                                <TextBlock Text="{DynamicResource AddHeaderButton}" />
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+
+                    <!-- BODY TAB -->
+                    <StackPanel
+                        IsVisible="{Binding SelectedRequestTab, Converter={x:Static ObjectConverters.Equal}, ConverterParameter=Body}">
+                        <TextBlock Text="{DynamicResource SectionRequestBody}" Classes="SectionTitle" />
+                        <controls:JsonBodyEditor Text="{Binding RequestBody}" 
+                                                 ContentType="{Binding ResponseContentType}"
+                                                 MinHeight="300"
+                                                 Margin="0,12,0,0" />
+                    </StackPanel>
+
+                    <!-- COOKIES TAB -->
+                    <StackPanel
+                        IsVisible="{Binding SelectedRequestTab, Converter={x:Static ObjectConverters.Equal}, ConverterParameter=Cookies}">
+                        <TextBlock Text="{DynamicResource SectionRequestCookies}" Classes="SectionTitle" />
+                        <ItemsControl ItemsSource="{Binding CookiesViewModel.Cookies}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid ColumnSpacing="12" Margin="0,6">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="40" />
+                                            <ColumnDefinition Width="*" MinWidth="80" />
+                                            <ColumnDefinition Width="*" MinWidth="80" />
+                                            <ColumnDefinition Width="40" />
+                                        </Grid.ColumnDefinitions>
+                                        <CheckBox Grid.Column="0" IsChecked="{Binding IsEnabled}"
+                                                  VerticalAlignment="Center" />
+                                        <controls:VariableTextBox Grid.Column="1"
+                                                                  Text="{Binding Key}"
+                                                                  Watermark="{DynamicResource CookieNamePlaceholder}"
+                                                                  Classes="KvInput"
+                                                                  EnvironmentsViewModel="{Binding #Root.EnvironmentsViewModel}" />
+                                        <controls:VariableTextBox Grid.Column="2"
+                                                                  Text="{Binding Value}"
+                                                                  Watermark="{DynamicResource CookieValuePlaceholder}"
+                                                                  Classes="KvInput"
+                                                                  EnvironmentsViewModel="{Binding #Root.EnvironmentsViewModel}" />
+                                        <Button Grid.Column="3" Classes="IconButton"
+                                                Command="{Binding $parent[UserControl].((viewModels:RequestViewModel)DataContext).CookiesViewModel.RemoveCookieCommand}"
+                                                CommandParameter="{Binding}">
+                                            <lucide:Lucide Icon="Trash2" StrokeBrush="{DynamicResource TextMuted}"
+                                                           Width="16" Height="16" />
+                                        </Button>
+                                    </Grid>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                        <Button Classes="AddRowButton" Margin="0,12,0,0"
+                                Command="{Binding CookiesViewModel.AddCookieCommand}">
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <lucide:Lucide Icon="Plus" StrokeBrush="{DynamicResource TextSecondary}" Width="14"
+                                               Height="14" />
+                                <TextBlock Text="{DynamicResource AddCookieButton}" />
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+                </StackPanel>
+            </ScrollViewer>
+    </Grid>
+</UserControl>
