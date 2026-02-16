@@ -46,7 +46,7 @@
                 <Button Grid.Column="2" IsEnabled="{Binding HasResponseData}" Classes="ActionButton"
                         ToolTip.Tip="{DynamicResource SaveResponseTooltip}" MinWidth="0"
                         Padding="8" Command="{Binding SaveResponseCommand}">
-                    <lucide:Lucide Icon="Save" StrokeBrush="{DynamicResource WhiteBrush}" Width="14"
+                    <lucide:Lucide Icon="Save" StrokeBrush="{DynamicResource TextPrimary}" Width="14"
                                    Height="14" />
                 </Button>
             </Grid>
@@ -202,8 +202,10 @@
                                 MinWidth="0"
                                 Padding="8"
                                 ToolTip.Tip="{DynamicResource ResponseOptionsTooltip}">
-                            <lucide:Lucide Icon="Menu" Width="14" Height="14"
-                                           StrokeBrush="{DynamicResource WhiteBrush}" />
+                            <lucide:Lucide Icon="Menu" 
+                                           Width="14" 
+                                           Height="14"
+                                           StrokeBrush="{DynamicResource TextPrimary}" />
 
                             <Button.Flyout>
                                 <MenuFlyout Placement="BottomEdgeAlignedRight">
@@ -239,8 +241,10 @@
                                 MinWidth="0"
                                 Padding="8"
                                 ToolTip.Tip="{DynamicResource CopyTooltip}">
-                            <lucide:Lucide Icon="Copy" Width="14" Height="14"
-                                           StrokeBrush="{DynamicResource WhiteBrush}" />
+                            <lucide:Lucide Icon="Copy" 
+                                           Width="14"
+                                           Height="14"
+                                           StrokeBrush="{DynamicResource TextPrimary}" />
                         </Button>
 
                         <!-- JSON Editor -->
@@ -309,26 +313,33 @@
                     </Border>
 
                     <!-- Content with data -->
-                    <ScrollViewer IsVisible="{Binding HasResponseData}">
-                        <StackPanel Margin="20">
-                            <TextBlock Text="{DynamicResource SectionResponseHeaders}"
-                                       Classes="SectionTitle"
-                                       Margin="0,0,0,12" />
+                    <Grid Margin="20" IsVisible="{Binding HasResponseData}">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
 
-                            <DataGrid ItemsSource="{Binding ResponseHeaders}"
-                                      Classes="ResponseGrid">
-                                <DataGrid.Columns>
-                                    <DataGridTextColumn Header="{DynamicResource ColName}"
-                                                        Binding="{Binding Name}"
-                                                        Width="200" />
+                        <TextBlock Grid.Row="0"
+                                   Text="{DynamicResource SectionResponseHeaders}"
+                                   Classes="SectionTitle"
+                                   Margin="0,0,0,12" />
 
-                                    <DataGridTextColumn Header="{DynamicResource ColValue}"
-                                                        Binding="{Binding Value}"
-                                                        Width="*" />
-                                </DataGrid.Columns>
-                            </DataGrid>
-                        </StackPanel>
-                    </ScrollViewer>
+                        <DataGrid Grid.Row="1"
+                                  ItemsSource="{Binding ResponseHeaders}"
+                                  Classes="ResponseGrid"
+                                  HorizontalScrollBarVisibility="Visible"
+                                  VerticalScrollBarVisibility="Auto">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="{DynamicResource ColName}"
+                                                    Binding="{Binding Name}"
+                                                    Width="Auto" />
+
+                                <DataGridTextColumn Header="{DynamicResource ColValue}"
+                                                    Binding="{Binding Value}"
+                                                    Width="Auto" />
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </Grid>
                 </Grid>
             </Border>
 

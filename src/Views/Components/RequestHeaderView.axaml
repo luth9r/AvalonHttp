@@ -41,7 +41,7 @@
                             ToolTip.Tip="{DynamicResource SaveTooltip}">
                         <StackPanel Orientation="Horizontal" Spacing="8">
                             <lucide:Lucide Icon="Save"
-                                           StrokeBrush="{DynamicResource WhiteBrush}"
+                                           StrokeBrush="{DynamicResource TextPrimary}"
                                            Width="14" Height="14"
                                            VerticalAlignment="Center" />
                             <TextBlock Text="{DynamicResource SaveButton}"
@@ -64,7 +64,7 @@
                     <Button Grid.Column="2" Classes="SendButton"
                             Command="{Binding SendRequestCommand}">
                         <Grid ColumnDefinitions="Auto, Auto" ColumnSpacing="8">
-                            <lucide:Lucide Grid.Column="0" Icon="Send" StrokeBrush="{DynamicResource WhiteBrush}" Width="16" Height="16" />
+                            <lucide:Lucide Grid.Column="0" Icon="Send" StrokeBrush="{DynamicResource TextPrimary}" Width="16" Height="16" />
                             <TextBlock Grid.Column="1" Text="{DynamicResource SendButton}" />
                         </Grid>
                     </Button>
