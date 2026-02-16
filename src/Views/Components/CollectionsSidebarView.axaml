@@ -117,7 +117,7 @@
 
                                             <lucide:Lucide Grid.Column="0"
                                                            Icon="Folder"
-                                                           StrokeBrush="#F59E0B"
+                                                           StrokeBrush="{DynamicResource Warning}"
                                                            Width="16" Height="16"
                                                            Margin="0,0,8,0" />
 
@@ -213,7 +213,7 @@
                                                 <Border.Styles>
                                                     <!-- Selected Style -->
                                                     <Style Selector="Border.selected">
-                                                        <Setter Property="Background" Value="#1A1F2E" />
+                                                        <Setter Property="Background" Value="{DynamicResource BgMain}" />
                                                         <Setter Property="BorderBrush"
                                                                 Value="{DynamicResource AccentBrush}" />
                                                         <Setter Property="BorderThickness" Value="1" />
@@ -303,43 +303,6 @@
                                                                         <lucide:Lucide Icon="Copy" Width="14" />
                                                                     </MenuItem.Icon>
                                                                 </MenuItem>
-                                                                <!-- Revert and Delete were complex bindings in original, simplifying assuming RequestViewModel context availability or handling via messaging/parent. 
-                                                                     Actually, RevertChangesCommand is on RequestViewModel. 
-                                                                     In the Sidebar, we are in CollectionsViewModel context. 
-                                                                     We don't easily have access to valid RequestViewModel here unless we pass it down or use messaging.
-                                                                     The usage in original was: $parent[UserControl].((vm:CollectionWorkspaceViewModel)DataContext).RequestViewModel.RevertChangesCommand
-                                                                     Here $parent[UserControl] is CollectionsSidebarView, and its DataContext is CollectionsViewModel.
-                                                                     CollectionsViewModel DOES NOT have RequestViewModel.
-                                                                     WE NEED TO FIX THIS.
-                                                                     
-                                                                     Option 1: Add RequestViewModel to CollectionsViewModel (circular dependency risk).
-                                                                     Option 2: Bind Revert command to something in RequestItemViewModel (the Item itself).
-                                                                     Option 3: Use a weak reference messenger or event.
-                                                                     
-                                                                     The RequestItemViewModel (Binding context here) MIGHT have the command if we put it there?
-                                                                     Let's check RequestItemViewModel... I can't check it right now, assuming standard pattern.
-                                                                     
-                                                                     Let's use the original binding path logic but looking further up if needed? 
-                                                                     No, the visual tree is broken.
-                                                                     
-                                                                     Actually, CollectionsSidebarView will be inside CollectionsWorkspaceView.
-                                                                     So $parent[UserControl] finds CollectionsSidebarView.
-                                                                     $parent[UserControl, 2] might find CollectionsWorkspaceView!
-                                                                     
-                                                                     Let's try $parent[collections_views:CollectionsWorkspaceView].
-                                                                     But we need namespace.
-                                                                     
-                                                                     Better approach:
-                                                                     The commands should probably be on the ItemViewModel itself if possible.
-                                                                     DeleteCommand IS on the item.
-                                                                     DuplicateCommand IS on the item.
-                                                                     RevertChangesCommand was on RequestViewModel (the active editor).
-                                                                     
-                                                                     Is it critical to have Revert in the sidebar context menu?
-                                                                     If so, we can try finding the parent window or main view.
-                                                                     
-                                                                     Let's try to reference the main RequestViewModel via the CollectionWorkspaceViewModel which is the parent of this view in the visual tree.
-                                                                -->
                                                                 <MenuItem Header="{DynamicResource DeleteMenuItem}"
                                                                           Command="{Binding DeleteCommand}">
                                                                     <MenuItem.Icon>

@@ -54,6 +54,8 @@ public class VariableTextBox : TemplatedControl
     private TextBlock? _highlightText;
     private Button? _revealButton;
     private bool _isPasswordRevealed;
+    private IBrush? _warningBrush;
+    private IBrush? _textPrimaryBrush;
 
     public string Text
     {
@@ -76,6 +78,9 @@ public class VariableTextBox : TemplatedControl
     protected override void OnApplyTemplate(TemplateAppliedEventArgs e)
     {
         base.OnApplyTemplate(e);
+        
+        _warningBrush = Application.Current?.FindResource("Warning") as IBrush;
+        _textPrimaryBrush = Application.Current?.FindResource("TextPrimary") as IBrush;
 
         _textBox = e.NameScope.Find<TextBox>("PART_TextBox");
         _highlightText = e.NameScope.Find<TextBlock>("PART_HighlightText");
@@ -151,8 +156,8 @@ public class VariableTextBox : TemplatedControl
             var run = new Run(part)
             {
                 Foreground = regex.IsMatch(part) 
-                    ? new SolidColorBrush(Color.Parse("#F59E0B"))
-                    : new SolidColorBrush(Color.Parse("#E0E0E0")),
+                    ? (_warningBrush ?? Brushes.Orange)
+                    : (_textPrimaryBrush ?? Brushes.White),
                 FontWeight = regex.IsMatch(part) ? FontWeight.Bold : FontWeight.Normal
             };
             _highlightText.Inlines?.Add(run);
@@ -261,7 +266,7 @@ public class VariableTextBox : TemplatedControl
         {
             _textBox.PasswordChar = isPasswordMode ? PasswordChar : default(char);
             _textBox.Foreground = isPasswordMode 
-                ? new SolidColorBrush(Color.Parse("#E0E0E0")) 
+                ? (_textPrimaryBrush ?? Brushes.White)
                 : Brushes.Transparent;
         }
         

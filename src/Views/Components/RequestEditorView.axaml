@@ -49,7 +49,7 @@
                             ToolTip.Tip="{DynamicResource SaveTooltip}">
                         <StackPanel Orientation="Horizontal" Spacing="8">
                             <lucide:Lucide Icon="Save"
-                                           StrokeBrush="White"
+                                           StrokeBrush="{DynamicResource WhiteBrush}"
                                            Width="14" Height="14"
                                            VerticalAlignment="Center" />
                             <TextBlock Text="{DynamicResource SaveButton}"
@@ -72,7 +72,7 @@
                     <Button Grid.Column="2" Classes="SendButton"
                             Command="{Binding RequestViewModel.SendRequestCommand}">
                         <Grid ColumnDefinitions="Auto, Auto" ColumnSpacing="8">
-                            <lucide:Lucide Grid.Column="0" Icon="Send" StrokeBrush="White" Width="16" Height="16" />
+                            <lucide:Lucide Grid.Column="0" Icon="Send" StrokeBrush="{DynamicResource WhiteBrush}" Width="16" Height="16" />
                             <TextBlock Grid.Column="1" Text="{DynamicResource SendButton}" />
                         </Grid>
                     </Button>
@@ -437,7 +437,7 @@
                         <Grid Grid.Column="0" ColumnDefinitions="Auto, Auto, Auto" ColumnSpacing="12">
                             <Border Grid.Column="0" Background="{Binding RequestViewModel.StatusBrush}" Padding="8"
                                     CornerRadius="6">
-                                <TextBlock Text="{Binding RequestViewModel.StatusCode}" Foreground="White"
+                                <TextBlock Text="{Binding RequestViewModel.StatusCode}" Foreground="{DynamicResource WhiteBrush}"
                                            FontSize="11" FontWeight="SemiBold" />
                             </Border>
                             <Grid Grid.Column="1" ColumnDefinitions="Auto, Auto" ColumnSpacing="6">
@@ -459,7 +459,7 @@
                         </Grid>
                         <Button Grid.Column="2" IsEnabled="{Binding RequestViewModel.HasResponseData}" Classes="ActionButton" ToolTip.Tip="{DynamicResource SaveResponseTooltip}" MinWidth="0"
                                 Padding="8" Command="{Binding RequestViewModel.SaveResponseCommand}">
-                            <lucide:Lucide Icon="Save" StrokeBrush="White" Width="14"
+                            <lucide:Lucide Icon="Save" StrokeBrush="{DynamicResource WhiteBrush}" Width="14"
                                            Height="14" />
                         </Button>
                     </Grid>
@@ -518,7 +518,7 @@
                         <Grid>
                             <!-- Empty State -->
                             <!-- We use hardcoded value cause underneath we have avaloniaedit -->
-                            <Border Background="#1A1A1A"
+                            <Border Background="{DynamicResource BgElevated}"
                                     CornerRadius="8"
                                     IsVisible="{Binding !RequestViewModel.HasResponseData}">
                                 <StackPanel VerticalAlignment="Center"
@@ -615,7 +615,7 @@
                                         MinWidth="0"
                                         Padding="8"
                                         ToolTip.Tip="{DynamicResource ResponseOptionsTooltip}">
-                                    <lucide:Lucide Icon="Menu" Width="14" Height="14" StrokeBrush="White" />
+                                    <lucide:Lucide Icon="Menu" Width="14" Height="14" StrokeBrush="{DynamicResource WhiteBrush}" />
 
                                     <Button.Flyout>
                                         <MenuFlyout Placement="BottomEdgeAlignedRight">
@@ -651,7 +651,7 @@
                                         MinWidth="0"
                                         Padding="8"
                                         ToolTip.Tip="{DynamicResource CopyTooltip}">
-                                    <lucide:Lucide Icon="Copy" Width="14" Height="14" StrokeBrush="White" />
+                                    <lucide:Lucide Icon="Copy" Width="14" Height="14" StrokeBrush="{DynamicResource WhiteBrush}" />
                                 </Button>
 
                                 <!-- JSON Editor -->

@@ -171,6 +171,7 @@ public partial class RequestItemViewModel : ObservableObject, IDisposable
             DialogMessage.Destructive(
                 title: Loc.Tr("DialogTitleDeleteRequest"),
                 message: Loc.Tr("MsgDeleteRequestConfirm", Name),
+                cancelText: Loc.Tr("BtnCancel"),
                 onConfirm: async () =>
                 {
                     try

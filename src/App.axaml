@@ -52,6 +52,15 @@
         <SolidColorBrush x:Key="Success">#10B981</SolidColorBrush>
         <SolidColorBrush x:Key="Error">#EF4444</SolidColorBrush>
         <SolidColorBrush x:Key="Warning">#F59E0B</SolidColorBrush>
+        <SolidColorBrush x:Key="WhiteBrush">#FFFFFF</SolidColorBrush>
+        <SolidColorBrush x:Key="ScrollBarHover">#404040</SolidColorBrush>
+        <SolidColorBrush x:Key="AccentHover">#4A90F7</SolidColorBrush>
+        <SolidColorBrush x:Key="AccentPressed">#2563EB</SolidColorBrush>
+        <SolidColorBrush x:Key="SuccessSubtle">#1A10B981</SolidColorBrush>
+        <SolidColorBrush x:Key="SuccessBorder">#3310B981</SolidColorBrush>
+        <SolidColorBrush x:Key="AccentSubtle">#1A3B82F6</SolidColorBrush>
+        <SolidColorBrush x:Key="AccentDrag">#153B82F6</SolidColorBrush>
+        <SolidColorBrush x:Key="AccentDragStrong">#253B82F6</SolidColorBrush>
         
         <SolidColorBrush x:Key="TextControlSelectionHighlightColor" Color="#663B82F6"/>
         
@@ -288,7 +297,7 @@
         </Style>
         
         <Style Selector="ScrollBar /template/ Thumb:pointerover">
-            <Setter Property="Background" Value="#404040"/>
+            <Setter Property="Background" Value="{DynamicResource ScrollBarHover}"/>
         </Style>
 
         <!-- Navigation Buttons -->
@@ -385,7 +394,7 @@
         <!-- Custom Inputs -->
         <Style Selector="ComboBox.MethodDropdown">
             <Setter Property="Background" Value="{DynamicResource AccentBrush}"/>
-            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Foreground" Value="{DynamicResource WhiteBrush}"/>
             <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
             <Setter Property="Height" Value="36"/>
@@ -408,7 +417,7 @@
         <!-- Buttons -->
         <Style Selector="Button.SendButton">
             <Setter Property="Background" Value="{DynamicResource AccentBrush}"/>
-            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Foreground" Value="{DynamicResource WhiteBrush}"/>
             <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
             <Setter Property="Height" Value="36"/>
@@ -423,11 +432,11 @@
         </Style>
 
         <Style Selector="Button.SendButton:pointerover /template/ ContentPresenter">
-            <Setter Property="Background" Value="#4A90F7"/>
+            <Setter Property="Background" Value="{DynamicResource AccentHover}"/>
         </Style>
 
         <Style Selector="Button.SendButton:pressed /template/ ContentPresenter">
-            <Setter Property="Background" Value="#2563EB"/>
+            <Setter Property="Background" Value="{DynamicResource AccentPressed}"/>
         </Style>
 
         <Style Selector="Button.IconButton">
@@ -508,7 +517,7 @@
         
         <Style Selector="Button.SaveButton">
             <Setter Property="Background" Value="{DynamicResource AccentBrush}" />
-            <Setter Property="Foreground" Value="White" />
+            <Setter Property="Foreground" Value="{DynamicResource WhiteBrush}" />
             <Setter Property="Padding" Value="12,6" />
             <Setter Property="CornerRadius" Value="6" />
             <Setter Property="BorderThickness" Value="0" />
@@ -584,20 +593,20 @@
         </Style>
 
         <Style Selector="Border.StatusSuccess">
-            <Setter Property="Background" Value="#1A10B981"/>
-            <Setter Property="BorderBrush" Value="#3310B981"/>
+            <Setter Property="Background" Value="{DynamicResource SuccessSubtle}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource SuccessBorder}"/>
             <Setter Property="BorderThickness" Value="1"/>
         </Style>
         
         <Style Selector="Border.TreeItem.DragTop">
             <Setter Property="BoxShadow" Value="inset 0 2 0 0 #3B82F6" />
-            <Setter Property="Background" Value="#153B82F6" />
+            <Setter Property="Background" Value="{DynamicResource AccentDrag}" />
             <Setter Property="BorderThickness" Value="0" /> 
             <Setter Property="Padding" Value="10,8" /> </Style>
 
         <Style Selector="Border.TreeItem.DragBottom">
             <Setter Property="BoxShadow" Value="inset 0 -2 0 0 #3B82F6" />
-            <Setter Property="Background" Value="#153B82F6" />
+            <Setter Property="Background" Value="{DynamicResource AccentDrag}" />
             <Setter Property="BorderThickness" Value="0" />
             <Setter Property="Padding" Value="10,8" />
         </Style>
@@ -653,7 +662,7 @@
 
         <!-- DataGrid Row Selected State -->
         <Style Selector="DataGrid.ResponseGrid DataGridRow:selected /template/ Rectangle#BackgroundRectangle">
-            <Setter Property="Fill" Value="#1A3B82F6"/>
+            <Setter Property="Fill" Value="{DynamicResource AccentSubtle}"/>
             <Setter Property="Opacity" Value="1"/>
         </Style>
 
@@ -722,15 +731,15 @@
         
         <Style Selector="Border.DragTop">
             <Setter Property="BoxShadow" Value="inset 0 2 4 0 #3B82F6, 0 -1 8 0 #3B82F6" />
-            <Setter Property="Background" Value="#253B82F6" />
-            <Setter Property="BorderBrush" Value="#3B82F6" />
+            <Setter Property="Background" Value="{DynamicResource AccentDragStrong}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
             <Setter Property="BorderThickness" Value="1,2,1,1" />
         </Style>
 
         <Style Selector="Border.DragBottom">
             <Setter Property="BoxShadow" Value="inset 0 -2 4 0 #3B82F6, 0 1 8 0 #3B82F6" />
-            <Setter Property="Background" Value="#253B82F6" />
-            <Setter Property="BorderBrush" Value="#3B82F6" />
+            <Setter Property="Background" Value="{DynamicResource AccentDrag}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
             <Setter Property="BorderThickness" Value="1,1,1,2" />
         </Style>
         

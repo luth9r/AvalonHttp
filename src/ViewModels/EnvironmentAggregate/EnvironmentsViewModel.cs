@@ -293,6 +293,7 @@ public partial class EnvironmentsViewModel : ViewModelBase, IDisposable
             Loc.Tr("DialogTitleDeleteEnvironment"),
             Loc.Tr("MsgDeleteEnvironmentConfirm", environment.Name),
             confirmText: Loc.Tr("BtnDelete"),
+            cancelText: Loc.Tr("BtnCancel"),
             onConfirm: async () => 
             {
                 try

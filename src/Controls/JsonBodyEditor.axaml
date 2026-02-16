@@ -4,15 +4,15 @@
              x:Class="AvalonHttp.Controls.JsonBodyEditor"
              x:Name="Root">
     
-    <Border Background="#1E1E1E"
+    <Border Background="{DynamicResource BgMain}"
             BorderBrush="{DynamicResource BorderColor}"
             BorderThickness="1"
             CornerRadius="8"
             ClipToBounds="True">
         <avaloniaEdit:TextEditor x:Name="Editor"
-                                 Background="#1E1E1E"
-                                 Foreground="#D4D4D4"
-                                 FontFamily="JetBrains Mono, Cascadia Code, Consolas, monospace"
+                                 Background="{DynamicResource BgMain}"
+                                 Foreground="{DynamicResource TextPrimary}"
+                                 FontFamily="{StaticResource JetBrainsMonoFont}"
                                  FontSize="13"
                                  ShowLineNumbers="True"
                                  WordWrap="False"

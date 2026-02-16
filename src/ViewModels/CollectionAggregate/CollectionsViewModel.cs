@@ -248,6 +248,7 @@ public partial class CollectionsViewModel : ViewModelBase, IDisposable
             Loc.Tr("DialogTitleDeleteCollection"),
             Loc.Tr("MsgDeleteCollectionConfirm", collection.Name),
             confirmText: Loc.Tr("BtnDelete"),
+            cancelText: Loc.Tr("BtnCancel"),
             onConfirm: async () => 
             {
                 try

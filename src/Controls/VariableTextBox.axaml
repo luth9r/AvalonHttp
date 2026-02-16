@@ -52,7 +52,7 @@
                                          VerticalContentAlignment="Center"
                                          TextWrapping="NoWrap"
                                          CaretBrush="{DynamicResource AccentBrush}"
-                                         SelectionBrush="#663B82F6"
+                                         SelectionBrush="{DynamicResource TextControlSelectionHighlightColor}"
                                          SelectionForegroundBrush="Transparent"
                                          MinHeight="0"
                                          MinWidth="0">
