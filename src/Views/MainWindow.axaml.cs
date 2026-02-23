@@ -2,6 +2,7 @@ using System;
 using AvalonHttp.ViewModels;
 using Avalonia.Controls;
 using Avalonia.Input;
+using Avalonia.Interactivity;
 
 namespace AvalonHttp.Views;
 
@@ -18,6 +19,7 @@ public partial class MainWindow : Window
         DataContext = _viewModel;
         
         Loaded += OnWindowLoaded;
+        this.PropertyChanged += MainWindow_PropertyChanged;
     }
     
     private void TopLevel_PointerPressed(object? sender, PointerPressedEventArgs e)
@@ -25,6 +27,35 @@ public partial class MainWindow : Window
         if (e.GetCurrentPoint(this).Properties.IsLeftButtonPressed)
         {
             BeginMoveDrag(e);
+        }
+    }
+    
+    private void Minimize_Click(object sender, RoutedEventArgs e)
+    {
+        WindowState = WindowState.Minimized;
+    }
+
+    private void Maximize_Click(object sender, RoutedEventArgs e)
+    {
+        WindowState = WindowState == WindowState.Maximized 
+            ? WindowState.Normal 
+            : WindowState.Maximized;
+    }
+    
+    private void Close_Click(object sender, RoutedEventArgs e)
+    {
+        Close();
+    }
+    
+    private void MainWindow_PropertyChanged(object? sender, Avalonia.AvaloniaPropertyChangedEventArgs e)
+    {
+        if (e.Property == Window.WindowStateProperty)
+        {
+            var isMaximized = WindowState == WindowState.Maximized;
+                
+            // Обращаемся к Path по их именам (x:Name в XAML)
+            MaximizePath.IsVisible = !isMaximized;
+            RestorePath.IsVisible = isMaximized;
         }
     }
     

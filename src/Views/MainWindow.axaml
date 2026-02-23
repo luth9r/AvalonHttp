@@ -7,7 +7,8 @@
         xmlns:collections="clr-namespace:AvalonHttp.Views"
         xmlns:environments="clr-namespace:AvalonHttp.Views"
         xmlns:settings="clr-namespace:AvalonHttp.Views"
-        
+        xmlns:ic="using:FluentIcons.Avalonia"
+
         x:Class="AvalonHttp.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
         
@@ -18,9 +19,42 @@
         TransparencyLevelHint="AcrylicBlur"
         ExtendClientAreaToDecorationsHint="True"
         Focusable="True"
-        ExtendClientAreaChromeHints="PreferSystemChrome"
-        WindowStartupLocation="CenterScreen">
+        ExtendClientAreaChromeHints="NoChrome"
+        WindowStartupLocation="CenterScreen"
+        ExtendClientAreaTitleBarHeightHint="40">
 
+    <Window.Styles>
+        <Style Selector="Button.WindowBtn">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextSecondary}"/>
+            <Setter Property="Width" Value="46"/>
+            <Setter Property="Height" Value="40"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="CornerRadius" Value="0"/>
+            <Setter Property="Padding" Value="0"/> <Setter Property="VerticalAlignment" Value="Top"/>
+            <Setter Property="Transitions">
+                <Transitions>
+                    <BrushTransition Property="Background" Duration="0:0:0.15"/>
+                    <BrushTransition Property="Foreground" Duration="0:0:0.15"/>
+                </Transitions>
+            </Setter>
+        </Style>
+
+        <Style Selector="Button.WindowBtn:pointerover">
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimary}"/>
+        </Style>
+        <Style Selector="Button.WindowBtn:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource GlassBg}"/>
+        </Style>
+
+        <Style Selector="Button.CloseBtn:pointerover">
+            <Setter Property="Foreground" Value="{DynamicResource WhiteBrush}"/>
+        </Style>
+        <Style Selector="Button.CloseBtn:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource Error}"/>
+        </Style>
+    </Window.Styles>
+    
     <Interaction.Behaviors>
         <behaviors:ClearFocusOnClickBehavior />
     </Interaction.Behaviors>
@@ -29,7 +63,7 @@
         <KeyBinding Gesture="Ctrl+S" Command="{Binding CollectionsWorkspace.RequestViewModel.SaveCurrentRequestCommand}" />
     </Window.KeyBindings>
 
-    <Panel>
+    <Panel Margin="{Binding $parent[Window].OffScreenMargin}">
         <shared:DialogView DataContext="{Binding DialogViewModel}" ZIndex="1000" />
 
         <Grid RowDefinitions="40, *">
@@ -38,22 +72,56 @@
                     Background="{DynamicResource BgElevated}" 
                     BorderThickness="0,0,0,1" 
                     BorderBrush="{DynamicResource BorderColor}"
-                    PointerPressed="TopLevel_PointerPressed"> <Grid ColumnDefinitions="Auto, *, Auto">
+                    PointerPressed="TopLevel_PointerPressed"> 
+                
+                <Grid ColumnDefinitions="Auto, *, Auto">
                     <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="12" Margin="16,0" VerticalAlignment="Center">
                         <lucide:Lucide Icon="Zap" StrokeBrush="{DynamicResource AccentBrush}" Width="16" Height="16" />
                         <TextBlock Text="AvalonHttp" FontWeight="SemiBold" FontSize="13" VerticalAlignment="Center" />
+                    </StackPanel>
+                    
+                    <StackPanel Grid.Column="2" Orientation="Horizontal">
+    
+                        <Button Classes="WindowBtn" Click="Minimize_Click">
+                            <ic:SymbolIcon Symbol="Subtract" 
+                                           FontSize="12" 
+                                           Foreground="{Binding $parent[Button].Foreground}" />
+                        </Button>
+
+                        <Button Classes="WindowBtn" Click="Maximize_Click">
+                            <Panel HorizontalAlignment="Center" VerticalAlignment="Center">
+                                <ic:SymbolIcon x:Name="MaximizePath" 
+                                               Symbol="Maximize" 
+                                               FontSize="12" 
+                                               Foreground="{Binding $parent[Button].Foreground}" />
+            
+                                <ic:SymbolIcon x:Name="RestorePath" 
+                                               Symbol="SquareMultiple" 
+                                               FontSize="12" 
+                                               Foreground="{Binding $parent[Button].Foreground}" 
+                                               IsVisible="False" />
+                            </Panel>
+                        </Button>
+
+                        <Button Classes="WindowBtn CloseBtn" Click="Close_Click">
+                            <ic:SymbolIcon Symbol="Dismiss" 
+                                           FontSize="12" 
+                                           Foreground="{Binding $parent[Button].Foreground}" />
+                        </Button>
+    
                     </StackPanel>
                 </Grid>
             </Border>
 
             <Grid Grid.Row="1">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="60" MinWidth="60" MaxWidth="60" /> <ColumnDefinition Width="*" /> </Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="60" MinWidth="60" MaxWidth="60" /> 
+                    <ColumnDefinition Width="*" /> 
+                </Grid.ColumnDefinitions>
 
                 <shared:SideBarView Grid.Column="0" />
 
                 <Grid Grid.Column="1">
-                    
                     <collections:CollectionsWorkspaceView
                         DataContext="{Binding CollectionsWorkspace}"
                         IsVisible="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).IsCollectionsView}" />
@@ -65,7 +133,6 @@
                     <settings:SettingsView
                         DataContext="{Binding SettingsViewModel}"
                         IsVisible="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).IsSettingsView}" />
-                        
                 </Grid>
             </Grid>
 
