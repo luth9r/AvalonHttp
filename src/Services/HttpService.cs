@@ -28,6 +28,22 @@ public class HttpService : IHttpService, IDisposable
         };
     }
 
+    /// <summary>
+    /// Used only for testing purposes.
+    /// </summary>
+    public HttpService(HttpMessageHandler? innerHandler = null)
+    {
+        var metricsHandler = new MetricsHandler(_metricsStore)
+        {
+            InnerHandler = innerHandler ?? new HttpClientHandler() 
+        };
+    
+        _httpClient = new HttpClient(metricsHandler)
+        {
+            Timeout = TimeSpan.FromSeconds(30)
+        };
+    }
+
     public async Task<HttpResponseMessage> SendRequestAsync(
         string url,
         string method,
