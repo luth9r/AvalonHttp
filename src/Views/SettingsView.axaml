@@ -48,7 +48,7 @@
                             BorderThickness="0,0,0,1" 
                             Padding="24,16">
                         <StackPanel Orientation="Horizontal" Spacing="12">
-                            <lucide:Lucide Icon="Monitor" 
+                            <lucide:Lucide Icon="SlidersHorizontal" 
                                            Width="18" Height="18" 
                                            StrokeBrush="{DynamicResource AccentBrush}" 
                                            VerticalAlignment="Center"/>

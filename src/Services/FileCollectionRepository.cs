@@ -18,15 +18,14 @@ public class FileCollectionRepository : ICollectionRepository
     private readonly IFileNameSanitizer _fileNameSanitizer;
     
     private readonly ConcurrentDictionary<Guid, string> _filePathCache = new();
-    
     private readonly ConcurrentDictionary<Guid, SemaphoreSlim> _locks = new();
 
-    public FileCollectionRepository(IFileNameSanitizer fileNameSanitizer)
+    public FileCollectionRepository(IFileNameSanitizer fileNameSanitizer, string? basePath = null)
     {
         _fileNameSanitizer = fileNameSanitizer;
         
-        var appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-        _collectionsFolder = Path.Combine(appData, "AvalonHttp", "Collections");
+        var appFolder = basePath ?? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "AvalonHttp");
+        _collectionsFolder = Path.Combine(appFolder, "Collections");
         
         Directory.CreateDirectory(_collectionsFolder);
 
@@ -122,17 +121,12 @@ public class FileCollectionRepository : ICollectionRepository
                 
                 await File.WriteAllTextAsync(tempFilePath, json);
                 
+                File.Move(tempFilePath, newFilePath, overwrite: true);
+                
                 if (oldFilePath != newFilePath && File.Exists(oldFilePath))
                 {
-                    File.Delete(oldFilePath);
+                    try { File.Delete(oldFilePath); } catch { }
                 }
-
-                if (File.Exists(newFilePath))
-                {
-                    File.Delete(newFilePath);
-                }
-                
-                File.Move(tempFilePath, newFilePath);
                 
                 _filePathCache[collection.Id] = newFilePath;
                 
@@ -214,7 +208,7 @@ public class FileCollectionRepository : ICollectionRepository
                     System.Diagnostics.Debug.WriteLine($"    Cookies: {request.Cookies?.Count ?? 0}");
                     System.Diagnostics.Debug.WriteLine($"    Auth Type: {request.AuthData?.Type ?? "null"}");
                     
-                    // ✅ Initialize null collections
+                    // Initialize null collections
                     request.Headers ??= new System.Collections.ObjectModel.ObservableCollection<Models.KeyValueItemModel>();
                     request.QueryParameters ??= new System.Collections.ObjectModel.ObservableCollection<Models.KeyValueItemModel>();
                     request.Cookies ??= new System.Collections.ObjectModel.ObservableCollection<Models.KeyValueItemModel>();

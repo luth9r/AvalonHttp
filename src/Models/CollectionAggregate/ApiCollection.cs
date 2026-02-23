@@ -16,7 +16,7 @@ public class ApiCollection
     
     public string GenerateUniqueRequestName(string baseName)
     {
-        if (!Requests.Any(r => r.Name == baseName))
+        if (Requests.All(r => r.Name != baseName))
         {
             return baseName;
         }

@@ -9,13 +9,15 @@ namespace AvalonHttp.Services;
 public class ThemeService : IThemeService
 {
     private readonly ISessionService _sessionService;
+    private readonly IThemeApplicator _themeApplicator;
     private readonly string[] _availableThemes = { "Dark", "Light" };
     
     public string CurrentTheme { get; private set; } = "Dark";
     
-    public ThemeService(ISessionService sessionService)
+    public ThemeService(ISessionService sessionService, IThemeApplicator themeApplicator)
     {
         _sessionService = sessionService;
+        _themeApplicator = themeApplicator;
     }
     
     public void Init()
@@ -43,16 +45,11 @@ public class ThemeService : IThemeService
     
     private void SwitchThemeInternal(string theme)
     {
+        CurrentTheme = theme;
+        
         try
         {
-            var app = Application.Current;
-            if (app == null) return;
-
-            app.RequestedThemeVariant = theme == "Dark" 
-                ? ThemeVariant.Dark 
-                : ThemeVariant.Light;
-
-            CurrentTheme = theme;
+            _themeApplicator.ApplyTheme(theme);
         }
         catch (Exception ex)
         {

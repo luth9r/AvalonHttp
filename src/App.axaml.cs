@@ -3,6 +3,7 @@ using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Data.Core.Plugins;
 using System.Linq;
+using AvalonHttp.Models;
 using AvalonHttp.Services;
 using AvalonHttp.Services.Interfaces;
 using Avalonia.Markup.Xaml;
@@ -64,6 +65,12 @@ public partial class App : Application
         services.AddSingleton<IUrlParserService, UrlParserService>();
         services.AddSingleton<IEnvironmentRepository, FileEnvironmentRepository>();
         services.AddSingleton<IThemeService, ThemeService>();
+        services.AddSingleton<IThemeApplicator, AvaloniaThemeApplicator>();
+        services.AddSingleton<ILanguageApplicator, AvaloniaLanguageApplicator>();
+        
+        services.AddSingleton<IFileStorage<AppState>>(sp => 
+            new GenericFileStorage<AppState>("app-state.json"));
+        
         
         services.AddSingleton<IDirtyTrackerService, DirtyTrackerService>();
         services.AddSingleton<ILanguageService, LanguageService>();

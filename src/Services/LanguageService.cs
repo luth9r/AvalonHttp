@@ -12,14 +12,16 @@ namespace AvalonHttp.Services;
 public class LanguageService : ILanguageService
 {
     private readonly ISessionService _sessionService;
+    private readonly ILanguageApplicator _languageApplicator;
 
     private readonly string[] _availableLanguages = { "en", "ua" };
 
     public CultureInfo CurrentCulture { get; private set; } = new("en");
 
-    public LanguageService(ISessionService sessionService)
+    public LanguageService(ISessionService sessionService, ILanguageApplicator languageApplicator)
     {
         _sessionService = sessionService;
+        _languageApplicator = languageApplicator;
     }
 
     public void Init()
@@ -32,7 +34,7 @@ public class LanguageService : ILanguageService
             lang = "en";
         }
         
-        SwitchLanguageInternal(lang, immediate: true);
+        SwitchLanguageInternal(lang);
     }
 
     public async Task ChangeLanguageAsync(string cultureCode)
@@ -47,50 +49,10 @@ public class LanguageService : ILanguageService
         await _sessionService.SaveLanguageAsync(cultureCode);
     }
     
-    private void SwitchLanguageInternal(string cultureCode, bool immediate = false)
+    private void SwitchLanguageInternal(string cultureCode)
     {
-        Action switchAction = () =>
-        {
-            try
-            {
-                var app = Application.Current;
-                if (app == null) return;
+        CurrentCulture = new CultureInfo(cultureCode);
 
-                var newUri = new Uri($"avares://AvalonHttp/Assets/Lang/{cultureCode}.axaml");
-                var dictionaries = app.Resources.MergedDictionaries;
-
-                var existingDictionary = dictionaries.OfType<ResourceInclude>()
-                    .FirstOrDefault(d => d.Source?.AbsolutePath?.Contains("/Assets/Lang/") == true);
-
-                if (existingDictionary?.Source?.ToString() == newUri.ToString())
-                {
-                    CurrentCulture = new CultureInfo(cultureCode);
-                    return;
-                }
-                
-                var newResourceInclude = new ResourceInclude(newUri) { Source = newUri };
-                dictionaries.Insert(0, newResourceInclude);
-                
-                if (existingDictionary != null)
-                {
-                    dictionaries.Remove(existingDictionary);
-                }
-
-                CurrentCulture = new CultureInfo(cultureCode);
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"Error switching language: {ex.Message}");
-            }
-        };
-        
-        if (Dispatcher.UIThread.CheckAccess())
-        {
-            switchAction(); // Уже в UI потоке
-        }
-        else
-        {
-            Dispatcher.UIThread.Invoke(switchAction);
-        }
+        _languageApplicator.ApplyLanguage(cultureCode);
     }
 }

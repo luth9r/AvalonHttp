@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
 using AvalonHttp.Services.Interfaces;
 using Environment = AvalonHttp.Models.EnvironmentAggregate.Environment;
@@ -14,11 +16,17 @@ public class FileEnvironmentRepository : IEnvironmentRepository
     private readonly string _environmentsDirectory;
     private readonly string _activeEnvironmentFile;
     private readonly JsonSerializerOptions _jsonOptions;
+    private readonly IFileNameSanitizer _fileNameSanitizer;
 
-    public FileEnvironmentRepository()
+    private readonly ConcurrentDictionary<Guid, string> _filePathCache = new();
+    private readonly ConcurrentDictionary<Guid, SemaphoreSlim> _locks = new();
+    private readonly SemaphoreSlim _activeEnvLock = new(1, 1);
+
+    public FileEnvironmentRepository(IFileNameSanitizer fileNameSanitizer, string? basePath = null)
     {
-        var appDataPath = System.Environment.GetFolderPath(System.Environment.SpecialFolder.ApplicationData);
-        var appFolder = Path.Combine(appDataPath, "AvalonHttp");
+        _fileNameSanitizer = fileNameSanitizer;
+        
+        var appFolder = basePath ?? Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.ApplicationData), "AvalonHttp");
         _environmentsDirectory = Path.Combine(appFolder, "Environments");
         _activeEnvironmentFile = Path.Combine(appFolder, "active-environment.json");
 
@@ -31,10 +39,6 @@ public class FileEnvironmentRepository : IEnvironmentRepository
         };
     }
 
-    // ========================================
-    // Load Operations
-    // ========================================
-    
     public async Task<List<Environment>> LoadAllAsync()
     {
         var environments = new List<Environment>();
@@ -48,20 +52,14 @@ public class FileEnvironmentRepository : IEnvironmentRepository
 
             var files = Directory.GetFiles(_environmentsDirectory, "*.json");
 
-            foreach (var file in files)
+            var loadTasks = files.Select(LoadEnvironmentFromFileAsync);
+            var results = await Task.WhenAll(loadTasks);
+            
+            foreach (var env in results.Where(e => e != null))
             {
-                try
-                {
-                    var env = await LoadEnvironmentFromFileAsync(file);
-                    if (env != null)
-                    {
-                        environments.Add(env);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    System.Diagnostics.Debug.WriteLine($"Failed to load environment from {file}: {ex.Message}");
-                }
+                var filePath = GetFilePath(env!.Id);
+                _filePathCache[env.Id] = filePath;
+                environments.Add(env);
             }
         }
         catch (Exception ex)
@@ -74,39 +72,43 @@ public class FileEnvironmentRepository : IEnvironmentRepository
 
     private async Task<Environment?> LoadEnvironmentFromFileAsync(string filePath)
     {
-        var json = await File.ReadAllTextAsync(filePath);
-        var env = JsonSerializer.Deserialize<Environment>(json, _jsonOptions);
-
-        if (env == null)
-        {
-            return null;
-        }
-
-        // Initialize empty JSON if needed
-        if (string.IsNullOrWhiteSpace(env.VariablesJson))
-        {
-            env.VariablesJson = "{\n  \n}";
-        }
-
-        // Validate JSON format
-        if (!env.IsValidJson())
-        {
-            System.Diagnostics.Debug.WriteLine($"Environment '{env.Name}' has invalid JSON, resetting to empty object");
-            env.VariablesJson = "{\n  \n}";
-        }
-
-        return env;
-    }
-
-    // ========================================
-    // Save Operations
-    // ========================================
-    
-    public async Task SaveAsync(Environment environment)
-    {
         try
         {
-            // Validate JSON before saving
+            var json = await File.ReadAllTextAsync(filePath);
+            var env = JsonSerializer.Deserialize<Environment>(json, _jsonOptions);
+
+            if (env == null)
+            {
+                return null;
+            }
+
+            if (string.IsNullOrWhiteSpace(env.VariablesJson))
+            {
+                env.VariablesJson = "{\n  \n}";
+            }
+
+            if (!env.IsValidJson())
+            {
+                System.Diagnostics.Debug.WriteLine($"Environment '{env.Name}' has invalid JSON, resetting to empty object");
+                env.VariablesJson = "{\n  \n}";
+            }
+
+            return env;
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Failed to load environment from {filePath}: {ex.Message}");
+            return null;
+        }
+    }
+
+    public async Task SaveAsync(Environment environment)
+    {
+        var semaphore = GetLock(environment.Id);
+        await semaphore.WaitAsync();
+
+        try
+        {
             if (!environment.IsValidJson())
             {
                 throw new InvalidOperationException($"Environment '{environment.Name}' contains invalid JSON");
@@ -114,86 +116,76 @@ public class FileEnvironmentRepository : IEnvironmentRepository
 
             environment.UpdatedAt = DateTime.UtcNow;
 
-            var fileName = $"{SanitizeFileName(environment.Name)}_{environment.Id}.json";
-            var filePath = Path.Combine(_environmentsDirectory, fileName);
+            var newFilePath = GenerateFilePath(environment);
+            var tempFilePath = newFilePath + ".tmp";
 
-            // Clean up old files with different names but same ID
-            await CleanupOldFilesAsync(environment.Id, fileName);
+            var oldFilePath = _filePathCache.TryGetValue(environment.Id, out var cached) 
+                ? cached 
+                : GetFilePath(environment.Id);
 
-            var json = JsonSerializer.Serialize(environment, _jsonOptions);
-            
-            // Write to temp file first, then rename (atomic operation)
-            var tempFile = Path.Combine(_environmentsDirectory, $"{fileName}.tmp");
-            await File.WriteAllTextAsync(tempFile, json);
-            
-            // Replace old file atomically
-            File.Move(tempFile, filePath, overwrite: true);
-            
-            System.Diagnostics.Debug.WriteLine($"Saved environment '{environment.Name}' to: {filePath}");
-        }
-        catch (Exception ex)
-        {
-            System.Diagnostics.Debug.WriteLine($"Failed to save environment '{environment.Name}': {ex.Message}");
-            throw;
-        }
-    }
-
-    private async Task CleanupOldFilesAsync(Guid environmentId, string currentFileName)
-    {
-        try
-        {
-            var files = Directory.GetFiles(_environmentsDirectory, $"*_{environmentId}.json");
-
-            foreach (var file in files)
+            try
             {
-                var fileName = Path.GetFileName(file);
-                if (fileName != currentFileName)
+                var json = JsonSerializer.Serialize(environment, _jsonOptions);
+                await File.WriteAllTextAsync(tempFilePath, json);
+                
+                File.Move(tempFilePath, newFilePath, overwrite: true);
+
+                if (oldFilePath != newFilePath && File.Exists(oldFilePath))
                 {
-                    System.Diagnostics.Debug.WriteLine($"Deleting old file: {file}");
-                    File.Delete(file);
+                    try { File.Delete(oldFilePath); } catch { }
                 }
+
+                _filePathCache[environment.Id] = newFilePath;
+                
+                System.Diagnostics.Debug.WriteLine($"Saved environment '{environment.Name}' to: {newFilePath}");
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Failed to save environment '{environment.Name}': {ex.Message}");
+                if (File.Exists(tempFilePath))
+                {
+                    File.Delete(tempFilePath);
+                }
+                throw;
             }
         }
-        catch (Exception ex)
+        finally
         {
-            System.Diagnostics.Debug.WriteLine($"Failed to cleanup old files: {ex.Message}");
+            semaphore.Release();
         }
     }
 
-    // ========================================
-    // Delete Operations
-    // ========================================
-    
     public async Task DeleteAsync(Guid environmentId)
     {
+        var semaphore = GetLock(environmentId);
+        await semaphore.WaitAsync();
+
         try
         {
-            var files = Directory.GetFiles(_environmentsDirectory, $"*_{environmentId}.json");
-
-            foreach (var file in files)
+            var filePath = GetFilePath(environmentId);
+            if (File.Exists(filePath))
             {
-                File.Delete(file);
-                System.Diagnostics.Debug.WriteLine($"Deleted environment file: {file}");
+                File.Delete(filePath);
             }
-
-            // Clear active environment if deleted
-            var activeId = await GetActiveEnvironmentIdAsync();
-            if (activeId == environmentId)
-            {
-                await SetActiveEnvironmentAsync(null);
-            }
+            _filePathCache.TryRemove(environmentId, out _);
         }
         catch (Exception ex)
         {
             System.Diagnostics.Debug.WriteLine($"Failed to delete environment: {ex.Message}");
             throw;
         }
+        finally
+        {
+            semaphore.Release();
+        }
+
+        var activeId = await GetActiveEnvironmentIdAsync();
+        if (activeId == environmentId)
+        {
+            await SetActiveEnvironmentAsync(null);
+        }
     }
 
-    // ========================================
-    // Active Environment
-    // ========================================
-    
     public async Task<Environment?> GetActiveEnvironmentAsync()
     {
         var activeId = await GetActiveEnvironmentIdAsync();
@@ -209,6 +201,7 @@ public class FileEnvironmentRepository : IEnvironmentRepository
 
     public async Task SetActiveEnvironmentAsync(Guid? environmentId)
     {
+        await _activeEnvLock.WaitAsync();
         try
         {
             var data = new { ActiveEnvironmentId = environmentId };
@@ -221,10 +214,15 @@ public class FileEnvironmentRepository : IEnvironmentRepository
         {
             System.Diagnostics.Debug.WriteLine($"Failed to set active environment: {ex.Message}");
         }
+        finally
+        {
+            _activeEnvLock.Release();
+        }
     }
 
     private async Task<Guid?> GetActiveEnvironmentIdAsync()
     {
+        await _activeEnvLock.WaitAsync();
         try
         {
             if (!File.Exists(_activeEnvironmentFile))
@@ -248,71 +246,70 @@ public class FileEnvironmentRepository : IEnvironmentRepository
         {
             System.Diagnostics.Debug.WriteLine($"Failed to get active environment: {ex.Message}");
         }
+        finally
+        {
+            _activeEnvLock.Release();
+        }
 
         return null;
     }
 
-    // ========================================
-    // Default Environments
-    // ========================================
-    
     public async Task<List<Environment>> EnsureDefaultEnvironmentsAsync()
     {
-        var environments = await LoadAllAsync();
-    
-        System.Diagnostics.Debug.WriteLine($"Loaded {environments.Count} environments");
-        
-        // Ensure Global environment exists
-        if (!environments.Any(e => e.IsGlobal))
+        await _activeEnvLock.WaitAsync();
+        try
         {
-            System.Diagnostics.Debug.WriteLine("Creating Global environment...");
-            
-            var globalEnv = new Environment
+            var environments = await LoadAllAsync();
+    
+            if (!environments.Any(e => e.IsGlobal))
             {
-                Id = Guid.NewGuid(),
-                Name = "Globals",
-                IsGlobal = true,
-                VariablesJson = "{\n  \"appName\": \"AvalonHttp\"\n}",
-                CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow
-            };
-        
-            await SaveAsync(globalEnv);
-            environments.Insert(0, globalEnv);
+                System.Diagnostics.Debug.WriteLine("Creating Global environment...");
             
-            System.Diagnostics.Debug.WriteLine($"Global environment created with ID: {globalEnv.Id}");
-        }
+                var globalEnv = new Environment
+                {
+                    Id = Guid.NewGuid(),
+                    Name = "Globals",
+                    IsGlobal = true,
+                    VariablesJson = "{\n  \"appName\": \"AvalonHttp\"\n}",
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow
+                };
+                
+                await SaveAsync(globalEnv);
+                environments.Insert(0, globalEnv);
+            }
 
-        // Sort: Globals first, then alphabetically
-        var sorted = environments
-            .OrderByDescending(e => e.IsGlobal)
-            .ThenBy(e => e.Name)
-            .ToList();
-    
-        System.Diagnostics.Debug.WriteLine($"Returning {sorted.Count} environments:");
-        foreach (var env in sorted)
-        {
-            System.Diagnostics.Debug.WriteLine($"  - {env.Name} (IsGlobal: {env.IsGlobal})");
+            return environments
+                .OrderByDescending(e => e.IsGlobal)
+                .ThenBy(e => e.Name)
+                .ToList();
         }
-    
-        return sorted;
+        finally
+        {
+            _activeEnvLock.Release();
+        }
     }
 
-    // ========================================
-    // Helper Methods
-    // ========================================
-    
-    private static string SanitizeFileName(string name)
+    private string GenerateFilePath(Environment environment)
     {
-        var invalid = Path.GetInvalidFileNameChars();
-        var sanitized = string.Join("_", name.Split(invalid, StringSplitOptions.RemoveEmptyEntries));
-        
-        // Limit length to avoid issues with long file paths
-        if (sanitized.Length > 50)
+        var sanitizedName = _fileNameSanitizer.Sanitize(environment.Name);
+        var fileName = $"{sanitizedName}_{environment.Id}.json";
+        return Path.Combine(_environmentsDirectory, fileName);
+    }
+
+    private string GetFilePath(Guid environmentId)
+    {
+        if (_filePathCache.TryGetValue(environmentId, out var cached))
         {
-            sanitized = sanitized.Substring(0, 50);
+            return cached;
         }
-        
-        return sanitized;
+
+        var files = Directory.GetFiles(_environmentsDirectory, $"*_{environmentId}.json");
+        return files.FirstOrDefault() ?? Path.Combine(_environmentsDirectory, $"{environmentId}.json");
+    }
+
+    private SemaphoreSlim GetLock(Guid environmentId)
+    {
+        return _locks.GetOrAdd(environmentId, _ => new SemaphoreSlim(1, 1));
     }
 }
