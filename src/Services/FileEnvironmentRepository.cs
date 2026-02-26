@@ -32,11 +32,7 @@ public class FileEnvironmentRepository : IEnvironmentRepository
 
         Directory.CreateDirectory(_environmentsDirectory);
 
-        _jsonOptions = new JsonSerializerOptions
-        {
-            WriteIndented = true,
-            PropertyNameCaseInsensitive = true
-        };
+        _jsonOptions = AvalonHttp.Helpers.JsonSettings.Default;
     }
 
     public async Task<List<Environment>> LoadAllAsync()

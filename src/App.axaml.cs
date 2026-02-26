@@ -1,4 +1,5 @@
 using System;
+using Serilog;
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Data.Core.Plugins;
@@ -58,6 +59,11 @@ public partial class App : Application
     
     private void ConfigureServices(IServiceCollection services)
     {
+        services.AddLogging(loggingBuilder =>
+        {
+            loggingBuilder.AddSerilog(dispose: true);
+        });
+        
         services.AddSingleton<IFileNameSanitizer, FileNameSanitizer>();
         services.AddSingleton<ICollectionRepository, FileCollectionRepository>();
         services.AddSingleton<ISessionService, SessionService>();

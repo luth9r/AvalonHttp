@@ -145,9 +145,6 @@ public partial class Environment : ObservableObject
             }
         }
 
-        VariablesJson = JsonSerializer.Serialize(jsonObject, new JsonSerializerOptions
-        {
-            WriteIndented = true
-        });
+        VariablesJson = JsonSerializer.Serialize(jsonObject, AvalonHttp.Helpers.JsonSettings.Indented);
     }
 }

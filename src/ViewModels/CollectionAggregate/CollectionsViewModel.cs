@@ -41,11 +41,7 @@ public partial class CollectionsViewModel : ViewModelBase, IDisposable
     /// </summary>
     private readonly IFilePickerService _filePickerService;
 
-    private readonly System.Text.Json.JsonSerializerOptions _jsonOptions = new()
-    {
-        WriteIndented = true,
-        PropertyNameCaseInsensitive = true
-    };
+    private readonly System.Text.Json.JsonSerializerOptions _jsonOptions = AvalonHttp.Helpers.JsonSettings.Default;
 
     /// <summary>
     /// Manages the lifecycle of disposable resources to ensure proper cleanup for the view model.

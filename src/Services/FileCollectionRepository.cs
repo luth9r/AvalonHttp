@@ -29,11 +29,7 @@ public class FileCollectionRepository : ICollectionRepository
         
         Directory.CreateDirectory(_collectionsFolder);
 
-        _jsonOptions = new JsonSerializerOptions
-        {
-            WriteIndented = true,
-            PropertyNameCaseInsensitive = true
-        };
+        _jsonOptions = AvalonHttp.Helpers.JsonSettings.Default;
     }
     
     public async Task<List<ApiCollection>> LoadAllAsync()

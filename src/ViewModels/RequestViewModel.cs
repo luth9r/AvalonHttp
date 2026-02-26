@@ -1394,11 +1394,7 @@ public partial class RequestViewModel : ViewModelBase, IDisposable
                 case "json":
                     using (var jsonDoc = JsonDocument.Parse(RawResponseContent))
                     {
-                        ResponseContent = JsonSerializer.Serialize(jsonDoc, new JsonSerializerOptions
-                        {
-                            WriteIndented = true,
-                            Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
-                        });
+                        ResponseContent = JsonSerializer.Serialize(jsonDoc, AvalonHttp.Helpers.JsonSettings.IndentedUnsafe);
                     }
                     break;
 

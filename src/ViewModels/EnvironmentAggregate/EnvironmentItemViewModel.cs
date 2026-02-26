@@ -274,11 +274,7 @@ public partial class EnvironmentItemViewModel : ViewModelBase, IDisposable
         try
         {
             using var jsonDoc = JsonDocument.Parse(VariablesJson);
-            VariablesJson = JsonSerializer.Serialize(jsonDoc, new JsonSerializerOptions
-            {
-                WriteIndented = true,
-                Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
-            });
+            VariablesJson = JsonSerializer.Serialize(jsonDoc, AvalonHttp.Helpers.JsonSettings.IndentedUnsafe);
         }
         catch
         {

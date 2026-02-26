@@ -25,11 +25,7 @@ public class GenericFileStorage<T> : IFileStorage<T>, IDisposable where T : clas
         _filePath = Path.Combine(appFolder, fileName);
         _cacheLifetime = cacheLifetime ?? TimeSpan.FromSeconds(5);
 
-        _jsonOptions = new JsonSerializerOptions
-        {
-            WriteIndented = true,
-            PropertyNameCaseInsensitive = true
-        };
+        _jsonOptions = AvalonHttp.Helpers.JsonSettings.Default;
     }
     
     public async Task<T> LoadAsync()

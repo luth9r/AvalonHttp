@@ -21,7 +21,8 @@
         Focusable="True"
         ExtendClientAreaChromeHints="NoChrome"
         WindowStartupLocation="CenterScreen"
-        ExtendClientAreaTitleBarHeightHint="40">
+        ExtendClientAreaTitleBarHeightHint="40"
+        Icon="/Assets/avalonia-logo.ico">
 
     <Window.Styles>
         <Style Selector="Button.WindowBtn">

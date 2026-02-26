@@ -6,12 +6,7 @@ namespace AvalonHttp.Services;
 
 public class DirtyTrackerService : IDirtyTrackerService
 {
-    private readonly JsonSerializerOptions _options = new() 
-    { 
-        WriteIndented = false,
-        
-        ReferenceHandler = ReferenceHandler.IgnoreCycles
-    };
+    private readonly JsonSerializerOptions _options = AvalonHttp.Helpers.JsonSettings.IgnoreCycles;
 
     public string TakeSnapshot<T>(T obj)
     {
