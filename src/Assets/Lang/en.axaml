@@ -7,10 +7,14 @@
     <!-- Collections Sidebar -->
     <system:String x:Key="CollectionsHeader">COLLECTIONS</system:String>
     <system:String x:Key="SearchPlaceholder">Search collections and requests...</system:String>
+    <system:String x:Key="NoSearchResults">No collections or requests found</system:String>
     <system:String x:Key="NewCollectionTooltip">New Collection</system:String>
     <system:String x:Key="AddCollectionButton">Add Collection</system:String>
     <system:String x:Key="RenameMenuItem">Rename</system:String>
     <system:String x:Key="AddRequestMenuItem">Add Request</system:String>
+    <system:String x:Key="ExportMenuItem">Export</system:String>
+    <system:String x:Key="ImportRequestMenuItem">Import Request</system:String>
+    <system:String x:Key="ImportCollectionTooltip">Import Collection</system:String>
     <system:String x:Key="DuplicateMenuItem">Duplicate</system:String>
     <system:String x:Key="DeleteMenuItem">Delete</system:String>
     
@@ -164,6 +168,15 @@
     <system:String x:Key="MsgFailedToMoveRequest">Failed to Move Request</system:String>
     <system:String x:Key="MsgFailedToMoveRequestDetail">Could not move request: {0}</system:String>
     
+    <system:String x:Key="DialogTitleExportCollection">Export Collection</system:String>
+    <system:String x:Key="DialogTitleImportCollection">Import Collection</system:String>
+    <system:String x:Key="DialogTitleExportRequest">Export Request</system:String>
+    <system:String x:Key="DialogTitleImportRequest">Import Request</system:String>
+    <system:String x:Key="MsgExportCollectionError">Failed to export collection: {0}</system:String>
+    <system:String x:Key="MsgImportCollectionError">Failed to import collection: {0}</system:String>
+    <system:String x:Key="MsgExportRequestError">Failed to export request: {0}</system:String>
+    <system:String x:Key="MsgImportRequestError">Failed to import request: {0}</system:String>
+
     <system:String x:Key="MsgFailedToLoadEnvironments">Failed to Load Environments</system:String>
     <system:String x:Key="MsgFailedToLoadEnvironmentsDetail">Could not load environments from disk. Message: {0}</system:String>
     

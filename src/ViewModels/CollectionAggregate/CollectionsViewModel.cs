@@ -9,6 +9,7 @@ using AvalonHttp.Helpers;
 using AvalonHttp.Messages;
 using AvalonHttp.Models.CollectionAggregate;
 using AvalonHttp.Services.Interfaces;
+using Avalonia.Platform.Storage;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
@@ -34,6 +35,17 @@ public partial class CollectionsViewModel : ViewModelBase, IDisposable
     /// Reference to session repository.
     /// </summary>
     private readonly ISessionService _sessionRepo;
+
+    /// <summary>
+    /// Reference to file picker service.
+    /// </summary>
+    private readonly IFilePickerService _filePickerService;
+
+    private readonly System.Text.Json.JsonSerializerOptions _jsonOptions = new()
+    {
+        WriteIndented = true,
+        PropertyNameCaseInsensitive = true
+    };
 
     /// <summary>
     /// Manages the lifecycle of disposable resources to ensure proper cleanup for the view model.
@@ -82,10 +94,12 @@ public partial class CollectionsViewModel : ViewModelBase, IDisposable
 
     public CollectionsViewModel(
         ICollectionRepository collectionService, 
-        ISessionService sessionService)
+        ISessionService sessionService,
+        IFilePickerService filePickerService)
     {
         _collectionService = collectionService ?? throw new ArgumentNullException(nameof(collectionService));
         _sessionRepo = sessionService ?? throw new ArgumentNullException(nameof(sessionService));
+        _filePickerService = filePickerService ?? throw new ArgumentNullException(nameof(filePickerService));
         
         _collectionsSource.Connect()
             .AutoRefresh(x => x.IsVisible) // Auto-refresh when visibility changes
@@ -360,6 +374,174 @@ public partial class CollectionsViewModel : ViewModelBase, IDisposable
             WeakReferenceMessenger.Default.Send(DialogMessage.Error(
                 Loc.Tr("MsgFailedToDuplicateCollection"),
                 Loc.Tr("MsgFailedToDuplicateCollectionDetail", ex.Message)
+            ));
+        }
+    }
+
+    /// <summary>
+    /// Exports the specified collection to a JSON file.
+    /// </summary>
+    /// <param name="collectionVm">The collection to export.</param>
+    [RelayCommand]
+    private async Task ExportCollection(CollectionItemViewModel collectionVm)
+    {
+        if (collectionVm == null) return;
+        
+        try
+        {
+            var filters = new[] { new FilePickerFileType("JSON Files") { Patterns = new[] { "*.json" } } };
+            var file = await _filePickerService.SaveFileAsync(Loc.Tr("DialogTitleExportCollection"), "json", $"{collectionVm.Name}.json", filters);
+            if (file == null) return;
+
+            // Sync VM to Model
+            collectionVm.Collection.Name = collectionVm.Name;
+            collectionVm.Collection.Description = collectionVm.Description;
+            collectionVm.Collection.UpdatedAt = DateTime.Now;
+
+            var json = System.Text.Json.JsonSerializer.Serialize(collectionVm.Collection, _jsonOptions);
+            
+            await using var stream = await file.OpenWriteAsync();
+            await using var writer = new System.IO.StreamWriter(stream);
+            await writer.WriteAsync(json);
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Failed to export collection: {ex.Message}");
+            WeakReferenceMessenger.Default.Send(DialogMessage.Error(
+                Loc.Tr("DialogTitleFileSystemError"),
+                Loc.Tr("MsgExportCollectionError", ex.Message)
+            ));
+        }
+    }
+
+    /// <summary>
+    /// Imports a collection from a JSON file.
+    /// </summary>
+    [RelayCommand]
+    private async Task ImportCollection()
+    {
+        try
+        {
+            var filters = new[] { new FilePickerFileType("JSON Files") { Patterns = new[] { "*.json" } } };
+            var file = await _filePickerService.OpenFileAsync(Loc.Tr("DialogTitleImportCollection"), filters);
+            if (file == null) return;
+
+            await using var stream = await file.OpenReadAsync();
+            using var reader = new System.IO.StreamReader(stream);
+            var json = await reader.ReadToEndAsync();
+
+            var collection = System.Text.Json.JsonSerializer.Deserialize<ApiCollection>(json, _jsonOptions);
+            if (collection == null) return;
+
+            // Regenerate IDs
+            collection.Id = Guid.NewGuid();
+            collection.Name = GenerateUniqueCollectionName(collection.Name);
+            collection.CreatedAt = DateTime.Now;
+            collection.UpdatedAt = DateTime.Now;
+
+            foreach (var request in collection.Requests)
+            {
+                request.Id = Guid.NewGuid();
+            }
+
+            var viewModel = new CollectionItemViewModel(collection, this);
+            _collectionsSource.Add(viewModel);
+            
+            await _collectionService.SaveAsync(collection);
+            System.Diagnostics.Debug.WriteLine($"✅ Imported collection: {collection.Name}");
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Failed to import collection: {ex.Message}");
+            WeakReferenceMessenger.Default.Send(DialogMessage.Error(
+                Loc.Tr("DialogTitleFileSystemError"),
+                Loc.Tr("MsgImportCollectionError", ex.Message)
+            ));
+        }
+    }
+
+    /// <summary>
+    /// Exports the specified request to a JSON file.
+    /// </summary>
+    /// <param name="requestVm">The request to export.</param>
+    [RelayCommand]
+    private async Task ExportRequest(RequestItemViewModel requestVm)
+    {
+        if (requestVm == null) return;
+        
+        try
+        {
+            var filters = new[] { new FilePickerFileType("JSON Files") { Patterns = new[] { "*.json" } } };
+            var file = await _filePickerService.SaveFileAsync(Loc.Tr("DialogTitleExportRequest"), "json", $"{requestVm.Name}.json", filters);
+            if (file == null) return;
+
+            // Sync VM to Model
+            requestVm.ApplyToModel();
+
+            var json = System.Text.Json.JsonSerializer.Serialize(requestVm.Request, _jsonOptions);
+            
+            await using var stream = await file.OpenWriteAsync();
+            await using var writer = new System.IO.StreamWriter(stream);
+            await writer.WriteAsync(json);
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Failed to export request: {ex.Message}");
+            WeakReferenceMessenger.Default.Send(DialogMessage.Error(
+                Loc.Tr("DialogTitleFileSystemError"),
+                Loc.Tr("MsgExportRequestError", ex.Message)
+            ));
+        }
+    }
+
+    /// <summary>
+    /// Imports a request from a JSON file into the specified collection.
+    /// </summary>
+    /// <param name="targetCollection">The collection to import the request into.</param>
+    [RelayCommand]
+    private async Task ImportRequest(CollectionItemViewModel targetCollection)
+    {
+        if (targetCollection == null) return;
+
+        try
+        {
+            var filters = new[] { new FilePickerFileType("JSON Files") { Patterns = new[] { "*.json" } } };
+            var file = await _filePickerService.OpenFileAsync(Loc.Tr("DialogTitleImportRequest"), filters);
+            if (file == null) return;
+
+            await using var stream = await file.OpenReadAsync();
+            using var reader = new System.IO.StreamReader(stream);
+            var json = await reader.ReadToEndAsync();
+
+            var request = System.Text.Json.JsonSerializer.Deserialize<ApiRequest>(json, _jsonOptions);
+            if (request == null) return;
+
+            // Regenerate ID
+            request.Id = Guid.NewGuid();
+            request.Name = targetCollection.Collection.GenerateUniqueRequestName(request.Name);
+
+            // Setup proper initialized lists if null
+            request.Headers ??= new ObservableCollection<Models.KeyValueItemModel>();
+            request.QueryParameters ??= new ObservableCollection<Models.KeyValueItemModel>();
+            request.Cookies ??= new ObservableCollection<Models.KeyValueItemModel>();
+            request.AuthData ??= new AuthData();
+
+            targetCollection.Collection.Requests.Add(request);
+            
+            var viewModel = new RequestItemViewModel(request, targetCollection);
+            targetCollection.AddRequestToSource(viewModel);
+
+            SelectRequest(viewModel);
+            await SaveCollectionCommand.ExecuteAsync(targetCollection);
+            
+            System.Diagnostics.Debug.WriteLine($"✅ Imported request: {request.Name}");
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Failed to import request: {ex.Message}");
+            WeakReferenceMessenger.Default.Send(DialogMessage.Error(
+                Loc.Tr("DialogTitleFileSystemError"),
+                Loc.Tr("MsgImportRequestError", ex.Message)
             ));
         }
     }

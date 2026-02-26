@@ -62,6 +62,7 @@ public partial class App : Application
         services.AddSingleton<ICollectionRepository, FileCollectionRepository>();
         services.AddSingleton<ISessionService, SessionService>();
         services.AddSingleton<IHttpService, HttpService>();
+        services.AddSingleton<IFilePickerService, FilePickerService>();
         services.AddSingleton<IUrlParserService, UrlParserService>();
         services.AddSingleton<IEnvironmentRepository, FileEnvironmentRepository>();
         services.AddSingleton<IThemeService, ThemeService>();

@@ -7,9 +7,13 @@
     <!-- Collections Sidebar -->
     <system:String x:Key="CollectionsHeader">КОЛЕКЦІЇ</system:String>
     <system:String x:Key="SearchPlaceholder">Пошук колекцій та запитів...</system:String>
+    <system:String x:Key="NoSearchResults">Колекцій або запитів не знайдено</system:String>
     <system:String x:Key="NewCollectionTooltip">Нова колекція</system:String>
     <system:String x:Key="AddCollectionButton">Додати колекцію</system:String>
     <system:String x:Key="AddRequestMenuItem">Додати запит</system:String>
+    <system:String x:Key="ExportMenuItem">Експорт</system:String>
+    <system:String x:Key="ImportRequestMenuItem">Імпортувати запит</system:String>
+    <system:String x:Key="ImportCollectionTooltip">Імпортувати колекцію</system:String>
     
     <!-- Request Editor Header -->
     <system:String x:Key="SaveButton">Зберегти</system:String>
@@ -163,6 +167,15 @@
     <system:String x:Key="MsgFailedToDuplicateRequestDetail">Не вдалося дублювати запит: {0}</system:String>
     <system:String x:Key="MsgFailedToMoveRequest">Не вдалося перемістити запит</system:String>
     <system:String x:Key="MsgFailedToMoveRequestDetail">Не вдалося перемістити запит: {0}</system:String>
+
+    <system:String x:Key="DialogTitleExportCollection">Експорт колекції</system:String>
+    <system:String x:Key="DialogTitleImportCollection">Імпорт колекції</system:String>
+    <system:String x:Key="DialogTitleExportRequest">Експорт запиту</system:String>
+    <system:String x:Key="DialogTitleImportRequest">Імпорт запиту</system:String>
+    <system:String x:Key="MsgExportCollectionError">Не вдалося експортувати колекцію: {0}</system:String>
+    <system:String x:Key="MsgImportCollectionError">Не вдалося імпортувати колекцію: {0}</system:String>
+    <system:String x:Key="MsgExportRequestError">Не вдалося експортувати запит: {0}</system:String>
+    <system:String x:Key="MsgImportRequestError">Не вдалося імпортувати запит: {0}</system:String>
 
     <system:String x:Key="MsgFailedToLoadEnvironments">Не вдалося завантажити середовища</system:String>
     <system:String x:Key="MsgFailedToLoadEnvironmentsDetail">Не вдалося завантажити середовища з диска. Повідомлення: {0}</system:String>

@@ -25,14 +25,22 @@
                                FontWeight="SemiBold"
                                LetterSpacing="1" />
 
-                    <Button Grid.Column="1"
-                            Classes="IconButton"
-                            Command="{Binding CreateCollectionCommand}"
-                            ToolTip.Tip="{DynamicResource NewCollectionTooltip}">
-                        <lucide:Lucide Icon="Plus"
-                                       StrokeBrush="{DynamicResource IconPrimary}"
-                                       Width="16" Height="16" />
-                    </Button>
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="4">
+                        <Button Classes="IconButton"
+                                Command="{Binding ImportCollectionCommand}"
+                                ToolTip.Tip="{DynamicResource ImportCollectionTooltip}">
+                            <lucide:Lucide Icon="Download"
+                                           StrokeBrush="{DynamicResource IconPrimary}"
+                                           Width="16" Height="16" />
+                        </Button>
+                        <Button Classes="IconButton"
+                                Command="{Binding CreateCollectionCommand}"
+                                ToolTip.Tip="{DynamicResource NewCollectionTooltip}">
+                            <lucide:Lucide Icon="Plus"
+                                           StrokeBrush="{DynamicResource IconPrimary}"
+                                           Width="16" Height="16" />
+                        </Button>
+                    </StackPanel>
                 </Grid>
 
                 <TextBox Watermark="{DynamicResource SearchPlaceholder}"
@@ -181,6 +189,21 @@
                                                         </MenuItem.Icon>
                                                     </MenuItem>
                                                     <Separator />
+                                                    <MenuItem Header="{DynamicResource ExportMenuItem}"
+                                                              Command="{Binding $parent[UserControl].((collectionAggregate:CollectionsViewModel)DataContext).ExportCollectionCommand}"
+                                                              CommandParameter="{Binding}">
+                                                        <MenuItem.Icon>
+                                                            <lucide:Lucide Icon="Upload" Width="14" />
+                                                        </MenuItem.Icon>
+                                                    </MenuItem>
+                                                    <MenuItem Header="{DynamicResource ImportRequestMenuItem}"
+                                                              Command="{Binding $parent[UserControl].((collectionAggregate:CollectionsViewModel)DataContext).ImportRequestCommand}"
+                                                              CommandParameter="{Binding}">
+                                                        <MenuItem.Icon>
+                                                            <lucide:Lucide Icon="Download" Width="14" />
+                                                        </MenuItem.Icon>
+                                                    </MenuItem>
+                                                    <Separator />
                                                     <MenuItem Header="{DynamicResource DeleteMenuItem}"
                                                               Command="{Binding $parent[UserControl].((collectionAggregate:CollectionsViewModel)DataContext).DeleteCollectionCommand}"
                                                               CommandParameter="{Binding}">
@@ -303,6 +326,15 @@
                                                                         <lucide:Lucide Icon="Copy" Width="14" />
                                                                     </MenuItem.Icon>
                                                                 </MenuItem>
+                                                                <Separator />
+                                                                <MenuItem Header="{DynamicResource ExportMenuItem}"
+                                                                          Command="{Binding $parent[UserControl].((collectionAggregate:CollectionsViewModel)DataContext).ExportRequestCommand}"
+                                                                          CommandParameter="{Binding}">
+                                                                    <MenuItem.Icon>
+                                                                        <lucide:Lucide Icon="Upload" Width="14" />
+                                                                    </MenuItem.Icon>
+                                                                </MenuItem>
+                                                                <Separator />
                                                                 <MenuItem Header="{DynamicResource DeleteMenuItem}"
                                                                           Command="{Binding DeleteCommand}">
                                                                     <MenuItem.Icon>
