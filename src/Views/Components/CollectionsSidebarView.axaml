@@ -73,10 +73,11 @@
 
 
             <!-- Collections Tree -->
-            <ScrollViewer>
-                <ItemsControl ItemsSource="{Binding Collections}"
-                              Margin="12,0,12,12">
-                    <ItemsControl.ItemTemplate>
+            <Grid>
+                <ScrollViewer IsVisible="{Binding !HasNoSearchResults}">
+                    <ItemsControl ItemsSource="{Binding Collections}"
+                                  Margin="12,0,12,12">
+                        <ItemsControl.ItemTemplate>
                         <DataTemplate>
                             <StackPanel Margin="0,0,0,8" IsVisible="{Binding IsVisible}">
                                 <!-- Collection Item Card -->
@@ -352,8 +353,24 @@
                             </StackPanel>
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>
-                </ItemsControl>
-            </ScrollViewer>
+                    </ItemsControl>
+                </ScrollViewer>
+
+                <!-- Search Empty State -->
+                <StackPanel VerticalAlignment="Center" 
+                            HorizontalAlignment="Center"
+                            Spacing="12"
+                            Margin="20"
+                            IsVisible="{Binding HasNoSearchResults}">
+                    <lucide:Lucide Icon="SearchX" 
+                                   Width="48" Height="48" 
+                                   StrokeBrush="{DynamicResource TextSecondary}" />
+                    <TextBlock Text="{DynamicResource NoSearchResults}"
+                               Foreground="{DynamicResource TextSecondary}"
+                               TextAlignment="Center"
+                               TextWrapping="Wrap" />
+                </StackPanel>
+            </Grid>
         </DockPanel>
     </Border>
 </UserControl>

@@ -87,6 +87,12 @@ public partial class CollectionsViewModel : ViewModelBase, IDisposable
     private string _searchText = string.Empty;
     
     /// <summary>
+    /// Indicates whether the search query yielded no results.
+    /// </summary>
+    [ObservableProperty]
+    private bool _hasNoSearchResults;
+    
+    /// <summary>
     /// Indicates whether there is a selection in the collections list.
     /// </summary>
     public bool HasSelection => SelectedRequest != null;
@@ -108,7 +114,7 @@ public partial class CollectionsViewModel : ViewModelBase, IDisposable
                 .Ascending(vm => _collectionsSource.Items.IndexOf(vm)))
             .ObserveOn(AvaloniaScheduler.Instance)
             .Bind(out _collections)
-            .Subscribe()
+            .Subscribe(_ => UpdateNoSearchResults())
             .DisposeWith(_cleanUp);
         
         this.WhenAnyValue(x => x.SearchText)
@@ -118,8 +124,14 @@ public partial class CollectionsViewModel : ViewModelBase, IDisposable
             .Subscribe(query => 
             {
                 System.Diagnostics.Debug.WriteLine($"Search query: '{query}'");
+                UpdateNoSearchResults();
             })
             .DisposeWith(_cleanUp);
+    }
+
+    private void UpdateNoSearchResults()
+    {
+        HasNoSearchResults = Collections?.Count == 0 && !string.IsNullOrWhiteSpace(SearchText);
     }
 
     /// <summary>
